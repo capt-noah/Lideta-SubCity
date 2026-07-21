@@ -2,6 +2,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 import express from 'express'
+import fs from 'fs'
 import path    from 'path'
 import { fileURLToPath } from 'url'
 
@@ -23,6 +24,7 @@ const app        = express()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname  = path.dirname(__filename)
 const distPath   = path.join(__dirname, '..', 'client', 'dist')
+const indexPath  = path.join(distPath, 'index.html')
 
 // ── Core middleware ───────────────────────────────────────────────────────────
 app.use(express.json())
@@ -64,26 +66,25 @@ app.use((req, res, next) => {
     req.path.startsWith('/auth/') ||
     req.path.startsWith('/uploads/')
   ) return next()
-  res.sendFile(path.join(distPath, 'index.html'))
+  res.sendFile(indexPath)
 })
 
 // ── Start ─────────────────────────────────────────────────────────────────────
-const port = process.env.PORT || process.env.SERVER_PORT || 3000
+const port = process.env.PORT || process.env.SERVER_PORT
 
 console.log(`[server] NODE_ENV     : ${process.env.NODE_ENV || 'development'}`)
-console.log(`[server] PORT         : ${port}`)
+console.log(`[server] PORT         : ${port || '✗ MISSING'}`)
+console.log(`[server] DIST PATH    : ${distPath}`)
+console.log(`[server] INDEX PATH   : ${indexPath}`)
+console.log(`[server] INDEX EXISTS : ${fs.existsSync(indexPath) ? '✓ FOUND' : '✗ MISSING'}`)
 console.log(`[server] DATABASE_URL : ${process.env.DATABASE_URL ? '✓' : '✗ MISSING'}`)
 console.log(`[server] JWT_SECRET   : ${process.env.JWT_SECRET  ? '✓' : '✗ MISSING'}`)
 console.log(`[server] SUPABASE_KEY : ${process.env.SUPABASE_ANON_KEY ? '✓' : '✗ MISSING'}`)
 
-if (isNaN(port)) {
-  // If port is not a number, it's a Unix socket path (common in Phusion Passenger / Plesk)
-  app.listen(port, () => {
-    console.log(`[server] ✓ Listening on Unix socket: ${port}`)
-  })
-} else {
-  // Standard TCP port
-  app.listen(Number(port), '0.0.0.0', () => {
-    console.log(`[server] ✓ Listening on port: ${Number(port)}`)
-  })
+if (!port) {
+  throw new Error('PORT is missing. Plesk must provide the app port.')
 }
+
+app.listen(Number(port), () => {
+  console.log(`[server] ✓ Listening on port: ${Number(port)}`)
+})
