@@ -29,6 +29,16 @@ app.use(express.json())
 app.use(corsMiddleware)
 app.use(logger)
 
+// ── Health check ─────────────────────────────────────────────────────────────
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    ok: true,
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    env: process.env.NODE_ENV || 'development',
+  })
+})
+
 // ── Static files ──────────────────────────────────────────────────────────────
 app.use(express.static(distPath))
 app.use('/uploads', express.static(uploadBasePath))
