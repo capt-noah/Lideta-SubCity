@@ -1,0 +1,657 @@
+import BASE_URL from '../utils/api'
+import React, { useState } from 'react'
+
+import ArrowSvg from '../assets/arrow.svg?react'
+import Upload from '../components/ui/Upload'
+import ConfirmationDialog from '../components/ui/ConfirmationDialog'
+import Notification from '../components/ui/Notification'
+import { useLanguage } from '../components/utils/LanguageContext'
+import { useUser } from '../components/utils/UserContext'
+import translatedContents from '../data/translated_contents.json'
+import MediaRecorderComponent from '../components/ui/MediaRecorderComponent'
+
+
+
+const subcities = [
+  'Bole', 'Yeka', 'Gullele', 'Lideta', 'Addis Ketema', 'Arada', 
+  'Kolfe Keranio', 'Akaki Kality', 'Nifas Silk', 'Lemi Kura', 'Kirkos'
+];
+
+const sectorGroups = [
+  'Office of Public Service and Human Resource Development',
+  'Government Property Administration Bureau',
+  'Women, Children and Social Affairs Bureau',
+  'Culture, Arts and Tourism Bureau',
+  'Communication Bureau',
+  'Health Bureau',
+  'Education Bureau',
+  'Main Executive Office',
+  'Justice Bureau',
+  'Peace and Security Bureau',
+  'Law Enforcement Bureau',
+  'Council',
+  'Agriculture and Urban Farming Bureau',
+  'Community Affairs',
+  'Trade Bureau',
+  'Finance Bureau',
+  'Renewal Coordination Bureau',
+  'Planning Commission',
+  'Good Governance, Complaints and Petitions Bureau',
+  'Design and Construction Works Bureau',
+  'Construction Permit and Inspection Bureau',
+  'Housing Development Administration Bureau',
+  'Labor and Skills Bureau',
+  'Workplace Development Administration Bureau',
+  'Industry Development Bureau',
+  'Community, Volunteer and Social Mobilization Bureau',
+  'Youth and Sports Bureau',
+  "Administrator's Office",
+  'Civil Registration and Citizenship Bureau',
+  'Local Security Bureau',
+  'Urban Beautification and Green Development Bureau',
+  'Sanitation Management Bureau',
+  'Land Development and Administration Bureau',
+  'Land Ownership and Information Bureau',
+  'Roads and Transport Bureau',
+  'Vehicle and Transport Bureau',
+  'Food and Drug Bureau',
+  'General Education Quality and Inspection Bureau',
+  'Traffic Management Bureau'
+];
+
+function Compliants() {
+  const { language } = useLanguage()
+  const { user } = useUser()
+  const t = translatedContents.complaints_page
+  const [formData, setFormData] = useState(() => ({
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    email: user?.email || '',
+    phoneCode: '+251',
+    phone: user?.phone || '',
+    address_city: '',
+    address_subcity: '',
+    address_woreda: '',
+    address_house_number: '',
+    complaint_subcity: '',
+    complaint_woreda: '',
+    complaint_sector_group: '',
+    status: 'assigning',
+    description: '',
+    concerned_staff_member: '',
+    photo: null,
+    video: null,
+    audio: null
+  }))
+
+  const [prevUser, setPrevUser] = useState(user)
+  if (user !== prevUser) {
+    setPrevUser(user)
+    setFormData(prev => ({
+      ...prev,
+      first_name: user?.first_name || '',
+      last_name:  user?.last_name  || '',
+      email:      user?.email      || '',
+      phone:      user?.phone      || '',
+    }))
+  }
+
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [submittedRef,    setSubmittedRef]    = useState(null)
+  const [showDisclaimer, setShowDisclaimer] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [notification, setNotification] = useState({ isOpen: false, message: '', type: 'success' })
+  const [errors, setErrors] = useState({})
+  const [disclaimerMode, setDisclaimerMode] = useState('initial')
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }))
+    }
+  }
+
+  const validateForm = () => {
+    // ... existing validation logic ...
+    const newErrors = {}
+
+    if (!formData.first_name.trim()) newErrors.first_name = 'First name is required'
+    if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required'
+    if (!formData.email.trim()) newErrors.email = 'Email is required'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Please enter a valid email address'
+    
+    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required'
+    else if (!/^[0-9\s-]+$/.test(formData.phone)) newErrors.phone = 'Please enter a valid phone number'
+
+    // Address Validation
+    if (!formData.address_city.trim()) newErrors.address_city = t.complaint_form.validation.required.city[language]
+    if (!formData.address_subcity.trim()) newErrors.address_subcity = t.complaint_form.validation.required.subcity[language]
+    if (!formData.address_woreda.trim()) newErrors.address_woreda = t.complaint_form.validation.required.woreda[language]
+
+    // Complaint Location Validation
+    if (!formData.complaint_subcity.trim()) newErrors.complaint_subcity = t.complaint_form.validation.required.complaint_subcity[language]
+    if (!formData.complaint_woreda.trim()) newErrors.complaint_woreda = t.complaint_form.validation.required.complaint_woreda[language]
+    if (!formData.complaint_sector_group.trim()) newErrors.complaint_sector_group = t.complaint_form.validation.required.sector_group[language]
+
+    if (!formData.description.trim()) {
+      newErrors.description = t.complaint_form.validation.required.description[language]
+    } else if (formData.description.trim().length < 10) {
+      newErrors.description = t.complaint_form.validation.required.description_length[language]
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault()
+
+    // Auth gate — must be logged in to submit
+    if (!user) {
+      window.location.href = '/account/auth?next=/compliants'
+      return
+    }
+    
+    if (validateForm()) {
+      setDisclaimerMode('submission')
+      setShowDisclaimer(true)
+    }
+  }
+
+  const handleConfirmSubmit = async () => {
+    setIsSubmitting(true)
+    setShowDisclaimer(false) // Close the disclaimer modal
+    // setShowConfirmDialog(false) // No longer used
+
+    try {
+      // ... existing submission logic ...
+      // Combine phone code and phone number
+      const fullPhone = `${formData.phoneCode} ${formData.phone}`
+
+      // Format photo as JSON array
+      let photoData = []
+      if (formData.photo) {
+        if (Array.isArray(formData.photo)) {
+          photoData = formData.photo
+        } else if (typeof formData.photo === 'object' && formData.photo.name) {
+          // Single photo object with name and path
+          photoData = [formData.photo]
+        }
+      }
+
+      // Format video as JSON array
+      let videoData = []
+      if (formData.video) {
+        if (Array.isArray(formData.video)) {
+          videoData = formData.video
+        } else if (typeof formData.video === 'object' && formData.video.name) {
+          videoData = [formData.video]
+        }
+      }
+
+      // Format audio as JSON array
+      let audioData = []
+      if (formData.audio) {
+        if (Array.isArray(formData.audio)) {
+          audioData = formData.audio
+        } else if (typeof formData.audio === 'object' && formData.audio.name) {
+          audioData = [formData.audio]
+        }
+      }
+
+      const submitData = {
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        email: formData.email.trim(),
+        phone: fullPhone,
+        // Address fields
+        address_city: formData.address_city.trim(),
+        address_subcity: formData.address_subcity.trim(),
+        address_woreda: formData.address_woreda.trim(),
+        address_house_number: formData.address_house_number.trim(),
+        // Complaint Location fields
+        complaint_subcity: formData.complaint_subcity.trim(),
+        complaint_woreda: formData.complaint_woreda.trim(),
+        complaint_sector_group: formData.complaint_sector_group.trim(),
+        type: formData.complaint_sector_group,
+        status: 'assigning',
+        description: formData.description.trim(),
+        concerned_staff_member: formData.concerned_staff_member.trim() || null,
+        photo: photoData,
+        video: videoData,
+        audio: audioData,
+        user_id: user?.id || null
+      }
+
+      const response = await fetch(`${BASE_URL}/api/complaints`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ formData: submitData })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to submit complaint. Please try again.')
+      }
+
+      const responseData = await response.json()
+
+      // Reset form (re-fill user fields if logged in)
+      setFormData({
+        first_name: user?.first_name || '',
+        last_name:  user?.last_name  || '',
+        email:      user?.email      || '',
+        phoneCode: '+251',
+        phone:      user?.phone      || '',
+        address_city: '',
+        address_subcity: '',
+        address_woreda: '',
+        address_house_number: '',
+        complaint_subcity: '',
+        complaint_woreda: '',
+        complaint_sector_group: '',
+        status: 'assigning',
+        description: '',
+        concerned_staff_member: '',
+        photo: null,
+        video: null,
+        audio: null
+      })
+      setErrors({})
+      setDisclaimerMode('initial')
+      setSubmittedRef(responseData.ref)
+      setShowSuccessModal(true)
+    } catch (error) {
+      console.error('Error submitting complaint:', error)
+      setNotification({ 
+        isOpen: true, 
+        message: error.message || 'An error occurred while submitting your complaint. Please try again.', 
+        type: 'error' 
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  return (
+    <div className='w-full max-w-7xl mx-auto h-fit mb-24 px-4 bg-transparent animate-fade-in'>
+      <div className='w-full'>
+        <div className='grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-16 2xl:gap-20'>
+
+          <div className='flex flex-col w-full text-center lg:text-start mt-10 px-4 md:px-8'>
+             {/* Left Side Content */}
+            <h1 className='font-goldman font-bold text-4xl lg:text-5xl mb-6 border-b-[6px] border-amber-500 pb-3 w-fit text-emerald-950 mx-auto lg:mx-0'> {t.title[language]} </h1>
+            <p className='font-roboto text-lg text-gray-600 mb-8 leading-relaxed'>{t.description[language]}</p>
+            
+            <div className='bg-gradient-to-br from-[#f8faf9] to-[#edf3ef] rounded-2xl p-6 border border-emerald-900/10 shadow-md text-left'>
+              <p className='font-goldman font-bold text-lg mb-4 text-emerald-950'>{t.contact_methods.title[language]}</p>
+              <div className='space-y-4 font-roboto text-sm'>
+                <div className='border-l-4 border-amber-500 pl-3'>
+                  <p className='text-gray-500 uppercase tracking-wider text-xs'>{t.contact_methods.email.label[language]}</p>
+                  <p className='font-bold text-emerald-950 text-base'>{t.contact_methods.email.value[language]}</p>
+                </div>
+                <div className='border-l-4 border-amber-500 pl-3'>
+                  <p className='text-gray-500 uppercase tracking-wider text-xs'>{t.contact_methods.phone.label[language]}</p>
+                  <p className='font-bold text-emerald-950 text-base'>{t.contact_methods.phone.value[language]}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Form Section */}
+          <div className='bg-gradient-to-b from-white to-[#edf3ef] w-full min-w-sm max-w-lg xl:max-w-2xl mx-auto rounded-2xl shadow-xl p-6 md:p-8 border mt-10 mb-0 border-emerald-900/10 lg:mb-4 relative overflow-hidden'>
+
+            {/* Auth gate overlay — shown when not logged in */}
+            {!user && (
+              <div className='absolute inset-0 z-10 backdrop-blur-md bg-[#03150c]/45 flex flex-col items-center justify-center p-4 rounded-2xl'>
+                <div className='bg-white rounded-2xl shadow-2xl border border-emerald-900/10 p-8 mx-6 text-center max-w-sm animate-fade-in'>
+                  <div className='w-14 h-14 bg-emerald-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20 shadow-lg'>
+                    <svg className='w-7 h-7 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' />
+                    </svg>
+                  </div>
+                  <h3 className='font-goldman font-bold text-xl text-emerald-950 mb-2'>
+                    {{ en: 'Sign in to continue', am: 'ለመቀጠል ይግቡ', or: 'Itti fufuuf seenaa' }[language]}
+                  </h3>
+                  <p className='font-roboto text-sm text-gray-500 mb-6 leading-relaxed'>
+                    {{ en: 'You need an account to submit a complaint and track its progress.', am: 'ቅሬታ ለማቅረብ እና ሂደቱን ለመከታተል መለያ ያስፈልጋዎታል።', or: 'Iyyata galchuuf fi hordofuuf herrega barbaachisaa dha.' }[language]}
+                  </p>
+                  <div className='flex flex-col gap-3'>
+                    <a href='/account/auth?next=/compliants'
+                      className='w-full py-3 bg-emerald-900 text-white font-bold font-goldman rounded-xl hover:bg-emerald-950 transition-all text-sm shadow-md cursor-pointer'>
+                      {{ en: 'Sign In', am: 'ግባ', or: 'Seeni' }[language]}
+                    </a>
+                    <a href='/account/auth?next=/compliants'
+                      className='w-full py-3 border border-emerald-900/20 text-emerald-900 font-semibold font-goldman rounded-xl hover:bg-emerald-50 transition-all text-sm cursor-pointer'>
+                      {{ en: 'Create Account', am: 'መለያ ፍጠር', or: 'Herrega Uumi' }[language]}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <h2 className='font-goldman font-bold text-2xl lg:text-3xl text-emerald-950 mb-6'>{t.complaint_form.title[language]}</h2>
+            
+            <form onSubmit={handleFormSubmit} className='space-y-8'>
+              
+              {/* Form Fields (Address, Personal, Complaint Details) */}
+              <div className="space-y-6">
+                 <h2 className='font-goldman font-bold text-emerald-900/70 text-base border-b border-emerald-900/10 pb-2'>{t.complaint_form.sections.personal_info[language]}</h2>
+                 {/* Personal & Address Fields */}
+                 <div className="space-y-4">
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.fields.first_name.label[language]} <span className='text-red-500'>*</span></label>
+                        <input 
+                          type='text' 
+                          name='first_name' 
+                          value={formData.first_name} 
+                          onChange={handleChange} 
+                          placeholder={t.complaint_form.fields.first_name.placeholder[language]} 
+                          className={`w-full px-4 py-2 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 bg-white/50 ${
+                            errors.first_name ? 'border-red-500' : 'border-emerald-900/10'
+                          }`}
+                        />
+                        {errors.first_name && <p className='text-red-500 text-xs mt-1'>{errors.first_name}</p>}
+                      </div>
+                      <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'> {t.complaint_form.fields.last_name.label[language]} <span className='text-red-500'>*</span></label>
+                        <input 
+                          type='text' 
+                          name='last_name' 
+                          value={formData.last_name} 
+                          onChange={handleChange} 
+                          placeholder={t.complaint_form.fields.last_name.placeholder[language]} 
+                          className={`w-full px-4 py-2 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 bg-white/50 ${
+                            errors.last_name ? 'border-red-500' : 'border-emerald-900/10'
+                          }`}
+                        />
+                        {errors.last_name && <p className='text-red-500 text-xs mt-1'>{errors.last_name}</p>}
+                      </div>
+                    </div>
+                    {/* Email Phone */}
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4' >
+                      <div className='w-full' >
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.fields.email.label[language]} <span className='text-red-500'>*</span></label>
+                        <input type='email' name='email' value={formData.email} onChange={handleChange} placeholder={t.complaint_form.fields.email.placeholder[language]} className={`w-full px-4 py-2 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 bg-white/50 ${errors.email ? 'border-red-500' : 'border-emerald-900/10'}`} />
+                        {errors.email && <p className='text-red-500 text-xs mt-1'>{errors.email}</p>}
+                      </div>
+                      <div className='w-full' >
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'> {t.complaint_form.fields.phone_number.label[language]} <span className='text-red-500'>*</span></label>
+                        <div className='flex gap-2'>
+                          <select name='phoneCode' value={formData.phoneCode} onChange={handleChange} className='px-3 py-2 border border-emerald-900/10 rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 bg-white/50'>
+                            <option value='+251'>{t.complaint_form.fields.phone_number.country_code[language]}</option>
+                            <option value='+1'>🇺🇸 +1</option>
+                            <option value='+44'>🇬🇧 +44</option>
+                          </select>
+                          <input type='tel' name='phone' value={formData.phone} onChange={handleChange} placeholder={t.complaint_form.fields.phone_number.placeholder[language]} className={`flex-1 px-4 py-2 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 bg-white/50 ${errors.phone ? 'border-red-500' : 'border-emerald-900/10'}`} />
+                        </div>
+                        {errors.phone && <p className='text-red-500 text-xs mt-1'>{errors.phone}</p>}
+                      </div>
+                    </div>
+                 </div>
+                 {/* Address Sub-section */}
+                 <div className="space-y-4">
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.address_fields.city.label[language]} <span className='text-red-500'>*</span></label>
+                        <input type='text' name='address_city' value={formData.address_city} onChange={handleChange} placeholder={t.complaint_form.address_fields.city.placeholder[language]} className={`w-full px-4 py-2 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 bg-white/50 ${errors.address_city ? 'border-red-500' : 'border-emerald-900/10'}`} />
+                        {errors.address_city && <p className='text-red-500 text-xs mt-1'>{errors.address_city}</p>}
+                      </div>
+                      <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.address_fields.subcity.label[language]} <span className='text-red-500'>*</span></label>
+                        <div className='relative'>
+                          <select name='address_subcity' value={formData.address_subcity} onChange={handleChange} className={`w-full px-4 py-2 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 appearance-none bg-white/50 ${errors.address_subcity ? 'border-red-500' : 'border-emerald-900/10'}`}>
+                            <option value="">{t.complaint_form.address_fields.subcity.placeholder[language]}</option>
+                            {subcities.map(city => (<option key={city} value={city}>{city}</option>))}
+                          </select>
+                          <ArrowSvg className='absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none opacity-60'/>
+                        </div>
+                        {errors.address_subcity && <p className='text-red-500 text-xs mt-1'>{errors.address_subcity}</p>}
+                      </div>
+                      <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.address_fields.woreda.label[language]} <span className='text-red-500'>*</span></label>
+                        <input type='text' name='address_woreda' value={formData.address_woreda} onChange={handleChange} placeholder={t.complaint_form.address_fields.woreda.placeholder[language]} className={`w-full px-4 py-2 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 bg-white/50 ${errors.address_woreda ? 'border-red-500' : 'border-emerald-900/10'}`} />
+                        {errors.address_woreda && <p className='text-red-500 text-xs mt-1'>{errors.address_woreda}</p>}
+                      </div>
+                      <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.address_fields.house_number.label[language]}</label>
+                        <input type='text' name='address_house_number' value={formData.address_house_number} onChange={handleChange} placeholder={t.complaint_form.address_fields.house_number.placeholder[language]} className='w-full px-4 py-2 border border-emerald-900/10 rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 bg-white/50' />
+                      </div>
+                    </div>
+                 </div>
+              </div>
+
+              {/* Complaint Details Group */}
+              <div className="space-y-6">
+                 <h2 className='font-goldman font-bold text-emerald-900/70 text-base border-b border-emerald-900/10 pb-2'>{t.complaint_form.sections.complaint_details[language]}</h2>
+                 {/* Location & Sector */}
+                 <div className="space-y-4">
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.address_fields.subcity.label[language]}</label>
+                        <div className='relative'>
+                          <select name='complaint_subcity' value={formData.complaint_subcity} onChange={handleChange} className={`w-full px-4 py-2 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 appearance-none bg-white/50 ${errors.complaint_subcity ? 'border-red-500' : 'border-emerald-900/10'}`}>
+                            <option value="">{t.complaint_form.address_fields.subcity.placeholder[language]}</option>
+                            {subcities.map(city => (<option key={city} value={city}>{city}</option>))}
+                          </select>
+                          <ArrowSvg className='absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none opacity-60'/>
+                        </div>
+                        {errors.complaint_subcity && <p className='text-red-500 text-xs mt-1'>{errors.complaint_subcity}</p>}
+                      </div>
+                      <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.address_fields.woreda.label[language]}</label>
+                        <input type='text' name='complaint_woreda' value={formData.complaint_woreda} onChange={handleChange} placeholder={t.complaint_form.address_fields.woreda.placeholder[language]} className={`w-full px-4 py-2 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 bg-white/50 ${errors.complaint_woreda ? 'border-red-500' : 'border-emerald-900/10'}`} />
+                        {errors.complaint_woreda && <p className='text-red-500 text-xs mt-1'>{errors.complaint_woreda}</p>}
+                      </div>
+                    </div>
+                 </div>
+                 
+                 <div className="space-y-4">
+                        {/* Sector Group */}
+                        <div>
+                            <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.sector_group.label[language]} <span className='text-red-500'>*</span></label>
+                            <div className='relative'>
+                              <select name='complaint_sector_group' value={formData.complaint_sector_group} onChange={handleChange} className={`w-full px-4 py-2 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 appearance-none bg-white/50 ${errors.complaint_sector_group ? 'border-red-500' : 'border-emerald-900/10'}`}>
+                                <option value="">{t.complaint_form.sector_group.placeholder[language]}</option>
+                                {sectorGroups.map(sector => (<option key={sector} value={sector}>{sector}</option>))}
+                              </select>
+                              <ArrowSvg className='absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none opacity-60'/>
+                            </div>
+                            {errors.complaint_sector_group && <p className='text-red-500 text-xs mt-1'>{errors.complaint_sector_group}</p>}
+                        </div>
+                 </div>
+
+                 {/* Description */}
+                 <div className="space-y-4">
+                    <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.fields.complaint.label[language]} <span className='text-red-500'>*</span></label>
+                        <textarea name='description' value={formData.description} onChange={handleChange} placeholder={t.complaint_form.fields.complaint.placeholder[language]} rows={5} className={`w-full px-4 py-3 border rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 resize-none bg-white/50 ${errors.description ? 'border-red-500' : 'border-emerald-900/10'}`} />
+                        {errors.description && <p className='text-red-500 text-xs mt-1'>{errors.description}</p>}
+                        {!errors.description && formData.description && <p className='text-emerald-900/40 text-xs mt-1 font-mono font-medium'>{formData.description.length} characters</p>}
+                    </div>
+                 </div>
+
+                 {/* Additional Info */}
+                 <div className="space-y-4">
+                    <h3 className="font-goldman font-bold text-emerald-900/60 text-xs uppercase tracking-wider">{t.complaint_form.sections.additional_info[language]}</h3>
+                    <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.fields.staff_member.label[language]}</label>
+                        <input type='text' name='concerned_staff_member' value={formData.concerned_staff_member} onChange={handleChange} placeholder={t.complaint_form.fields.staff_member.placeholder[language]} className='w-full px-4 py-2 border border-emerald-900/10 rounded-xl font-roboto text-sm focus:outline-none focus:ring-2 focus:ring-emerald-900/20 bg-white/50' />
+                    </div>
+                    <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>{t.complaint_form.fields.photo_upload.label[language]}</label>
+                        <p className='font-roboto text-xs text-gray-500 mb-3'>{t.complaint_form.fields.photo_upload.description?.[language] || "Drag and drop or browse image to add a photo of evidence for complaint"}</p>
+                        <Upload photo={formData.photo} setFormData={setFormData} />
+                    </div>
+                    <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>
+                            {t.complaint_form.fields.video_recording.label[language]}
+                        </label>
+                        <p className='font-roboto text-xs text-gray-500 mb-3'>{t.complaint_form.fields.video_recording.description[language]}</p>
+                        <MediaRecorderComponent 
+                            type="video" 
+                            initialMedia={formData.video} 
+                            onMediaCaptured={(data) => setFormData(prev => ({ ...prev, video: data }))}
+                        />
+                    </div>
+                    <div>
+                        <label className='block font-roboto font-medium text-xs uppercase tracking-wider mb-1 text-gray-650'>
+                            {t.complaint_form.fields.audio_recording.label[language]}
+                        </label>
+                        <p className='font-roboto text-xs text-gray-500 mb-3'>{t.complaint_form.fields.audio_recording.description[language]}</p>
+                        <MediaRecorderComponent 
+                            type="audio" 
+                            initialMedia={formData.audio} 
+                            onMediaCaptured={(data) => setFormData(prev => ({ ...prev, audio: data }))}
+                        />
+                    </div>
+                 </div>
+              </div>
+
+
+              {/* Submit Button */}
+              <button
+                type='submit'
+                disabled={isSubmitting}
+                className='w-full bg-emerald-900 hover:bg-amber-500 text-white hover:text-emerald-950 text-base font-goldman font-bold py-3.5 rounded-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5'
+              >
+                {isSubmitting ? 'Submitting...' : t.complaint_form.submit_button[language]}
+              </button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+      <Notification
+        isOpen={notification.isOpen}
+        onClose={() => setNotification({ ...notification, isOpen: false })}
+        message={notification.message}
+        type={notification.type}
+        duration={5000}
+      />
+
+      {/* Disclaimer Modal / Confirmation Modal */}
+      {showDisclaimer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#03150c]/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-emerald-900/10 flex flex-col">
+            <div className="p-6 md:p-8 border-b border-emerald-900/10 sticky top-0 bg-white z-10 flex justify-between items-start">
+              <div>
+                <h2 className="font-goldman font-bold text-2xl md:text-3xl text-emerald-950 leading-tight">
+                  {t.disclaimer?.title[language]}
+                </h2>
+                <p className="font-roboto text-gray-500 mt-2 text-sm md:text-base">
+                  {t.disclaimer?.subtitle[language]}
+                </p>
+              </div>
+              <button 
+                onClick={() => setShowDisclaimer(false)}
+                className="p-2 hover:bg-emerald-50 rounded-full transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-450 hover:text-emerald-950" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6 md:p-8 font-roboto text-gray-700 leading-relaxed text-base space-y-4">
+               <ul className="list-disc pl-5 space-y-3 marker:text-amber-500">
+                  {t.disclaimer?.items?.map((item, index) => (
+                    <li key={index} className="font-light text-emerald-950">
+                        {typeof item === 'string' ? item : (item[language] || item['en'])}
+                    </li>
+                  ))}
+               </ul>
+            </div>
+
+            <div className="p-6 md:p-8 border-t border-emerald-900/10 bg-[#edf3ef]/50 flex justify-end gap-4 rounded-b-2xl">
+              {disclaimerMode === 'submission' && (
+                <button
+                  onClick={() => setShowDisclaimer(false)}
+                  className="px-6 py-3 rounded-xl border border-emerald-900/10 text-gray-700 font-goldman font-semibold text-sm hover:bg-white transition-colors cursor-pointer"
+                >
+                  {t.disclaimer?.actions?.cancel[language]}
+                </button>
+              )}
+              <button
+                onClick={() => {
+                   if (disclaimerMode === 'initial') {
+                     setShowDisclaimer(false)
+                   } else {
+                     handleConfirmSubmit()
+                   }
+                 }}
+                className="bg-emerald-900 hover:bg-amber-500 hover:text-emerald-950 text-white font-bold font-goldman py-3.5 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer"
+              >
+                {disclaimerMode === 'initial' ? t.disclaimer?.actions?.confirm[language] : t.disclaimer?.actions?.confirm_submit[language]}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#03150c]/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center font-roboto border border-emerald-900/10">
+            <div className="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-900/5 shadow-inner">
+              <svg className="w-8 h-8 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="font-goldman font-bold text-2xl text-emerald-950 mb-2">
+              {{ en: 'Complaint Submitted!', am: 'ቅሬታ ቀርቧል!', or: 'Iyyanni Galame!' }[language]}
+            </h3>
+            <p className="text-gray-500 text-sm mb-5 leading-relaxed">
+              {{ en: 'Your complaint has been received. Save your reference number to track its progress.', am: 'ቅሬታዎ ደርሷል። ሂደቱን ለመከታተል የማጣቀሻ ቁጥርዎን ያስቀምጡ።', or: 'Iyyata keessan ni argame. Lakkoofsa wabii keessan kuusuun hordofaa.' }[language]}
+            </p>
+
+            {/* Reference number */}
+            <div className="bg-emerald-50/50 border-2 border-dashed border-emerald-900/10 rounded-xl px-6 py-4 mb-6 shadow-inner">
+              <p className="text-xs text-emerald-800 uppercase tracking-widest mb-1 font-goldman font-bold">
+                {{ en: 'Reference Number', am: 'የማጣቀሻ ቁጥር', or: 'Lakkoofsa Wabii' }[language]}
+              </p>
+              <p className="text-3xl font-goldman font-bold text-emerald-950 tracking-widest">{submittedRef}</p>
+            </div>
+
+            <div className="flex flex-wrap gap-2 justify-center">
+              <button
+                onClick={() => { navigator.clipboard.writeText(submittedRef) }}
+                className="px-5 py-2.5 border border-emerald-900/10 text-emerald-900 text-xs font-goldman font-bold rounded-xl hover:bg-emerald-50 transition-colors cursor-pointer"
+              >
+                {{ en: 'Copy', am: 'ቅዳ', or: 'Koppii' }[language]}
+              </button>
+              {user && (
+                <a href="/account"
+                  className="px-5 py-2.5 bg-emerald-900 text-white text-xs font-goldman font-bold rounded-xl hover:bg-emerald-950 transition-colors shadow-md"
+                >
+                  {{ en: 'Track Progress', am: 'ሂደቱን ይከታተሉ', or: 'Deemi Hordofi' }[language]}
+                </a>
+              )}
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="px-5 py-2.5 bg-amber-500 text-emerald-950 text-xs font-goldman font-bold rounded-xl hover:bg-amber-400 transition-colors cursor-pointer shadow-md"
+              >
+                {{ en: 'Done', am: 'ተጠናቋል', or: 'Xumurami' }[language]}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default Compliants

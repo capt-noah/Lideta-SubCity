@@ -1,0 +1,1172 @@
+import BASE_URL from '../../utils/api'
+import { useContext, useState, useMemo, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { adminContext } from '../../components/utils/AdminContext.jsx'
+import { useLanguage } from '../../components/utils/LanguageContext'
+import translatedContents from '../../data/translated_contents.json'
+
+import GroupIcon from '../../assets/icons/group_icon.svg?react'
+import ClockIcon from '../../assets/icons/clock_icon.svg?react'
+import CalenderIcon from '../../assets/icons/calender_icon.svg?react'
+import CheckmarkIcon from '../../assets/icons/checkmark_icon.svg?react'
+import GraphIcon from '../../assets/icons/graph_icon.svg?react'
+import ChartArrowIcon from '../../assets/icons/chart_arrow.svg?react'
+import SortIcon from '../../assets/icons/sort_icon.svg?react'
+import LogoutIcon from '../../assets/icons/logout_icon.svg?react'
+import LocationIcon from '../../assets/icons/location_icon.svg?react'
+import ImageIcon from '../../assets/icons/image_icon.svg?react'
+import RecordIcon from '../../assets/icons/record_icon.svg?react'
+
+import ConfirmationDialog from '../../components/ui/ConfirmationDialog'
+
+import { AreaChart, Area, LineChart, Line, BarChart, Bar, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
+import Status from '../../components/ui/Status.jsx'
+
+function SuperAdminHome() {
+  const { admin, token, setAdmin } = useContext(adminContext)
+  const { language } = useLanguage()
+  const navigate = useNavigate()
+
+  const [activeStat, setActiveStat] = useState('vacancy')
+  const [activeProfileTab, setActiveProfileTab] = useState('profile')
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false)
+  const [complaintsList, setComplaintsList] = useState()
+  const [complaintsSortConfig, setComplaintsSortConfig] = useState({ key: 'date', direction: 'desc' })
+  const [vacancyApplications, setVacancyApplications] = useState([])
+  const [vacancyStats, setVacancyStats] = useState()
+  const [vacancyCounts, setVacancyCounts] = useState()
+  const [complaintStats, setComplaintStats] = useState()
+  const [complaintCounts, setComplaintCounts] = useState()
+  const [vacancySortConfig, setVacancySortConfig] = useState({ key: 'date', direction: 'desc' })
+  const [recentActivities, setRecentActivities] = useState([])
+  const [selectedActivity, setSelectedActivity] = useState(null) // For activity details modal
+  const [overviewStats, setOverviewStats] = useState({
+    totalComplaints: 0,
+    resolvedComplaints: 0,
+    pendingApplications: 0,
+    activeEvents: 0
+  })
+  const [satisfactionStats, setSatisfactionStats] = useState({
+    totalResponses: 0,
+    averages: [],
+    daily: []
+  })
+
+  const satisfactionQuestions =
+    translatedContents?.service_satisfaction_form?.sections?.satisfaction_questions?.questions || []
+
+  const getQuestionText = (questionKey) => {
+    if (!questionKey) return ''
+    const match = satisfactionQuestions.find(q => q.id === questionKey)
+    if (!match || !match.text) return questionKey.toUpperCase()
+    return (
+      match.text[language] ||
+      match.text.en ||
+      match.text.am ||
+      match.text.or ||
+      questionKey.toUpperCase()
+    )
+  }
+
+  const scoreToLabel = (score) => {
+    if (score >= 4.5) return 'Very High'
+    if (score >= 3.5) return 'High'
+    if (score >= 2.5) return 'Medium'
+    if (score >= 1.5) return 'Low'
+    if (score > 0) return 'Very Low'
+    return 'No data'
+  }
+
+  const satisfactionMonthLabel = useMemo(() => {
+    const daily = satisfactionStats.daily
+    if (!daily || daily.length === 0) return 'Last 30 days'
+
+    const parseMonthYear = (dateStr) => {
+      const d = new Date(dateStr)
+      if (Number.isNaN(d.getTime())) return null
+      return { month: d.getMonth(), year: d.getFullYear() }
+    }
+
+    const first = parseMonthYear(daily[0].date)
+    const last = parseMonthYear(daily[daily.length - 1].date)
+    if (!first || !last) return 'Last 30 days'
+
+    const monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ]
+
+    if (first.month === last.month && first.year === last.year) {
+      return monthNames[first.month]
+    }
+
+    return `${monthNames[first.month]} – ${monthNames[last.month]}`
+  }, [satisfactionStats.daily])
+
+  useEffect(() => {
+    async function fetchActivities() {
+      try {
+        const response = await fetch(`${BASE_URL}/api/admin/activities`, {
+          headers: {
+            authorization: `Bearer ${token}`
+          }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if(data.status === 'Success') {
+              setRecentActivities(data.activities)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching activities:', error)
+      }
+    }
+
+    if (token) {
+      fetchActivities()
+    }
+  }, [token])
+
+  useEffect(() => {
+    async function fetchOverviewStats() {
+      try {
+        const response = await fetch(`${BASE_URL}/api/superadmin/overview`, {
+          headers: {
+            authorization: `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const stats = await response.json()
+          console.log(stats)
+          setOverviewStats(stats)
+        }
+      } catch (error) {
+        console.error('Error fetching overview stats:', error)
+      }
+    }
+
+    if (token) {
+      fetchOverviewStats()
+    }
+  }, [token])
+
+    useEffect(() => {
+  
+      async function getComplaints() {
+        const response = await fetch(`${BASE_URL}/api/complaints/admin`, {
+          headers: {
+            authorization: `Bearer ${token}`
+          }
+        })
+        const list = await response.json()
+  
+        if (!response.ok) {
+          localStorage.removeItem('token')
+          navigate('/auth/login')
+          return
+        }
+        console.log(list)
+        setComplaintsList(list.complaints)
+        setComplaintCounts(list.counts)
+        setComplaintStats(list.stats)
+      }
+  
+      getComplaints()
+      
+    }, [token, navigate])
+
+    // Load vacancy applications (joined applicants + vacancies)
+  useEffect(() => {
+    async function fetchVacancyApplications() {
+      try {
+        const response = await fetch(`${BASE_URL}/api/superadmin/vacancy-applications`, {
+          headers: {
+            authorization: `Bearer ${token}`
+          }
+        })
+
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('token')
+            navigate('/auth/login')
+            return
+          }
+          throw new Error('Failed to fetch vacancy applications')
+        }
+
+        const data = await response.json()
+        console.log(data)
+        setVacancyApplications(data.vacants)
+        setVacancyCounts(data.counts)
+        setVacancyStats(data.stats)
+      } catch (error) {
+        console.error('Error fetching vacancy applications:', error)
+      }
+    }
+
+    if (token) {
+      fetchVacancyApplications()
+    }
+  }, [token, navigate])
+
+  // Load service satisfaction stats for dashboard graph
+  useEffect(() => {
+    async function fetchSatisfactionStats() {
+      try {
+        const response = await fetch(`${BASE_URL}/api/superadmin/service-satisfaction-stats`, {
+          headers: {
+            authorization: `Bearer ${token}`
+          },
+          cache: 'no-store'
+        })
+
+        if (response.status === 304) {
+          // Not modified – keep existing stats
+          return
+        }
+
+        if (!response.ok) {
+          return
+        }
+
+        const data = await response.json()
+        setSatisfactionStats({
+          totalResponses: data.totalResponses || 0,
+          averages: Array.isArray(data.averages) ? data.averages : [],
+          daily: Array.isArray(data.daily) ? data.daily : []
+        })
+      } catch (error) {
+        console.error('Error fetching satisfaction stats:', error)
+      }
+    }
+
+    if (token) {
+      fetchSatisfactionStats()
+    }
+  }, [token])
+
+  
+  const overviewCards = [
+    { title: 'Total complaints', value: overviewStats.totalComplaints, trend: '+ 2.01%', up: true },
+    { title: 'Resolved Complaints', value: overviewStats.resolvedComplaints, trend: '↓ 2.01%', up: false },
+    { title: 'Pending Applications', value: overviewStats.pendingApplications, trend: '+ 2.01%', up: true },
+    { title: 'Active Events', value: overviewStats.activeEvents, trend: '+ 2.01%', up: true }
+  ]
+
+  const data = [
+    { day: '03', thisMonth: 120, lastMonth: 80 },
+    { day: '06', thisMonth: 75, lastMonth: 95 },
+    { day: '09', thisMonth: 150, lastMonth: 110 },
+    { day: '12', thisMonth: 90, lastMonth: 130 },
+    { day: '15', thisMonth: 200, lastMonth: 250 },
+    { day: '18', thisMonth: 160, lastMonth: 140 },
+    { day: '21', thisMonth: 30, lastMonth: 190 },
+    { day: '24', thisMonth: 180, lastMonth: 210 },
+    { day: '28', thisMonth: 160, lastMonth: 100 },
+    { day: '31', thisMonth: 220, lastMonth: 70 }
+  ]
+
+  const vacancyMonthlyStats = [
+    { month: 'Jan', applications: 32 },
+    { month: 'Feb', applications: 28 },
+    { month: 'Mar', applications: 45 },
+    { month: 'Apr', applications: 38 },
+    { month: 'May', applications: 52 },
+    { month: 'Jun', applications: 47 },
+    { month: 'Jul', applications: 41 },
+    { month: 'Aug', applications: 39 },
+    { month: 'Sep', applications: 44 },
+    { month: 'Oct', applications: 36 },
+    { month: 'Nov', applications: 29 },
+    { month: 'Dec', applications: 33 }
+  ]
+
+  const statsConfig =
+    activeStat === 'vacancy'
+      ? {
+          title: 'Vacancy overview',
+          subtitle: 'Applicants per category this month',
+          total: vacancyCounts?.total,
+          data: vacancyStats
+        }
+      : {
+          title: 'Complaints overview',
+          subtitle: 'Complaints per type this month',
+          total: complaintCounts?.total,
+          data: complaintStats
+        }
+
+
+  function handleComplaintsSort(key) {
+    setComplaintsSortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+      }
+      return { key, direction: 'asc' }
+    })
+  }
+
+  function handleVacancySort(key) {
+    setVacancySortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+      }
+      return { key, direction: 'asc' }
+    })
+  }
+
+  const sortedComplaints = useMemo(() => {
+    if (!complaintsList) return []
+    const sorted = [...complaintsList]
+
+    const compareString = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })
+
+    sorted.sort((a, b) => {
+      let result = 0
+
+      switch (complaintsSortConfig.key) {
+      case 'name': {
+        const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim()
+        const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim()
+        result = compareString(nameA, nameB)
+        break
+      }
+      case 'date': {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+        result = dateA - dateB
+        break
+      }
+      case 'type':
+        result = compareString(a.type || '', b.type || '')
+        break
+      case 'status':
+        result = compareString(a.status || '', b.status || '')
+        break
+      default:
+        result = 0
+      }
+
+      return complaintsSortConfig.direction === 'asc' ? result : -result
+    })
+
+    return sorted
+  }, [complaintsList, complaintsSortConfig])
+
+  const sortedVacancyApplications = useMemo(() => {
+    if (!vacancyApplications) return []
+    const rows = [...vacancyApplications]
+
+    const compareString = (a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' })
+    const parseNumber = (value) => {
+      if (value == null) return 0
+      const n = parseFloat(String(value).toString().replace(/[^\d.-]/g, ''))
+      return Number.isNaN(n) ? 0 : n
+    }
+
+    rows.sort((a, b) => {
+      let result = 0
+
+      switch (vacancySortConfig.key) {
+      case 'name':
+        result = compareString(a.full_name || '', b.full_name || '')
+        break
+      case 'date': {
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0
+        result = dateA - dateB
+        break
+      }
+      case 'category':
+        result = compareString(a.category || '', b.category || '')
+        break
+      case 'salary':
+        result = parseNumber(a.salary) - parseNumber(b.salary)
+        break
+      default:
+        result = 0
+      }
+
+      return vacancySortConfig.direction === 'asc' ? result : -result
+    })
+
+    return rows
+  }, [vacancyApplications, vacancySortConfig])
+
+  function handleLogout() {
+    setShowLogoutDialog(true)
+  }
+
+  const handleDeleteConfirm = () => {
+    localStorage.removeItem('token')
+    setAdmin(null)
+    navigate('/auth/login')
+  }
+
+  return (
+    <div className='w-full min-h-screen flex justify-center items-start py-3 px-4 md:px-6 bg-white font-roboto'>
+      <ConfirmationDialog
+        isOpen={showLogoutDialog}
+        onClose={() => setShowLogoutDialog(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Logout?"
+        message="Are you sure you want to logout?"
+        confirmText="Logout"
+      />
+      <div className='w-full max-w-8xl grid grid-cols-1 lg:grid-cols-[7fr_3fr] gap-6'>
+         {/* Left column */}
+        <div className='space-y-8'>
+          {/* Hero card */}
+          <section className='bg-[#3A3A3A] rounded-3xl text-white px-8 py-8 flex justify-between items-center shadow-xl'>
+            <div className='space-y-2'>
+              <h1 className='text-3xl font-goldman font-bold'>Hello, {admin?.first_name || 'Stranger'}!</h1>
+              <p className='text-sm opacity-80 max-w-md'>
+                Manage complaints, events, news and vacancies
+              </p>
+            </div>
+            
+            <div className='w-24 h-24 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gray-600 flex items-center justify-center text-3xl font-bold text-white'>
+                {admin?.photo ? (
+                  <img
+                    src={admin.photo}
+                    alt='Profile'
+                    className='w-full h-full object-cover'
+                  />
+                ) : (
+                  <span>{admin?.first_name?.charAt(0).toUpperCase()}</span>
+                )}
+            </div>
+          </section>
+
+          {/* Overview cards */}
+          <section className='space-y-4'>
+            <h2 className='text-2xl font-bold text-[#111827]'>Overview</h2>
+            <div className='grid grid-cols-4 gap-4'>
+              {overviewCards.map((card, index) => (
+                <div
+                  key={index}
+                  className='bg-white rounded-2xl border border-gray-200 px-4 py-3 flex flex-col justify-between shadow-sm'
+                >
+                  <p className='text-xs text-gray-500 mb-1'>{card.title}</p>
+                  <div className='flex items-end justify-between'>
+                    <p className='text-2xl font-semibold text-[#111827]'>{card.value}</p>
+                    <span
+                      className={`text-xs font-medium flex items-center gap-1 ${
+                        card.up ? 'text-green-500' : 'text-red-500'
+                      }`}
+                    >
+                      {card.trend}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Complaints graph and table */}
+          <section className='space-y-4'>
+            <h2 className='text-2xl font-bold text-[#111827]'>Complaints</h2>
+            <div className='bg-white rounded-3xl border border-gray-200 px-6 py-5 shadow-sm space-y-4'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <div className='flex items-end gap-2'>
+                  <p className='text-4xl font-semibold text-[#111827]'>468</p>
+                  <span className='text-xs text-green-500 flex items-center gap-1'>
+                    <ChartArrowIcon className='w-4 h-4' /> 22.41%
+                  </span>
+                </div>
+              </div>
+
+              <div className='flex items-center gap-4 text-xs text-gray-600'>
+                <button className='px-4 py-1 rounded-full bg-[#111827] text-white text-xs'>January</button>
+                <div className='flex items-center gap-2'>
+                  <span className='w-3 h-3 rounded-full bg-[#2563EB]' />
+                  <span>This Month</span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <span className='w-3 h-3 rounded-full bg-[#93C5FD]' />
+                  <span>Last Month</span>
+                </div>
+              </div>
+            </div>
+
+            <div className='w-full h-64'>
+              <ResponsiveContainer width='100%' height='100%'>
+                <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorThisMonth" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2563EB" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#2563EB" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorLastMonth" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#93C5FD" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#93C5FD" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey='day' tickLine={false} axisLine={{ stroke: '#E5E7EB' }} />
+                  <YAxis tickLine={false} axisLine={{ stroke: '#E5E7EB' }} />
+                  <CartesianGrid stroke='#E5E7EB' strokeDasharray='4 4' vertical={false} />
+                  <Tooltip />
+                  <Area type='monotone' dataKey='thisMonth' stroke='#2563EB' strokeWidth={3} fillOpacity={1} fill="url(#colorThisMonth)" />
+                  <Area type='monotone' dataKey='lastMonth' stroke='#93C5FD' strokeWidth={3} fillOpacity={1} fill="url(#colorLastMonth)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Complaints table */}
+
+            <div className='bg-white h-100  rounded-xl font-jost p-5 pt-0 space-y-5 overflow-y-auto '>
+              <h1 className='text-sm font-bold bg-white sticky top-0'>Compliants List</h1>
+      
+              <div className='flex gap-2 text-[#818181] text-sm font-medium'>
+                <button
+                  type='button'
+                  onClick={() => handleComplaintsSort('name')}
+                  className='w-[30%] text-left flex items-center gap-0.5 cursor-pointer hover:text-black'
+                >
+                  Full name
+                  <SortIcon />
+                </button>
+                <button
+                  type='button'
+                  onClick={() => handleComplaintsSort('date')}
+                  className='w-[20%] text-left flex items-center gap-0.5 cursor-pointer hover:text-black'
+                >
+                  Date
+                  <SortIcon />
+                </button>
+                <button
+                  type='button'
+                  onClick={() => handleComplaintsSort('type')}
+                  className='w-[25%] text-left flex items-center gap-0.5 cursor-pointer hover:text-black'
+                >
+                  Type
+                  <SortIcon />
+                </button>
+                <button
+                  type='button'
+                  onClick={() => handleComplaintsSort('status')}
+                  className='w-[20%] text-left flex items-center gap-0.5 cursor-pointer hover:text-black'
+                >
+                  Status
+                  <SortIcon />
+                </button>
+              </div>
+      
+              <div className='space-y-3'>
+                {complaintsList?
+                    sortedComplaints.map((list) => {
+                      let dateObj = new Date(list.created_at)
+                      const month = dateObj.getUTCMonth() + 1
+                      const day = dateObj.getUTCDay()
+                      return (
+                        <div key={list.id} className={`flex flex-col space-y-3 transition-colors `}>
+                          <div className='flex items-center gap-2 text-sm'>
+                            <div className='w-[30%]'>
+                              <p className='font-medium'>{list.first_name} {list.last_name}</p>
+                              <div className="flex gap-2 items-center mt-0.5">
+                                 {/* Media indicators */}
+                                 {(() => {
+                                    try {
+                                      const photos = typeof list.photos === 'string' ? JSON.parse(list.photos) : list.photos;
+                                      if (Array.isArray(photos) && photos.length > 0) {
+                                        return <ImageIcon className="w-3 h-3 text-blue-400" title="Has photo" />;
+                                      }
+                                    } catch (err) {
+                                      console.warn(err)
+                                    }
+                                    return null;
+                                 })()}
+                                 {(() => {
+                                    try {
+                                      const videos = typeof list.videos === 'string' ? JSON.parse(list.videos) : list.videos;
+                                      if (Array.isArray(videos) && videos.length > 0) {
+                                        return <div className="flex items-center gap-0.5"><RecordIcon className="w-3 h-3 text-red-400" title="Has video" /><span className="text-[9px] text-red-400 font-bold">V</span></div>;
+                                      }
+                                    } catch (err) {
+                                      console.warn(err)
+                                    }
+                                    return null;
+                                 })()}
+                                 {(() => {
+                                    try {
+                                      const audios = typeof list.audios === 'string' ? JSON.parse(list.audios) : list.audios;
+                                      if (Array.isArray(audios) && audios.length > 0) {
+                                        return <div className="flex items-center gap-0.5"><RecordIcon className="w-3 h-3 text-green-400" title="Has audio" /><span className="text-[9px] text-green-400 font-bold">A</span></div>;
+                                      }
+                                    } catch (err) {
+                                      console.warn(err)
+                                    }
+                                    return null;
+                                 })()}
+                              </div>
+                            </div>
+                            <p className='w-[20%] text-gray-500'>{month} - {day}</p>
+                            <p className='w-[25%] text-gray-500 capitalize'>{list.type}</p>
+                            <div className="w-[20%]">
+                                <Status status={list.status} />
+                            </div>
+                          </div>
+                          <hr className=' w-full text-[#DEDEDE]' />
+                        </div>
+                      )
+                    })
+                    :
+                    'Loading...'}
+              </div>
+            </div>  
+
+            </div>
+          </section>
+
+          {/* Service satisfaction graph */}
+          <section className='space-y-4'>
+            <h2 className='text-2xl font-bold text-[#111827]'>Service Satisfaction</h2>
+            <div className='bg-white rounded-3xl border border-gray-200 px-6 py-5 shadow-sm space-y-4'>
+              <div className='flex items-center justify-between'>
+                <div>
+                  <p className='text-xs text-gray-500 mb-1'>Total responses</p>
+                  <p className='text-3xl font-semibold text-[#111827]'>
+                    {satisfactionStats.totalResponses}
+                  </p>
+                </div>
+                <div className='text-xs flex gap-5 items-center text-gray-500'>
+                  <span className='px-4 py-1 rounded-full bg-[#111827] text-white text-[11px]'>
+                    {satisfactionMonthLabel}
+                  </span>
+
+                  <p className='font-medium'>Scale: Very Low → Very High</p>
+
+                </div>
+              </div>
+
+              <div className='w-full h-64'>
+                {satisfactionStats.averages && satisfactionStats.averages.length > 0 ? (
+                  <ResponsiveContainer width='100%' height='100%'>
+                    <BarChart data={satisfactionStats.averages} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                      <CartesianGrid stroke='#E5E7EB' strokeDasharray='4 4' vertical={false} />
+                      <XAxis
+                        dataKey='questionLabel'
+                        tickLine={false}
+                        axisLine={{ stroke: '#E5E7EB' }}
+                        tick={{ fontSize: 11, fill: '#6B7280' }}
+                        label={{ value: 'Question', position: 'insideBottom', offset: -10 }}
+                      />
+                      <YAxis
+                        tickLine={false}
+                        axisLine={{ stroke: '#E5E7EB' }}
+                        tick={{ fontSize: 11, fill: '#6B7280' }}
+                        domain={[0, 5]}
+                        ticks={[1, 2, 3, 4, 5]}
+                        tickFormatter={(value) => {
+                          switch (value) {
+                          case 1: return 'Very Low'
+                          case 2: return 'Low'
+                          case 3: return 'Medium'
+                          case 4: return 'High'
+                          case 5: return 'Very High'
+                          default: return ''
+                          }
+                        }}
+                      />
+                      <Tooltip
+                        formatter={(value, _name, payload) => {
+                          const responses = payload?.payload?.responses || 0
+                          const suffix = responses === 1 ? 'response' : 'responses'
+                          return [scoreToLabel(value), `${responses} ${suffix}`]
+                        }}
+                        labelFormatter={(_label, payload) => {
+                          if (!payload || !payload.length) return ''
+                          const questionKey = payload[0]?.payload?.questionKey
+                          return getQuestionText(questionKey)
+                        }}
+                      />
+                      <Bar
+                        dataKey='averageScore'
+                        radius={[8, 8, 0, 0]}
+                        barSize={46}
+                        fill='#facc14'
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className='w-full h-full flex items-center justify-center text-sm text-gray-400'>
+                    No satisfaction data yet.
+                  </div>
+                )}
+              </div>
+              
+              {satisfactionStats.averages && satisfactionStats.averages.length > 0 && (
+                <div className='pt-4 border-t border-gray-100 text-xs text-gray-600 space-y-2'>
+                  <div>
+                    <p className='font-semibold text-gray-700'>Question key</p>
+                    <ul className='grid md:grid-cols-2 gap-1 mt-1'>
+                      {satisfactionStats.averages.map(item => (
+                        <li key={item.questionKey} className='flex'>
+                          <span className='font-mono text-[11px] mr-1 text-gray-500'>
+                            {item.questionLabel}:
+                          </span>
+                          <span className='flex-1'>
+                            {getQuestionText(item.questionKey)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {satisfactionStats.daily && satisfactionStats.daily.length > 0 && (
+                    <div className='mt-3'>
+                      <p className='font-semibold text-gray-700 mb-1'>Last 30 days (overall)</p>
+                      <div className='max-h-28 overflow-y-auto border border-gray-100 rounded-md'>
+                        <table className='min-w-full text-[11px]'>
+                          <thead className='bg-gray-50 text-gray-500'>
+                            <tr>
+                              <th className='px-2 py-1 text-left font-medium'>Date</th>
+                              <th className='px-2 py-1 text-left font-medium'>Average</th>
+                              <th className='px-2 py-1 text-left font-medium'>Label</th>
+                              <th className='px-2 py-1 text-right font-medium'>Responses</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {satisfactionStats.daily.map((row) => (
+                              <tr key={row.date} className='border-t border-gray-100'>
+                                <td className='px-2 py-1 text-gray-700'>{row.date}</td>
+                                <td className='px-2 py-1 text-gray-700'>{row.averageScore}</td>
+                                <td className='px-2 py-1 text-gray-700'>{scoreToLabel(row.averageScore)}</td>
+                                <td className='px-2 py-1 text-gray-500 text-right'>{row.responses}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Vacancy stats & applications */}
+          <section className='space-y-4 font-jost'>
+            <h2 className='text-2xl font-bold text-[#111827]'>Vacancy Application</h2>
+            <div className='bg-white rounded-3xl border border-gray-200 px-6 py-5 shadow-sm space-y-4'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <div className='flex items-end gap-2'>
+                  <p className='text-4xl font-semibold text-[#111827]'>
+                    {vacancyApplications.length}
+                  </p>
+                  <span className='text-xs text-green-500 flex items-center gap-1'>
+                    <ChartArrowIcon className='w-4 h-4' /> 12.4%
+                  </span>
+                </div>
+              </div>
+
+              <div className='flex items-center gap-4 text-xs text-gray-600'>
+                <button className='px-4 py-1 rounded-full bg-[#111827] text-white text-xs'>This Month</button>
+              </div>
+            </div>
+
+            {/* Vacancy vertical bar chart - applications per month */}
+            <div className='w-full h-64'>
+              <ResponsiveContainer width='100%' height='100%'>
+                <BarChart data={vacancyMonthlyStats} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
+                  <CartesianGrid stroke='#E5E7EB' strokeDasharray='4 4' vertical={false} />
+                  <XAxis
+                    dataKey='month'
+                    tickLine={false}
+                    axisLine={{ stroke: '#E5E7EB' }}
+                    tick={{ fontSize: 11, fill: '#6B7280' }}
+                  />
+                  <YAxis
+                    tickLine={false}
+                    axisLine={{ stroke: '#E5E7EB' }}
+                    tick={{ fontSize: 11, fill: '#6B7280' }}
+                  />
+                  <Tooltip
+                    formatter={(value) => [`${value}`, 'Applications']}
+                    labelFormatter={(label) => `Month: ${label}`}
+                  />
+                  <Bar
+                    dataKey='applications'
+                    radius={[8, 8, 0, 0]}
+                    barSize={46}
+                    fill='#577fd5'
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Vacancy applications table */}
+          
+            <div className='bg-white h-100 rounded-xl font-jost p-5 pt-0 space-y-5 overflow-y-auto '>
+              <h1 className='text-sm font-bold bg-white sticky top-0'>Vacancy Applications</h1>
+      
+              <div className='flex gap-2 text-[#818181] text-sm font-medium'>
+                <button
+                  type='button'
+                  onClick={() => handleVacancySort('name')}
+                  className='w-[30%] text-left flex items-center gap-0.5 cursor-pointer hover:text-black'
+                >
+                  Full name
+                  <SortIcon />
+                </button>
+                <button
+                  type='button'
+                  onClick={() => handleVacancySort('date')}
+                  className='w-[20%] text-left flex items-center gap-0.5 cursor-pointer hover:text-black'
+                >
+                  Date
+                  <SortIcon />
+                </button>
+                <button
+                  type='button'
+                  onClick={() => handleVacancySort('category')}
+                  className='w-[25%] text-left flex items-center gap-0.5 cursor-pointer hover:text-black'
+                >
+                  Category
+                  <SortIcon />
+                </button>
+                <button
+                  type='button'
+                  onClick={() => handleVacancySort('salary')}
+                  className='w-[20%] text-left flex items-center gap-0.5 cursor-pointer hover:text-black'
+                >
+                  Status
+                  <SortIcon />
+                </button>
+              </div>
+      
+              <div className='space-y-3'>
+                {vacancyApplications && vacancyApplications.length > 0
+                  ? sortedVacancyApplications.map((app) => (
+                    <div
+                      key={app.id}
+                      className='flex flex-col space-y-3 cursor-pointer transition-colors '
+                    >
+                      <div className='flex items-center gap-2 text-sm'>
+                        <p className='w-[30%]'>{app.full_name}</p>
+                        <p className='w-[20%]'>{app.applied_date}</p>
+                        <p className='w-[25%]'>{app.category}</p>
+                        <Status className='w-[20%]' status={app.status} />
+                      </div>
+                      <hr className='w-full text-[#DEDEDE]' />
+                    </div>
+                  ))
+                  : 'No applications found.'}
+              </div>
+            </div>  
+            </div>
+          </section>
+
+          {/* Recent Activities Section - Form Styling */}
+          <section className='space-y-4 font-jost'>
+            <h2 className='text-2xl font-bold text-[#111827]'>Recent Activities</h2>
+            <div className='bg-white rounded-3xl border border-gray-200 px-6 py-5 shadow-sm space-y-4'>
+              
+               <div className='bg-white h-100 rounded-xl font-jost p-5 pt-0 space-y-5 overflow-y-auto '>
+                  <h1 className='text-sm font-bold bg-white sticky top-0'>Activity Log</h1>
+
+                  {/* Header Row */}
+                  <div className='flex gap-2 text-[#818181] text-sm font-medium'>
+                    <p className='w-[20%]'>Date</p>
+                    <p className='w-[20%]'>User</p>
+                    <p className='w-[25%]'>Action</p>
+                    <p className='w-[35%]'>Detail</p>
+                  </div>
+
+                  {/* Rows */}
+                  <div className='space-y-3'>
+                    {recentActivities && recentActivities.length > 0 ? (
+                      recentActivities.map((activity, index) => (
+                        <div 
+                          key={index} 
+                          onClick={() => setSelectedActivity(activity)}
+                          className='flex flex-col space-y-3 cursor-pointer transition-colors hover:bg-gray-50 p-1 rounded-lg'
+                        >
+                           <div className='flex items-center gap-2 text-sm'>
+                              <p className='w-[20%] text-gray-500 text-xs'>
+                                {new Date(activity.created_at).toLocaleString()}
+                              </p>
+                              <p className='w-[20%] font-bold text-[#4F46E5]'>@{activity.username}</p>
+                              <p className='w-[25%] '>
+                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                  activity.action === 'CREATED' ? 'bg-green-100 text-green-700' :
+                                  activity.action === 'UPDATED' ? 'bg-blue-100 text-blue-700' :
+                                  'bg-red-100 text-red-700'
+                                }`}>
+                                  {activity.action}
+                                </span>
+                                <span className='text-xs ml-2 text-gray-500'>{activity.entity_type}</span>
+                              </p>
+                              <p className='w-[35%] truncate font-medium text-gray-800' title={activity.entity_title}>
+                                {activity.entity_title}
+                              </p>
+                           </div>
+                           <hr className='w-full text-[#DEDEDE]' />
+                        </div>
+                      ))
+                    ) : (
+                      <p className='text-center text-gray-400 py-4'>No recent activities found.</p>
+                    )}
+                  </div>
+               </div>
+            </div>
+          </section>
+        </div>
+
+        {/* Right column: Superadmin profile summary */}
+        <aside className='h-197 flex flex-col sticky overflow-y-scroll top-3'>
+          <div className='flex-1 bg-[#F2F2F2] rounded-3xl border border-[#E5E7EB] flex flex-col items-stretch pt-8 px-3'>
+            <div className='w-full flex justify-between items-center mb-6'>
+              <h2 className='font-goldman text-lg text-[#111827]'>Superadmin</h2>
+            </div>
+
+            <div className='w-full bg-white rounded-3xl shadow-md p-5'>
+              {/* Profile / Create account toggle */}
+              <div className='flex items-center justify-between mb-4'>
+                <div className='flex items-center bg-gray-100 rounded-full p-1 text-[11px]'>
+                  <button
+                    type='button'
+                    onClick={() => setActiveProfileTab('profile')}
+                    className={`px-3 py-1 rounded-full transition-colors ${
+                      activeProfileTab === 'profile' ? 'bg-white text-[#111827] shadow-sm' : 'text-gray-500'
+                    }`}
+                  >
+                    Profile
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setActiveProfileTab('create')}
+                    className={`px-3 py-1 rounded-full transition-colors ${
+                      activeProfileTab === 'create' ? 'bg-white text-[#111827] shadow-sm' : 'text-gray-500'
+                    }`}
+                  >
+                    Create account
+                  </button>
+                </div>
+              </div>
+
+              {activeProfileTab === 'profile' ? (
+                <div className='flex items-center gap-4'>
+                  <div className='w-14 h-14 rounded-full overflow-hidden border border-gray-200 bg-gray-600 flex items-center justify-center text-white font-bold text-xl'>
+                    {admin?.photo ? (
+                      <img src={admin.photo} alt='Profile' className='w-full h-full object-cover' />
+                    ) : (
+                      <span>{admin?.first_name?.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <div className='flex-1 min-w-0'>
+                    <p className='text-sm font-semibold text-[#111827] truncate'>
+                      {admin?.first_name && admin?.last_name
+                        ? `${admin.first_name} ${admin.last_name}`
+                        : 'Abebe Kebede'}
+                    </p>
+                    <p className='text-xs text-gray-500 truncate mb-1'>{admin?.username || 'abe_kebe'}</p>
+                    <button
+                      type='button'
+                      onClick={() => navigate('/superadmin/profile', { state: { activeTab: 'profile' } })}
+                      className='mt-1.5 inline-flex items-center justify-center px-3 py-1.5 rounded-lg bg-[#3A3A3A] text-white text-[11px] font-semibold hover:bg-black transition-colors active:scale-98 cursor-pointer'
+                    >
+                      View & update profile
+                    </button>
+                  </div>
+                  <button 
+                    onClick={handleLogout}
+                    className='w-10 h-10 bg-[#3A3A3A] rounded-lg flex items-center justify-center hover:bg-black transition-colors shadow-md group shrink-0'
+                    title="Logout"
+                  >
+                     <LogoutIcon className='w-5 h-5 text-white group-hover:scale-110 transition-transform' />
+                  </button>
+                </div>
+              ) : (
+                <div className='space-y-3 text-xs text-gray-600'>
+                  <p className='text-sm font-semibold text-[#111827]'>Create new admin account</p>
+                  <p className='text-[11px] text-gray-500'>
+                    Quickly onboard new admins and superadmins. You can set roles, contact info and access levels.
+                  </p>
+                  <button
+                    type='button'
+                    onClick={() => navigate('/superadmin/profile', { state: { activeTab: 'create' } })}
+                    className='mt-1 inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#3A3A3A] text-white text-[11px] font-semibold hover:bg-black transition-colors active:scale-98 cursor-pointer'
+                  >
+                    Go to create account
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Stats section */}
+            <div className='w-full mt-6 bg-white rounded-3xl shadow-md p-5'>
+              {/* Header + toggle */}
+              <div className='flex items-center justify-between mb-4'>
+                <div>
+                  <h3 className='text-sm font-semibold text-[#111827]'>Stats</h3>
+                  <p className='text-[11px] text-gray-400 mt-0.5'>
+                    {activeStat === 'vacancy' ? 'Vacancy categories' : 'Complaint types'}
+                  </p>
+                </div>
+                <div className='flex items-center bg-gray-100 rounded-full p-1 text-[11px]'>
+                  <button
+                    type='button'
+                    onClick={() => setActiveStat('vacancy')}
+                    className={`px-3 py-1 rounded-full transition-colors ${
+                      activeStat === 'vacancy' ? 'bg-white text-[#4F46E5] shadow-sm' : 'text-gray-500'
+                    }`}
+                  >
+                    Vacancy
+                  </button>
+                  <button
+                    type='button'
+                    onClick={() => setActiveStat('complaints')}
+                    className={`px-3 py-1 rounded-full transition-colors ${
+                      activeStat === 'complaints' ? 'bg-white text-[#4F46E5] shadow-sm' : 'text-gray-500'
+                    }`}
+                  >
+                    Complaints
+                  </button>
+                </div>
+              </div>
+
+              {/* Main metric */}
+              <div className='mb-3'>
+                <p className='text-[11px] text-gray-500 mb-1 uppercase tracking-wide'>
+                  {activeStat === 'vacancy' ? 'Monthly applicants' : 'Monthly complaints'}
+                </p>
+                <p className='text-2xl font-semibold text-[#111827] leading-tight'>
+                  {statsConfig.total}
+                </p>
+                <p className='text-[11px] text-gray-400 mt-1'>{statsConfig.subtitle}</p>
+              </div>
+
+              {/* Horizontal bar chart */}
+              <div className='w-full h-56 mt-2'>
+                <ResponsiveContainer width='100%' height='100%'>
+                  <BarChart data={statsConfig.data} layout='vertical' barCategoryGap={10}>
+                    <CartesianGrid horizontal={false} stroke='#E5E7EB' />
+                    <XAxis type='number' hide />
+                    <YAxis type='category' dataKey='category' width={120} tick={{ fontSize: 11, fill: '#4B5563' }}/>
+                    <Tooltip
+                      formatter={(value) => [
+                        `${value}`,
+                        activeStat === 'vacancy' ? 'Applicants' : 'Complaints'
+                      ]}
+                      labelFormatter={(label) => label}
+                    />
+                    <Bar dataKey='count' radius={[0, 2, 2, 0]} barSize={18} fill={activeStat === 'vacancy' ? '#21975c' : '#ad0000'}
+                      label={{
+                        position: 'insideLeft',
+                        formatter: (value) => value.toString(),
+                        fill: '#FFFFFF',
+                        fontSize: 10
+                      }}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+      {/* Activity Details Modal */}
+      {selectedActivity && (
+        <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 font-jost'>
+          <div className='bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden flex flex-col max-h-[85vh]'>
+            {/* Header */}
+            <div className='bg-gray-100 p-5 border-b flex justify-between items-center'>
+              <div>
+                <h3 className='font-bold text-lg text-gray-800'>Activity Details</h3>
+                <p className='text-xs text-gray-500'>
+                  Logged at {new Date(selectedActivity.created_at).toLocaleString()}
+                </p>
+              </div>
+              <button 
+                type='button' 
+                onClick={() => setSelectedActivity(null)}
+                className='text-gray-400 hover:text-gray-600 font-bold text-xl cursor-pointer p-1'
+              >
+                &times;
+              </button>
+            </div>
+            
+            {/* Body */}
+            <div className='p-6 space-y-4 overflow-y-auto flex-1 text-sm text-gray-700'>
+              <div className='grid grid-cols-2 gap-4 border-b pb-4'>
+                <div>
+                  <span className='block text-xs font-semibold text-gray-400 uppercase'>Admin Account</span>
+                  <span className='font-semibold text-gray-800 text-base'>@{selectedActivity.username}</span>
+                </div>
+                <div>
+                  <span className='block text-xs font-semibold text-gray-400 uppercase'>Action Performed</span>
+                  <span className={`inline-block mt-0.5 px-2.5 py-0.5 rounded text-xs font-bold uppercase ${
+                    selectedActivity.action === 'CREATED' ? 'bg-green-100 text-green-700' :
+                    selectedActivity.action === 'UPDATED' ? 'bg-blue-100 text-blue-700' :
+                    'bg-red-100 text-red-700'
+                  }`}>
+                    {selectedActivity.action}
+                  </span>
+                </div>
+                <div>
+                  <span className='block text-xs font-semibold text-gray-400 uppercase'>Entity Type</span>
+                  <span className='font-medium text-gray-800'>{selectedActivity.entity_type}</span>
+                </div>
+                <div>
+                  <span className='block text-xs font-semibold text-gray-400 uppercase'>Target Name/Title</span>
+                  <span className='font-medium text-gray-800 truncate block' title={selectedActivity.entity_title}>
+                    {selectedActivity.entity_title}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <h4 className='font-bold text-gray-800 text-sm mb-3 uppercase tracking-wide text-gray-400'>
+                  Detailed Changes
+                </h4>
+                {selectedActivity.details ? (
+                  <div className='space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-150'>
+                    {Object.entries(
+                      typeof selectedActivity.details === 'string'
+                        ? JSON.parse(selectedActivity.details)
+                        : selectedActivity.details
+                    ).map(([field, diff]) => (
+                      <div key={field} className='space-y-1 pb-3 border-b last:border-0 last:pb-0'>
+                        <span className='font-semibold text-gray-600 block text-xs uppercase'>{field}</span>
+                        <div className='grid grid-cols-[1fr_16px_1fr] items-center gap-2 text-xs'>
+                          <div className='bg-red-50 text-red-700 p-2 rounded border border-red-100 line-through truncate' title={diff.old}>
+                            {diff.old}
+                          </div>
+                          <div className='text-gray-400 font-bold text-center'>➔</div>
+                          <div className='bg-green-50 text-green-700 p-2 rounded border border-green-100 font-semibold truncate' title={diff.new}>
+                            {diff.new}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className='text-gray-400 text-xs italic text-center py-2 bg-gray-50 rounded-lg border'>
+                    No specific property updates logged (e.g. initial creation or deletion).
+                  </p>
+                )}
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className='bg-gray-50 px-6 py-4 border-t flex justify-end'>
+              <button 
+                type='button'
+                onClick={() => setSelectedActivity(null)}
+                className='px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-black font-semibold text-sm cursor-pointer'
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default SuperAdminHome

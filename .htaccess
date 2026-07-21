@@ -1,0 +1,19 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# PLESK NODE.JS / REACT DEPLOYMENT HTACCESS
+# ──────────────────────────────────────────────────────────────────────────────
+
+# CASE 1: If using Plesk's official Node.js Extension (Phusion Passenger)
+# Passenger automatically intercepts and routes requests to app.js / server.js.
+# You do NOT need any rewrite rules here. If you see 503 errors, make sure you have
+# set up Passenger correctly in Plesk (Application Root: /, Document Root: /client/dist, 
+# Startup File: app.js). If Passenger is active, you can comment out or delete this file.
+
+# CASE 2: If running Node.js as a background process (e.g., on port 3000)
+# and proxying requests from Apache/Nginx manually, uncomment the lines below 
+# and replace 3000 with your actual running Node port:
+
+# RewriteEngine On
+# RewriteCond %{REQUEST_FILENAME} !-f
+# RewriteCond %{REQUEST_FILENAME} !-d
+# RewriteRule ^(.*)$ http://localhost:3000/$1 [P,L]
+

@@ -1,0 +1,17 @@
+{
+  "name": "lideta-official",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "build:client": "npm run build --workspace=client",
+    "dev": "node server/server.js",
+    "build": "npm run build:client",
+    "start": "node app.js",
+    "lint": "npm run lint --workspace=client"
+  }
+}
