@@ -73,44 +73,162 @@
   --font-goldman: Goldman, "sans-serif";
 }
 
+/* ── Keyframes ────────────────────────────────────────────────────────────── */
+
 @keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in-up {
-  animation: fadeInUp 0.8s ease-out forwards;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
-.delay-100 {
-  animation-delay: 0.1s;
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.delay-200 {
-  animation-delay: 0.2s;
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(32px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.93); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 @keyframes bounceSlow {
-  0%, 100% {
-    transform: translateY(-5%);
-  }
-  50% {
-    transform: translateY(5%);
-  }
+  0%, 100% { transform: translateY(-5%); }
+  50%       { transform: translateY(5%); }
+}
+
+/* ── Shimmer skeleton ─────────────────────────────────────────────────────── */
+
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #e8e8e8 25%,
+    #f4f4f4 50%,
+    #e8e8e8 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ── Page-level entrance (instant, no scroll trigger) ─────────────────────── */
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out both;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in-left {
+  animation: fadeInLeft 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in-right {
+  animation: fadeInRight 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-bounce-slow {
   animation: bounceSlow 3s infinite ease-in-out;
 }
 
+/* ── Scroll-triggered: elements start hidden, JS adds .in-view ────────────── */
+
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.scroll-reveal-left {
+  opacity: 0;
+  transform: translateX(-32px);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-left.in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.scroll-reveal-right {
+  opacity: 0;
+  transform: translateX(32px);
+  transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-right.in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.scroll-reveal-scale {
+  opacity: 0;
+  transform: scale(0.93);
+  transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.scroll-reveal-scale.in-view {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ── Stagger delay utilities ──────────────────────────────────────────────── */
+
+.delay-0   { transition-delay: 0ms !important; animation-delay: 0ms !important; }
+.delay-75  { transition-delay: 75ms  !important; animation-delay: 75ms  !important; }
+.delay-100 { transition-delay: 100ms !important; animation-delay: 100ms !important; }
+.delay-150 { transition-delay: 150ms !important; animation-delay: 150ms !important; }
+.delay-200 { transition-delay: 200ms !important; animation-delay: 200ms !important; }
+.delay-300 { transition-delay: 300ms !important; animation-delay: 300ms !important; }
+.delay-400 { transition-delay: 400ms !important; animation-delay: 400ms !important; }
+.delay-500 { transition-delay: 500ms !important; animation-delay: 500ms !important; }
+.delay-600 { transition-delay: 600ms !important; animation-delay: 600ms !important; }
+.delay-700 { transition-delay: 700ms !important; animation-delay: 700ms !important; }
+.delay-800 { transition-delay: 800ms !important; animation-delay: 800ms !important; }
+
 body {
-  background-color: #FAF8F2;
+  background-color: #ffffff;
   color: #112c1b;
   font-family: 'Jost', sans-serif;
   overflow-x: hidden;

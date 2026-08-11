@@ -57,7 +57,7 @@ function Login() {
         if      (role === 'superadmin')      navigate('/superadmin/home')
         else if (role === 'news_admin')      navigate('/admin/news')
         else if (role === 'event_admin')     navigate('/admin/events')
-        else if (role === 'complaint_admin') navigate('/admin/compliants')
+        else if (role === 'complaint_admin') navigate('/admin/complaints')
         else if (role === 'vacancy_admin')   navigate('/admin/vacancy')
         else                                 navigate('/admin')
         return
@@ -111,7 +111,7 @@ function Login() {
       if      (role === 'superadmin')      navigate('/superadmin/home')
       else if (role === 'news_admin')      navigate('/admin/news')
       else if (role === 'event_admin')     navigate('/admin/events')
-      else if (role === 'complaint_admin') navigate('/admin/compliants')
+      else if (role === 'complaint_admin') navigate('/admin/complaints')
       else if (role === 'vacancy_admin')   navigate('/admin/vacancy')
       else                                 navigate('/admin')
     } catch { setStatus('Network error. Please try again.') }

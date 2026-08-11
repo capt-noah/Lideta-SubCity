@@ -12,7 +12,7 @@ import { adminContext } from '../../components/utils/AdminContext.jsx'
 const ROLE_DEFAULT_PATH = {
   news_admin: '/admin/news',
   event_admin: '/admin/events',
-  complaint_admin: '/admin/compliants',
+  complaint_admin: '/admin/complaints',
   vacancy_admin: '/admin/vacancy',
 }
 

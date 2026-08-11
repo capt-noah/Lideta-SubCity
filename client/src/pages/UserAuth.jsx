@@ -36,13 +36,13 @@ const T = {
 const StrengthBar = ({ password }) => {
   if (!password) return null
   const { score } = validatePasswordStrength(password)
-  const colors = ['bg-red-500','bg-amber-500','bg-yellow-400','bg-amber-500','bg-amber-600']
+  const colors = ['bg-red-500','bg-orange-500','bg-yellow-400','bg-emerald-500','bg-emerald-600']
   const labels = ['Very Weak','Weak','Fair','Strong','Very Strong']
   const idx = Math.min(score ?? 0, 4)
   return (
     <div className='mt-2'>
       <div className='flex gap-1'>{[0,1,2,3,4].map(i=><div key={i} className={`h-1 flex-1 rounded-full ${i<=idx?colors[idx]:'bg-slate-200'} transition-all`}/>)}</div>
-      <p className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${idx<2?'text-red-500':idx<4?'text-amber-600':'text-amber-600'}`}>{labels[idx]}</p>
+      <p className={`text-[10px] uppercase font-bold tracking-wider mt-1 ${idx<2?'text-red-500':idx<4?'text-orange-600':'text-emerald-700'}`}>{labels[idx]}</p>
     </div>
   )
 }
@@ -63,7 +63,7 @@ function OtpInput({ otp, setOtp, refs, onPaste }) {
           type='text' inputMode='numeric' maxLength={1} value={d}
           onChange={e => handleChange(i, e.target.value)}
           onKeyDown={e => handleKeyDown(i, e)}
-          className='w-11 h-12 text-center text-xl font-bold border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-colors' />
+          className='w-11 h-12 text-center text-xl font-bold border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 transition-colors' />
       ))}
     </div>
   )
@@ -112,7 +112,7 @@ function UserAuth() {
 
   const set = k => e => setForm(p => ({...p, [k]: e.target.value}))
 
-  const inputCls = 'w-full px-4 py-2.5 border border-slate-200 bg-white rounded-xl text-sm font-roboto focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all'
+  const inputCls = 'w-full px-4 py-2.5 border border-slate-200 bg-white rounded-xl text-sm font-roboto focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 transition-all'
 
   // ── Login ─────────────────────────────────────────────────────────────────
   const handleLogin = async (e) => {
@@ -222,11 +222,11 @@ function UserAuth() {
   }
 
   return (
-    <div className='min-h-screen bg-transparent flex flex-col items-center justify-center px-4 py-12 font-roboto animate-fade-in'>
+    <div className='min-h-screen bg-white flex flex-col items-center justify-center px-4 py-12 font-roboto animate-fade-in'>
       <Notification isOpen={notification.isOpen} message={notification.message} type={notification.type} onClose={() => setNotif(n=>({...n,isOpen:false}))} />
       <Link to='/' className='mb-8 hover:scale-103 transition-transform'><LidetaLogo className='w-36' /></Link>
 
-      <div className='w-full max-w-md bg-gradient-to-b from-white to-slate-50 rounded-2xl shadow-xl border border-slate-200 p-8 text-left relative'>
+      <div className='w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 p-8 text-left relative'>
 
         {/* ── Login / Register ── */}
         {(step === 'login' || step === 'register') && (
@@ -254,7 +254,7 @@ function UserAuth() {
               <div>
                 <div className='flex justify-between items-center mb-1.5'>
                   <label className='text-[10px] uppercase tracking-wider font-bold text-slate-550'>{t('password')} <span className='text-red-500'>*</span></label>
-                  {step==='register' && <button type='button' onClick={() => { const p=generateStrongPassword(); setForm(f=>({...f,password:p,confirmPassword:p})) }} className='text-[10px] text-slate-800 hover:text-amber-500 font-goldman font-bold uppercase tracking-wider cursor-pointer'>{t('suggest')}</button>}
+                  {step==='register' && <button type='button' onClick={() => { const p=generateStrongPassword(); setForm(f=>({...f,password:p,confirmPassword:p})) }} className='text-[10px] text-slate-800 hover:text-emerald-600 font-goldman font-bold uppercase tracking-wider cursor-pointer'>{t('suggest')}</button>}
                 </div>
                 <div className='relative'>
                    <input type={showPass?'text':'password'} value={form.password} onChange={set('password')} required className={inputCls+' pr-14'} />
@@ -266,7 +266,7 @@ function UserAuth() {
                 <div><label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('confirm_pass')} <span className='text-red-500'>*</span></label><input type='password' value={form.confirmPassword} onChange={set('confirmPassword')} required className={inputCls} />{form.confirmPassword && form.password !== form.confirmPassword && <p className='text-xs text-red-500 mt-1.5'>Passwords do not match</p>}</div>
               )}
               {step==='login' && <button type='button' onClick={() => setStep('forgot')} className='text-[10px] font-goldman font-bold uppercase tracking-wider text-slate-400 hover:text-slate-800 cursor-pointer w-full text-right'>{t('forgot_pass')}</button>}
-              <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-amber-500 text-white hover:text-slate-950 font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md hover:shadow-lg mt-2'>
+              <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-emerald-600 text-white font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md hover:shadow-lg mt-2'>
                 {step==='login' ? t('login') : t('register')}
               </LoadingButton>
             </form>
@@ -282,11 +282,11 @@ function UserAuth() {
             <div><h2 className='text-2xl font-goldman font-bold text-slate-900 uppercase tracking-wide'>{t('otp_title')}</h2><p className='text-sm text-gray-550 font-light mt-1.5'>{t('otp_sent')} <strong className='font-mono'>{pendingEmail}</strong></p></div>
             <form onSubmit={handleVerifyOtp} className='space-y-4'>
               <OtpInput otp={otp} setOtp={setOtp} refs={otpRefs} onPaste={pasteHandler(setOtp)} />
-              <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-amber-500 text-white hover:text-slate-950 font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>{t('verify')}</LoadingButton>
+              <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-emerald-600 text-white  font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>{t('verify')}</LoadingButton>
               <div className='flex items-center justify-between text-xs text-gray-400 font-mono'>
                 <button type='button' onClick={() => setStep('login')} className='hover:text-slate-800 font-goldman font-bold uppercase tracking-wider cursor-pointer'>← Back</button>
                 <button type='button' onClick={() => handleResend('2fa_login', pendingEmail)} disabled={resendTimer > 0}
-                  className={`cursor-pointer font-goldman font-bold uppercase tracking-wider ${resendTimer > 0 ? 'opacity-40' : 'text-slate-800 hover:text-amber-500'}`}>
+                  className={`cursor-pointer font-goldman font-bold uppercase tracking-wider ${resendTimer > 0 ? 'opacity-40' : 'text-slate-800 hover:text-emerald-600'}`}>
                   {resendTimer > 0 ? `${t('resend_in')} ${resendTimer}s` : t('resend')}
                 </button>
               </div>
@@ -303,11 +303,11 @@ function UserAuth() {
             <div><h2 className='text-2xl font-goldman font-bold text-slate-900 uppercase tracking-wide'>Verify your email</h2><p className='text-sm text-gray-550 font-light mt-1.5'>We sent a code to <strong className='font-mono'>{pendingEmail}</strong></p></div>
             <form onSubmit={handleVerifyEmail} className='space-y-4'>
               <OtpInput otp={otp} setOtp={setOtp} refs={otpRefs} onPaste={pasteHandler(setOtp)} />
-              <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-amber-500 text-white hover:text-slate-950 font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>{t('verify')}</LoadingButton>
+              <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-emerald-600 text-white  font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>{t('verify')}</LoadingButton>
               <div className='flex items-center justify-between text-xs text-gray-400 font-mono'>
                 <button type='button' onClick={() => setStep('login')} className='hover:text-slate-800 font-goldman font-bold uppercase tracking-wider cursor-pointer'>← Back</button>
                 <button type='button' onClick={() => handleResend('verify_email', pendingEmail)} disabled={resendTimer > 0}
-                  className={`cursor-pointer font-goldman font-bold uppercase tracking-wider ${resendTimer > 0 ? 'opacity-40' : 'text-slate-800 hover:text-amber-500'}`}>
+                  className={`cursor-pointer font-goldman font-bold uppercase tracking-wider ${resendTimer > 0 ? 'opacity-40' : 'text-slate-800 hover:text-emerald-600'}`}>
                   {resendTimer > 0 ? `${t('resend_in')} ${resendTimer}s` : t('resend')}
                 </button>
               </div>
@@ -322,7 +322,7 @@ function UserAuth() {
             <div className='text-center'><h2 className='text-2xl font-goldman font-bold text-slate-900 uppercase tracking-wide'>{t('reset_pass')}</h2><p className='text-sm text-gray-550 font-light mt-1.5'>Enter your email to receive a reset code.</p></div>
             <form onSubmit={handleForgotSend} className='space-y-5'>
               <input type='email' value={fpEmail} onChange={e=>setFpEmail(e.target.value)} required className={inputCls} placeholder='your@email.com' />
-              <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-amber-500 text-white hover:text-slate-950 font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>Send Code</LoadingButton>
+              <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-emerald-600 text-white  font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>Send Code</LoadingButton>
               <button type='button' onClick={()=>setStep('login')} className='w-full text-center text-xs font-goldman font-bold uppercase tracking-wider text-slate-400 hover:text-slate-800 cursor-pointer'>← Back to sign in</button>
             </form>
           </div>
@@ -334,10 +334,10 @@ function UserAuth() {
             <div><h2 className='text-2xl font-goldman font-bold text-slate-900 uppercase tracking-wide'>Enter Reset Code</h2><p className='text-sm text-gray-550 font-light mt-1.5'>Sent to <strong className='font-mono'>{fpEmail}</strong></p></div>
             <form onSubmit={handleResetOtp} className='space-y-4'>
               <OtpInput otp={fpOtp} setOtp={setFpOtp} refs={fpRefs} onPaste={pasteHandler(setFpOtp)} />
-              <button type='submit' className='w-full py-3.5 bg-slate-900 hover:bg-amber-500 text-white hover:text-slate-950 font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>Continue</button>
+              <button type='submit' className='w-full py-3.5 bg-slate-900 hover:bg-emerald-600 text-white  font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>Continue</button>
               <div className='flex justify-between text-xs font-mono text-gray-450'>
                 <button onClick={()=>setStep('forgot')} className='hover:text-slate-800 font-goldman font-bold uppercase tracking-wider cursor-pointer'>← Back</button>
-                <button onClick={()=>handleResend('reset_password', fpEmail)} disabled={resendTimer>0} className={`cursor-pointer font-goldman font-bold uppercase tracking-wider ${resendTimer>0?'opacity-40':'text-slate-800 hover:text-amber-500'}`}>{resendTimer>0?`Resend in ${resendTimer}s`:'Resend'}</button>
+                <button onClick={()=>handleResend('reset_password', fpEmail)} disabled={resendTimer>0} className={`cursor-pointer font-goldman font-bold uppercase tracking-wider ${resendTimer>0?'opacity-40':'text-slate-800 hover:text-emerald-600'}`}>{resendTimer>0?`Resend in ${resendTimer}s`:'Resend'}</button>
               </div>
             </form>
           </div>
@@ -350,7 +350,7 @@ function UserAuth() {
             <form onSubmit={handleResetPassword} className='space-y-5'>
               <div><label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('new_pass')}</label><input type='password' value={fpNewPass} onChange={e=>setFpNewPass(e.target.value)} required className={inputCls} /></div>
               <div><label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>Confirm</label><input type='password' value={fpConfirm} onChange={e=>setFpConfirm(e.target.value)} required className={inputCls} />{fpConfirm && fpNewPass!==fpConfirm && <p className='text-xs text-red-500 mt-1.5'>Passwords do not match</p>}</div>
-              <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-amber-500 text-white hover:text-slate-950 font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>Reset Password</LoadingButton>
+              <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-emerald-600 text-white  font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>Reset Password</LoadingButton>
             </form>
           </div>
         )}

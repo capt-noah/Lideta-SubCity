@@ -88,24 +88,47 @@ function DepartmentDetails() {
               </h1>
               <p className='text-lg text-emerald-900 font-medium mb-6 uppercase font-goldman tracking-wider'>{department?.name?.[language] || ''}</p>
               
-              {/* Department Leader */}
+              {/* Department Leader — always shown, placeholder if no photo */}
               <div className="w-full mb-8">
-                <div className="relative w-full h-120 bg-gradient-to-br from-emerald-950/20 to-emerald-900/5 rounded-2xl overflow-hidden flex items-center justify-center border border-emerald-900/10 shadow-lg">
-                  {getDepartmentHead(department.id) ? (
-                     <img 
-                       src={getDepartmentHead(department.id)} 
-                       alt={`Head of ${department?.title?.[language] || 'Department'}`} 
-                       className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-102"
-                     />
-                  ) : (
-                    <svg className="w-32 h-32 text-emerald-900/20" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-                <div className="mt-6 border-l-4 border-amber-500 pl-4 py-1.5 bg-emerald-50/50 rounded-r-xl border-r border-t border-b border-emerald-900/5 shadow-sm">
-                  <p className="text-xs uppercase tracking-wider font-semibold text-emerald-800/80 mb-1">{t.department_head[language]}</p>
-                  <p className="text-lg font-goldman font-bold text-emerald-950">{department?.leader?.[language] || t.not_specified[language]}</p>
+                {/* Photo or placeholder */}
+                {getDepartmentHead(department.id) ? (
+                  <div className="relative w-full h-96 md:h-[480px] bg-gray-100 rounded-2xl overflow-hidden border border-gray-200 shadow-lg">
+                    <img
+                      src={getDepartmentHead(department.id)}
+                      alt={`Head of ${department?.title?.[language] || 'Department'}`}
+                      className="w-full h-full object-cover object-top transition-transform duration-700 hover:scale-105"
+                    />
+                  </div>
+                ) : (
+                  /* Placeholder when no photo available */
+                  <div className="relative w-full h-56 bg-gradient-to-br from-emerald-50 to-gray-100 rounded-2xl overflow-hidden border border-gray-200 shadow-sm flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-3 text-gray-400">
+                      <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
+                        <svg className="w-12 h-12 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                        </svg>
+                      </div>
+                      <p className="text-sm font-medium text-gray-400">Photo not available</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Leader name — always shown */}
+                <div className="mt-4 flex items-start gap-3 p-4 bg-emerald-50/70 rounded-xl border border-emerald-900/8">
+                  <div className="w-1 self-stretch bg-amber-500 rounded-full flex-shrink-0" />
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">
+                      {t.department_head[language]}
+                    </p>
+                    <p className="text-lg font-goldman font-bold text-emerald-950">
+                      {(() => {
+                        const leader = department?.leader
+                        if (!leader) return t.not_specified[language]
+                        if (typeof leader === 'object') return leader[language] || leader.en || t.not_specified[language]
+                        return leader || t.not_specified[language]
+                      })()}
+                    </p>
+                  </div>
                 </div>
               </div>
 

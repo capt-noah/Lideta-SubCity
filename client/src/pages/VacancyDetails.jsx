@@ -88,7 +88,7 @@ function VacancyDetails() {
 
     // Auth gate
     if (!user) {
-      window.location.href = `/account/auth?next=/vaccancy/${id}`
+      window.location.href = `/account/auth?next=/vacancy/${id}`
       return
     }
 
@@ -175,7 +175,7 @@ function VacancyDetails() {
         <div className='w-full py-6 font-roboto'>
           {/* Back Button */}
           <button
-            onClick={() => navigate('/vaccancy')}
+            onClick={() => navigate('/vacancy')}
             className='bg-emerald-900 flex items-center gap-2 mb-8 font-goldman font-bold text-sm text-white py-2.5 px-5 rounded-xl hover:bg-amber-500 hover:text-emerald-950 active:scale-95 transition-all cursor-pointer shadow-md'
           >
             <ArrowRight className='w-4 h-4 rotate-180' />
@@ -312,11 +312,11 @@ function VacancyDetails() {
                           {{ en: 'You need an account to apply for this position and track your application status.', am: 'ለዚህ ቦታ ለማመልከት እና ሁኔታዎን ለመከታተል መለያ ያስፈልጋዎታል።', or: 'Bakka kanaaf iyyachuuf fi haala iyyata keessan hordofuuf herrega barbaachisaa dha.' }[language]}
                         </p>
                         <div className='flex flex-col gap-3'>
-                          <a href={`/account/auth?next=/vaccancy/${id}`}
+                          <a href={`/account/auth?next=/vacancy/${id}`}
                             className='w-full py-3 bg-emerald-900 text-white font-bold font-goldman uppercase tracking-wider rounded-xl hover:bg-amber-500 hover:text-emerald-950 transition-all text-sm shadow-md'>
                             {{ en: 'Sign In', am: 'ግባ', or: 'Seeni' }[language]}
                           </a>
-                          <a href={`/account/auth?next=/vaccancy/${id}`}
+                          <a href={`/account/auth?next=/vacancy/${id}`}
                             className='w-full py-3 border border-emerald-900/20 text-emerald-950 font-bold font-goldman uppercase tracking-wider rounded-xl hover:bg-emerald-50 transition-all text-sm'>
                             {{ en: 'Create Account', am: 'መለያ ፍጠር', or: 'Herrega Uumi' }[language]}
                           </a>

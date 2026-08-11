@@ -1,8 +1,10 @@
 import BASE_URL from '../utils/api'
+import { motion } from 'framer-motion'
 import React, { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import EventCard from '../components/ui/EventCard.jsx'
 import Loading from '../components/ui/Loading.jsx'
+import AnimatedCard from '../components/ui/AnimatedCard.jsx'
 import eventsData from '../data/events.json'
 import SearchIcon from '../assets/icons/search_icon.svg'
 import ArrowSvg from '../assets/arrow.svg'
@@ -101,24 +103,30 @@ function Events() {
   }, [filteredEvents])
 
   return (
-    <div className='w-full max-w-7xl mx-auto flex flex-col gap-6 px-4 mt-10 mb-24 animate-fade-in bg-transparent'>
+    <div className='w-full bg-white min-h-screen'>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className='w-full max-w-7xl mx-auto flex flex-col gap-6 px-4 pt-10 pb-24'
+      >
       <div className='w-full flex flex-col gap-6'>
-        <div className='w-fit font-goldman font-bold text-4xl lg:text-5xl flex items-end pb-4 border-b-4 border-amber-500 pr-10 text-slate-800'>{t.title[language]}</div>
+        <div className='w-fit font-goldman font-bold text-4xl lg:text-5xl flex items-end pb-4 border-b-4 border-emerald-600 pr-10 text-emerald-900'>{t.title[language]}</div>
 
-        <div className='bg-white w-full h-full overflow-y-auto rounded-2xl border border-slate-200 p-4 lg:p-6 space-y-6 mb-20 shadow-md'>
+        <div className='bg-emerald-50 w-full h-full overflow-y-auto rounded-2xl border border-emerald-200 p-4 lg:p-6 space-y-6 mb-20 shadow-md'>
 
           <div className='flex flex-wrap items-center gap-4 justify-between'>
 
             <SearchBox data={events} results={results} setResults={setResults} noResultFound={noResultFound} setNoResultFound={setNoResultFound} />
 
-            <div className='border border-slate-200 rounded-xl p-1.5 bg-white shadow-sm flex flex-wrap items-center gap-1.5'>
+            <div className='border border-emerald-200 rounded-xl p-1.5 bg-emerald-50 shadow-sm flex flex-wrap items-center gap-1.5'>
               {statusFilters.map(status => {
                 const isActive = selectedStatus === status.value
                 return (
                   <button
                     key={status.value}
                     onClick={() => setSelectedStatus(status.value)}
-                    className={`px-4 py-1.5 rounded-lg text-xs font-goldman font-medium transition-all duration-300 cursor-pointer ${isActive ? 'bg-amber-500 text-white shadow-md border border-amber-600/10 font-bold' : 'bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-goldman font-medium transition-all duration-300 cursor-pointer ${isActive ? 'bg-emerald-600 text-white shadow-md border border-emerald-700/10 font-bold' : 'bg-transparent text-emerald-700 hover:bg-emerald-100 hover:text-emerald-900'}`}
                   >
                      {status.label}
                   </button>
@@ -126,13 +134,13 @@ function Events() {
               })}
             </div>
 
-            <button className='flex items-center justify-between gap-2 px-5 py-2 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 shadow-sm font-roboto font-medium text-sm min-w-[120px] cursor-pointer transition-colors self-start lg:self-auto'>
-              <span className="text-slate-700">{language === 'am' ? 'የቅርብ ጊዜ' : language === 'or' ? 'Dhihoo' : 'Latest'}</span>
+            <button className='flex items-center justify-between gap-2 px-5 py-2 rounded-xl bg-emerald-100 border border-emerald-200 hover:bg-emerald-200 shadow-sm font-roboto font-medium text-sm min-w-[120px] cursor-pointer transition-colors self-start lg:self-auto'>
+              <span className="text-emerald-900">{language === 'am' ? 'የቅርብ ጊዜ' : language === 'or' ? 'Dhihoo' : 'Latest'}</span>
               <img src={ArrowSvg} alt='' className="w-3 opacity-60" />
             </button>
           </div>
 
-          <div className='w-full h-px bg-slate-200 mt-5 mb-5' />
+          <div className='w-full h-px bg-emerald-200 mt-5 mb-5' />
 
           <div className='space-y-10'>
             {isLoading ? (
@@ -147,10 +155,10 @@ function Events() {
             ) : (
                 monthSections.map(section => (
               <div key={section.label} className='space-y-3'>
-                <h3 className='font-goldman font-bold text-slate-800 text-xl px-1 border-l-4 border-amber-500 pl-3'>{section.label}</h3>
+                <h3 className='font-goldman font-bold text-emerald-900 text-xl px-1 border-l-4 border-emerald-600 pl-3'>{section.label}</h3>
                 <div className='w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-1'>
                   {
-                        section.events.map(event => {
+                        section.events.map((event, idx) => {
                          let title = event.title
                          let location = event.location
 
@@ -163,9 +171,9 @@ function Events() {
                          }
 
                           return (
-                          <div key={event.id} className='w-full'>
+                          <AnimatedCard key={event.id} index={idx} stagger={80} maxDelay={480}>
                             <EventCard event={{...event, title, location}} onClick={() => navigate(`/events/${event.id}`)} />
-                          </div>
+                          </AnimatedCard>
                         )})
                   }
                 </div>
@@ -176,6 +184,7 @@ function Events() {
           </div>
         </div>
       </div>
+      </motion.div>
     </div>
   )
 }

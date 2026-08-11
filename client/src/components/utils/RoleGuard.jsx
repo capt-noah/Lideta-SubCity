@@ -2,38 +2,35 @@ import { useContext } from 'react'
 import { Navigate } from 'react-router-dom'
 import { adminContext } from '../utils/AdminContext'
 
-// Maps each role to its default landing path
+// Default landing path per role when they hit a page they can't access
 const ROLE_DEFAULT_PATH = {
   admin:           '/admin',
-  complaint_admin: '/admin/compliants',
+  complaint_admin: '/admin/complaints',
   event_admin:     '/admin/events',
   news_admin:      '/admin/news',
   vacancy_admin:   '/admin/vacancy',
+  superadmin:      '/superadmin/home',
 }
 
 /**
  * RoleGuard
- * 
- * Wraps a route and only renders it if the logged-in admin's role
- * is included in the `allowedRoles` prop.
- * 
- * If not allowed, redirects to the admin's own default section.
- * If admin data isn't loaded yet (null), renders nothing (waits).
  *
- * Usage:
- *   <RoleGuard allowedRoles={['admin', 'news_admin']}>
- *     <AdminNews />
- *   </RoleGuard>
+ * Renders children only if the logged-in admin's role is in `allowedRoles`.
+ * Superadmin bypasses all role checks (full access everywhere).
+ *
+ * If the role isn't allowed, redirects to that role's default landing page.
+ * Returns null while admin data is still loading.
  */
 function RoleGuard({ allowedRoles, children }) {
   const { admin } = useContext(adminContext)
 
-  // Still loading admin data — don't redirect yet
+  // Still loading — don't redirect yet
   if (!admin) return null
 
-  if (allowedRoles.includes(admin.role) || admin.role === 'superadmin') {
-    return children
-  }
+  // Superadmin has unrestricted access
+  if (admin.role === 'superadmin') return children
+
+  if (allowedRoles.includes(admin.role)) return children
 
   // Redirect to the admin's permitted landing page
   const fallback = ROLE_DEFAULT_PATH[admin.role] ?? '/admin'

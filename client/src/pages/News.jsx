@@ -1,44 +1,31 @@
 import BASE_URL from '../utils/api'
-import React, { useState, useEffect } from 'react'
-import SideBar from '../components/ui/SideBar'
+import React, { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
 import NewsCard from '../components/ui/NewsCard'
 import Loading from '../components/ui/Loading'
-// import newsData from '../data/news.json'
-
-import SearchIcon from '../assets/icons/book_icon.svg?react'
-import DividerIcon from '../assets/icons/divider_icon.svg'
-import ArrowSvg from '../assets/arrow.svg'
-
-import AllIcon from '../assets/icons/all_icon.svg?react'
-import ChipIcon from '../assets/icons/chip_icon.svg?react'
-import Enviroment_icon from '../assets/icons/enviroment_icon.svg?react'
-import CityIcon from '../assets/icons/city_icon.svg?react'
-import HealthIcon from '../assets/icons/heart_pulse_icon.svg?react'
-import GraduationIcon from '../assets/icons/graduation_cap_solid.svg?react'
-import ShieldIcon from '../assets/icons/shield_solid_icon.svg?react'
-import EventIcon from '../assets/icons/calendar_day_icon.svg?react'
-
-import SearchBox from '../components/ui/Search.jsx'
+import AnimatedCard from '../components/ui/AnimatedCard'
+import SearchIcon from '../assets/icons/search_icon.svg?react'
+import ChevronDown from '../assets/icons/arrow_right.svg?react'
 import { useLanguage } from '../components/utils/LanguageContext'
 import translatedContents from '../data/translated_contents.json'
 
 function News() {
   const { language } = useLanguage()
   const t = translatedContents.news_page
-  const [news, setNews] = useState()
+  const [news, setNews] = useState([])
   const [results, setResults] = useState(null)
   const [noResultFound, setNoResultFound] = useState(false)
   const [filter, setFilter] = useState('All')
   const [isLoading, setIsLoading] = useState(true)
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false)
+  const filterDropdownRef = useRef(null)
 
-  // Fetch news from API
   useEffect(() => {
     async function fetchNews() {
       try {
         const response = await fetch(`${BASE_URL}/api/news`)
         if (response.ok) {
           const data = await response.json()
-          // Format the data to match expected structure
           const formattedNews = data.map(item => ({
             id: item.id.toString(),
             title: item.title,
@@ -49,12 +36,10 @@ function News() {
             amh: item.amh,
             orm: item.orm
           }))
-          console.log(formattedNews)
           setNews(formattedNews)
         }
       } catch (error) {
         console.error('Error fetching news:', error)
-        // Keep using JSON data as fallback
       } finally {
         setIsLoading(false)
       }
@@ -62,103 +47,181 @@ function News() {
     fetchNews()
   }, [])
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target)) {
+        setIsFilterDropdownOpen(false)
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   let filtered = filter.toLowerCase() === 'all' ? news : news.filter(fil => fil.category.toLowerCase() === filter.toLowerCase())
   const finalList = results || filtered || []
 
   const categories = [
-    { label: t.categories_section.filters.all[language], value: 'All', bg: '#3A3A3A', color: 'white', icon: AllIcon},
-    { label: t.categories_section.filters.technology[language], value: 'Technology', bg: '#FFFFFF', color: 'black', icon: ChipIcon},
-    { label: t.categories_section.filters.health[language], value: 'Health', bg: '#FFFFFF', color: 'black', icon: HealthIcon},
-    { label: t.categories_section.filters.infrastructure[language], value: 'Infrastructure', bg: '#FFFFFF', color: 'black', icon: CityIcon},
-    { label: t.categories_section.filters.education[language], value: 'Education', bg: '#FFFFFF', color: 'black', icon: GraduationIcon},
-    { label: t.categories_section.filters.events[language], value: 'Event', bg: '#FFFFFF', color: 'black', icon: EventIcon},
-    { label: t.categories_section.filters.security[language], value: 'Security', bg: '#FFFFFF', color: 'black', icon: ShieldIcon},
-    { label: t.categories_section.filters.environment[language], value: 'Enviroment', bg: '#FFFFFF', color: 'black', icon: Enviroment_icon},
+    { label: t.categories_section.filters.all[language], value: 'All' },
+    { label: t.categories_section.filters.technology[language], value: 'Technology' },
+    { label: t.categories_section.filters.health[language], value: 'Health' },
+    { label: t.categories_section.filters.infrastructure[language], value: 'Infrastructure' },
+    { label: t.categories_section.filters.education[language], value: 'Education' },
+    { label: t.categories_section.filters.events[language], value: 'Event' },
+    { label: t.categories_section.filters.security[language], value: 'Security' },
+    { label: t.categories_section.filters.environment[language], value: 'Enviroment' },
   ]
 
+  const getCurrentCategoryLabel = () => {
+    const cat = categories.find(c => c.value === filter)
+    return cat ? cat.label : t.categories_section.filters.all[language]
+  }
+
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase().trim()
+    
+    if (term === '') {
+      setNoResultFound(false)
+      setResults(null)
+      return
+    }
+
+    const searchResults = filtered.filter(item => {
+      let enTitle = ''
+      let amTitle = ''
+      let orTitle = ''
+      let enDesc = ''
+      let amDesc = ''
+      let orDesc = ''
+      
+      if (typeof item.title === 'string') {
+        enTitle = item.title.toLowerCase()
+        amTitle = item.amh?.title?.toLowerCase() || ''
+        orTitle = item.orm?.title?.toLowerCase() || ''
+      }
+      
+      if (typeof item.description === 'string') {
+        enDesc = item.description.toLowerCase()
+        amDesc = item.amh?.short_description?.toLowerCase() || item.amh?.description?.toLowerCase() || ''
+        orDesc = item.orm?.short_description?.toLowerCase() || item.orm?.description?.toLowerCase() || ''
+      }
+
+      return enTitle.includes(term) || amTitle.includes(term) || orTitle.includes(term) ||
+             enDesc.includes(term) || amDesc.includes(term) || orDesc.includes(term)
+    })
+
+    if (searchResults.length === 0) {
+      setNoResultFound(true)
+      setResults([])
+    } else {
+      setNoResultFound(false)
+      setResults(searchResults)
+    }
+  }
+
   return (
-    <div className='w-full max-w-7xl mx-auto flex flex-col gap-8 px-4 mt-12 lg:flex-row lg:px-6 mb-24 animate-fade-in'>
-
-      <div className='hidden lg:flex mt-20 shrink-0'>
-        <SideBar filter={filter} setFilter={setFilter} categories={categories} />
-      </div>
-
-
-
-      <div className='w-full flex flex-col gap-6'>
-
-        <div className='w-fit font-goldman font-bold text-4xl lg:text-5xl flex items-end pb-4 border-b-4 border-amber-500 pr-10 text-slate-800'>{t.title[language]}</div>
-
-
-        <div className='bg-white w-full h-full rounded-3xl border border-slate-200 p-6 lg:p-8 shadow-md'>
-
-
-          <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1'>
-
-            <SearchBox data={filtered} results={results} setResults={setResults} noResultFound={noResultFound} setNoResultFound={setNoResultFound} />
-
-            <button className='flex items-center justify-between gap-2 px-5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100/70 shadow-sm font-jost font-medium text-sm min-w-[120px] cursor-pointer transition-all text-slate-700'>
-              <span>{language === 'am' ? 'የቅርብ ጊዜ' : language === 'or' ? 'Dhihoo' : 'Latest'}</span>
-              <img src={ArrowSvg} alt="" className="w-3 opacity-60" />
-            </button>
-          </div>
-
-          <div className='w-full h-px bg-slate-200 mt-6 mb-6' />
-
-          <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-
-            {
-
-            isLoading ? (
-              <div className="col-span-full flex justify-center items-center h-64">
-                <Loading />
+    <div className='w-full bg-white min-h-screen'>
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className='w-full max-w-7xl mx-auto px-4 pt-8 pb-24'
+      >
+        <div className='mb-8'>
+          <h1 className='font-goldman font-bold text-3xl md:text-4xl text-emerald-900 mb-6'>{t.title[language]}</h1>
+          
+          <div className='flex flex-col sm:flex-row gap-4'>
+            <div className='relative flex-1 max-w-lg'>
+              <div className='absolute left-4 top-1/2 -translate-y-1/2'>
+                <SearchIcon className='w-5 h-5 text-emerald-700/50' />
               </div>
-            ) :
-              finalList.length === 0 ?
-                <div className='w-full h-96 flex flex-col gap-4 justify-center items-center text-slate-400 col-span-full' >
-                  <SearchIcon className="w-16 h-16" />
-                  <p className='text-lg font-goldman font-bold' >{language === 'am' ? 'ምንም ውጤት የለም' : language === 'or' ? 'Bu\'aa Hin Argamne' : 'No Results Found'}</p>
+              <input
+                type='text'
+                placeholder={t.search?.[language] || (language === 'am' ? 'ፈልግ' : language === 'or' ? 'Barbaadi' : 'Search')}
+                onChange={handleSearch}
+                className='w-full pl-12 pr-4 py-3 rounded-2xl border border-emerald-200 bg-emerald-50/50 focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-400 font-roboto text-sm transition-all'
+              />
+            </div>
+
+            <div className='relative' ref={filterDropdownRef}>
+              <button
+                onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                className='flex items-center justify-between gap-3 px-5 py-3 rounded-2xl border border-emerald-200 bg-white hover:bg-emerald-50 shadow-sm font-jost font-medium text-sm text-emerald-900 cursor-pointer transition-all min-w-[160px]'
+              >
+                <span>{getCurrentCategoryLabel()}</span>
+                <ChevronDown
+                  className={`w-3 h-3 text-emerald-700/70 transition-transform ${isFilterDropdownOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+
+              {isFilterDropdownOpen && (
+                <div className='absolute top-full left-0 right-0 mt-2 bg-white border border-emerald-200 rounded-2xl shadow-lg z-50 overflow-hidden'>
+                  {categories.map(cat => (
+                    <button
+                      key={cat.value}
+                      onClick={() => {
+                        setFilter(cat.value)
+                        setIsFilterDropdownOpen(false)
+                      }}
+                      className={`w-full text-left px-5 py-3 font-jost text-sm transition-all ${
+                        cat.value === filter
+                          ? 'bg-emerald-50 text-emerald-700 font-semibold'
+                          : 'text-slate-700 hover:bg-emerald-50/50'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
                 </div>
-                  
-                  :
-                  finalList.map(item => {
-                    let title = item.title;
-                    let description = item.description;
-                    let category = item.category;
-
-                    if (language === 'am' && item.amh) {
-                         title = item.amh.title || title;
-                         description = item.amh.short_description || item.amh.description?.substring(0, 100) || description;
-                         category = item.amh.category || category;
-                    } else if (language === 'or' && item.orm) {
-                         title = item.orm.title || title;
-                         description = item.orm.short_description || item.orm.description?.substring(0, 100) || description;
-                         category = item.orm.category || category;
-                    }
-
-                    return (
-                      <div key={item.id} className='w-full'>
-                        <NewsCard 
-                          id={item.id} 
-                          title={title} 
-                          description={description} 
-                          date={item.date} 
-                          category={category}
-                          photo={item.photo}
-                        />
-                      </div>
-                    )
-                  })
-            }
-
+              )}
+            </div>
           </div>
-
-
-
         </div>
 
-      </div>
+        <div className='w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5'>
+          {isLoading ? (
+            <div className="col-span-full flex justify-center items-center h-64">
+              <Loading />
+            </div>
+          ) : finalList.length === 0 ? (
+            <div className='w-full col-span-full flex flex-col gap-3 justify-center items-center text-slate-400 py-16'>
+              <SearchIcon className="w-14 h-14 text-emerald-700/30" />
+              <p className='text-lg font-goldman font-bold text-slate-600'>
+                {language === 'am' ? 'ምንም ውጤት የለም' : language === 'or' ? 'Bu\'aa Hin Argamne' : 'No Results Found'}
+              </p>
+            </div>
+          ) : (
+            finalList.map((item, idx) => {
+              let title = item.title
+              let description = item.description
+              let category = item.category
+
+              if (language === 'am' && item.amh) {
+                title = item.amh.title || title
+                description = item.amh.short_description || item.amh.description?.substring(0, 100) || description
+                category = item.amh.category || category
+              } else if (language === 'or' && item.orm) {
+                title = item.orm.title || title
+                description = item.orm.short_description || item.orm.description?.substring(0, 100) || description
+                category = item.orm.category || category
+              }
+
+              return (
+                <AnimatedCard key={item.id} index={idx} stagger={70} maxDelay={560} className="h-full">
+                  <NewsCard
+                    id={item.id}
+                    title={title}
+                    description={description}
+                    date={item.date}
+                    category={category}
+                    photo={item.photo}
+                  />
+                </AnimatedCard>
+              )
+            })
+          )}
+        </div>
+      </motion.div>
     </div>
   )
 }

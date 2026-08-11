@@ -30,18 +30,9 @@ function SideBar({ categories, filter, setFilter }) {
 
 
   return (
-      <div className='w-64 bg-gradient-to-br from-white to-slate-50 border border-slate-200 flex flex-col items-center space-y-4 rounded-3xl font-jost py-6 px-4 shadow-md' >
+      <div className='w-48 bg-white/80 backdrop-blur-sm border border-emerald-200/50 flex flex-col space-y-1 rounded-2xl font-jost py-3 px-2 shadow-sm' >
           
-          <div className='w-full px-2 flex justify-between items-center' >
-              <p className='font-goldman font-bold text-lg text-slate-800' >Categories</p>
-              <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center border border-slate-200">
-                <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-              </div>
-          </div>
-
-          <div className='w-full h-px bg-slate-200' />
-          
-          <div className='w-full space-y-1.5' >
+          <div className='w-full space-y-1' >
               
             {
               categories.map(cat => {
@@ -52,19 +43,19 @@ function SideBar({ categories, filter, setFilter }) {
                     <button  
                       key={cat.label} 
                       onClick={() => setFilter(value)} 
-                      className={`w-full h-11 rounded-xl flex items-center px-4.5 gap-3.5 cursor-pointer transition-all duration-300 ${
+                      className={`w-full h-10 rounded-xl flex items-center px-3 gap-3 cursor-pointer transition-all duration-200 ${
                         isSelected 
-                          ? 'bg-amber-50 text-amber-600 font-bold shadow-sm border border-amber-500/20' 
-                          : 'text-slate-600 hover:text-slate-800 hover:bg-slate-100/60'
+                          ? 'bg-emerald-50 text-emerald-700 font-semibold border border-emerald-300/60 shadow-sm' 
+                          : 'text-emerald-800/70 hover:text-emerald-900 hover:bg-emerald-50'
                       }`}
                     >
-                      <cat.icon className={`w-5 h-5 transition-transform duration-300 ${isSelected ? 'scale-110 text-amber-500' : 'text-slate-400 group-hover:text-slate-600'}`} />
-                      <p className='text-sm font-medium tracking-wide' >{ cat.label }</p>
+                      <cat.icon className={`w-4.5 h-4.5 transition-all duration-200 ${isSelected ? 'text-emerald-600' : 'text-emerald-700/50'}`} />
+                      <p className='text-xs font-medium tracking-wide' >{ cat.label }</p>
                     </button>
                 )
               })
             }
-             
+              
 
           </div>
 

@@ -46,7 +46,7 @@ function SuperAdminLayout() {
 
   return (
     <adminContext.Provider value={{ admin, setAdmin, token }}>
-      <div className='w-full min-h-screen bg-[#F5F5F5]'>
+      <div className='w-full min-h-screen bg-white'>
         <Outlet />
       </div>
     </adminContext.Provider>

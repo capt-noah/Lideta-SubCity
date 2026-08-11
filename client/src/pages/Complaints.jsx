@@ -59,7 +59,7 @@ const sectorGroups = [
   'Traffic Management Bureau'
 ];
 
-function Compliants() {
+function Complaints() {
   const { language } = useLanguage()
   const { user } = useUser()
   const t = translatedContents.complaints_page
@@ -156,7 +156,7 @@ function Compliants() {
 
     // Auth gate — must be logged in to submit
     if (!user) {
-      window.location.href = '/account/auth?next=/compliants'
+      window.location.href = '/account/auth?next=/complaints'
       return
     }
     
@@ -284,23 +284,24 @@ function Compliants() {
   }
 
   return (
-    <div className='w-full max-w-7xl mx-auto h-fit mb-24 px-4 bg-transparent animate-fade-in'>
+    <div className='w-full bg-white min-h-screen'>
+      <div className='w-full max-w-7xl mx-auto h-fit mb-24 px-4 animate-fade-in'>
       <div className='w-full'>
         <div className='grid grid-cols-1 gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-16 2xl:gap-20'>
 
           <div className='flex flex-col w-full text-center lg:text-start mt-10 px-4 md:px-8'>
              {/* Left Side Content */}
-            <h1 className='font-goldman font-bold text-4xl lg:text-5xl mb-6 border-b-[6px] border-amber-500 pb-3 w-fit text-emerald-950 mx-auto lg:mx-0'> {t.title[language]} </h1>
+            <h1 className='font-goldman font-bold text-4xl lg:text-5xl mb-6 border-b-[6px] border-emerald-600 pb-3 w-fit text-emerald-950 mx-auto lg:mx-0'> {t.title[language]} </h1>
             <p className='font-roboto text-lg text-gray-600 mb-8 leading-relaxed'>{t.description[language]}</p>
             
-            <div className='bg-gradient-to-br from-[#f8faf9] to-[#edf3ef] rounded-2xl p-6 border border-emerald-900/10 shadow-md text-left'>
+            <div className='bg-emerald-50 rounded-2xl p-6 border border-emerald-900/10 shadow-md text-left'>
               <p className='font-goldman font-bold text-lg mb-4 text-emerald-950'>{t.contact_methods.title[language]}</p>
               <div className='space-y-4 font-roboto text-sm'>
-                <div className='border-l-4 border-amber-500 pl-3'>
+                <div className='border-l-4 border-emerald-600 pl-3'>
                   <p className='text-gray-500 uppercase tracking-wider text-xs'>{t.contact_methods.email.label[language]}</p>
                   <p className='font-bold text-emerald-950 text-base'>{t.contact_methods.email.value[language]}</p>
                 </div>
-                <div className='border-l-4 border-amber-500 pl-3'>
+                <div className='border-l-4 border-emerald-600 pl-3'>
                   <p className='text-gray-500 uppercase tracking-wider text-xs'>{t.contact_methods.phone.label[language]}</p>
                   <p className='font-bold text-emerald-950 text-base'>{t.contact_methods.phone.value[language]}</p>
                 </div>
@@ -309,13 +310,13 @@ function Compliants() {
           </div>
 
           {/* Right Form Section */}
-          <div className='bg-gradient-to-b from-white to-[#edf3ef] w-full min-w-sm max-w-lg xl:max-w-2xl mx-auto rounded-2xl shadow-xl p-6 md:p-8 border mt-10 mb-0 border-emerald-900/10 lg:mb-4 relative overflow-hidden'>
+          <div className='bg-white w-full min-w-sm max-w-lg xl:max-w-2xl mx-auto rounded-2xl shadow-xl p-6 md:p-8 border mt-10 mb-0 border-emerald-900/10 lg:mb-4 relative overflow-hidden'>
 
             {/* Auth gate overlay — shown when not logged in */}
             {!user && (
               <div className='absolute inset-0 z-10 backdrop-blur-md bg-[#03150c]/45 flex flex-col items-center justify-center p-4 rounded-2xl'>
                 <div className='bg-white rounded-2xl shadow-2xl border border-emerald-900/10 p-8 mx-6 text-center max-w-sm animate-fade-in'>
-                  <div className='w-14 h-14 bg-emerald-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-500/20 shadow-lg'>
+                  <div className='w-14 h-14 bg-emerald-900 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-600/20 shadow-lg'>
                     <svg className='w-7 h-7 text-white' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                       <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' />
                     </svg>
@@ -327,11 +328,11 @@ function Compliants() {
                     {{ en: 'You need an account to submit a complaint and track its progress.', am: 'ቅሬታ ለማቅረብ እና ሂደቱን ለመከታተል መለያ ያስፈልጋዎታል።', or: 'Iyyata galchuuf fi hordofuuf herrega barbaachisaa dha.' }[language]}
                   </p>
                   <div className='flex flex-col gap-3'>
-                    <a href='/account/auth?next=/compliants'
+                    <a href='/account/auth?next=/complaints'
                       className='w-full py-3 bg-emerald-900 text-white font-bold font-goldman rounded-xl hover:bg-emerald-950 transition-all text-sm shadow-md cursor-pointer'>
                       {{ en: 'Sign In', am: 'ግባ', or: 'Seeni' }[language]}
                     </a>
-                    <a href='/account/auth?next=/compliants'
+                    <a href='/account/auth?next=/complaints'
                       className='w-full py-3 border border-emerald-900/20 text-emerald-900 font-semibold font-goldman rounded-xl hover:bg-emerald-50 transition-all text-sm cursor-pointer'>
                       {{ en: 'Create Account', am: 'መለያ ፍጠር', or: 'Herrega Uumi' }[language]}
                     </a>
@@ -524,7 +525,7 @@ function Compliants() {
               <button
                 type='submit'
                 disabled={isSubmitting}
-                className='w-full bg-emerald-900 hover:bg-amber-500 text-white hover:text-emerald-950 text-base font-goldman font-bold py-3.5 rounded-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5'
+                className='w-full bg-emerald-900 hover:bg-emerald-600 text-white text-base font-goldman font-bold py-3.5 rounded-xl transition-all duration-300 cursor-pointer shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5'
               >
                 {isSubmitting ? 'Submitting...' : t.complaint_form.submit_button[language]}
               </button>
@@ -567,7 +568,7 @@ function Compliants() {
             </div>
             
             <div className="p-6 md:p-8 font-roboto text-gray-700 leading-relaxed text-base space-y-4">
-               <ul className="list-disc pl-5 space-y-3 marker:text-amber-500">
+               <ul className="list-disc pl-5 space-y-3 marker:text-emerald-600">
                   {t.disclaimer?.items?.map((item, index) => (
                     <li key={index} className="font-light text-emerald-950">
                         {typeof item === 'string' ? item : (item[language] || item['en'])}
@@ -593,7 +594,7 @@ function Compliants() {
                      handleConfirmSubmit()
                    }
                  }}
-                className="bg-emerald-900 hover:bg-amber-500 hover:text-emerald-950 text-white font-bold font-goldman py-3.5 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer"
+                className="bg-emerald-900 hover:bg-emerald-600 text-white font-bold font-goldman py-3.5 px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer"
               >
                 {disclaimerMode === 'initial' ? t.disclaimer?.actions?.confirm[language] : t.disclaimer?.actions?.confirm_submit[language]}
               </button>
@@ -642,7 +643,7 @@ function Compliants() {
               )}
               <button
                 onClick={() => setShowSuccessModal(false)}
-                className="px-5 py-2.5 bg-amber-500 text-emerald-950 text-xs font-goldman font-bold rounded-xl hover:bg-amber-400 transition-colors cursor-pointer shadow-md"
+                className="px-5 py-2.5 bg-emerald-600 text-white text-xs font-goldman font-bold rounded-xl hover:bg-emerald-500 transition-colors cursor-pointer shadow-md"
               >
                 {{ en: 'Done', am: 'ተጠናቋል', or: 'Xumurami' }[language]}
               </button>
@@ -650,8 +651,9 @@ function Compliants() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
 
-export default Compliants
+export default Complaints

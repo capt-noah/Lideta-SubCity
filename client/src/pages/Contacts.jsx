@@ -94,29 +94,30 @@ function Contacts() {
   }
 // grid grid-cols-[1fr_1.2fr]
   return (
-    <div className='w-full bg-transparent max-w-7xl mx-auto mb-20 px-4 animate-fade-in'>
+    <div className='w-full bg-white min-h-screen'>
+      <div className='w-full max-w-7xl mx-auto mb-20 px-4 animate-fade-in'>
       <div className='w-full'>
         <div className='flex flex-col justify-center gap-8 lg:flex-row lg:justify-around lg:gap-12'>
 
           <div className='max-w-md flex flex-col mx-auto mt-12 text-center lg:text-start xl:max-w-lg px-4'>
 
-            <h1 className='font-goldman font-bold text-4xl lg:text-5xl mb-6 text-emerald-950 border-b-[6px] border-amber-500 pb-3 w-fit mx-auto lg:mx-0'>{t.title[language]}</h1>
+            <h1 className='font-goldman font-bold text-4xl lg:text-5xl mb-6 text-emerald-950 border-b-[6px] border-emerald-600 pb-3 w-fit mx-auto lg:mx-0'>{t.title[language]}</h1>
             
             <p className='w-full font-roboto text-lg text-gray-600 mb-8 leading-relaxed'>
               {t.description[language]}
             </p>
             
-            <div className='bg-gradient-to-br from-[#f8faf9] to-[#edf3ef] rounded-2xl p-6 border border-emerald-900/10 shadow-md text-left'>
+            <div className='bg-emerald-50 rounded-2xl p-6 border border-emerald-900/10 shadow-md text-left'>
               <p className='font-goldman font-bold text-base mb-4 text-emerald-950 uppercase tracking-wider'>{t.contact_methods.direct_contact.title[language]}</p>
 
               <div className='space-y-4 font-roboto text-sm'>
 
-                <div className='border-l-4 border-amber-500 pl-3'>
+                <div className='border-l-4 border-emerald-600 pl-3'>
                   <p className='text-gray-500 uppercase tracking-wider text-xs'>{t.contact_methods.direct_contact.email.label[language]}</p>
                   <p className='font-bold text-emerald-950 text-base'>{t.contact_methods.direct_contact.email.value[language]}</p>
                 </div>
 
-                <div className='border-l-4 border-amber-500 pl-3'>
+                <div className='border-l-4 border-emerald-600 pl-3'>
                   <p className='text-gray-500 uppercase tracking-wider text-xs'>{t.contact_methods.direct_contact.phone.label[language]}</p>
                   <p className='font-bold text-emerald-950 text-base'>{t.contact_methods.direct_contact.phone.value[language]}</p>
                 </div>
@@ -131,7 +132,7 @@ function Contacts() {
           </div>
 
           {/* Right Form Section */}
-          <div className='bg-gradient-to-b from-white to-[#edf3ef] w-full max-w-lg rounded-2xl shadow-xl p-6 md:p-8 mx-auto border border-emerald-900/10 mt-10 mb-10 lg:min-w-xl'>
+          <div className='bg-white w-full max-w-lg rounded-2xl shadow-xl p-6 md:p-8 mx-auto border border-emerald-900/10 mt-10 mb-10 lg:min-w-xl'>
             <h2 className='font-goldman font-bold text-2xl lg:text-3xl mb-6 text-emerald-950'>{t.contact_form.title[language]}</h2>
             
             <form onSubmit={handleSubmit} className='space-y-6'>
@@ -208,7 +209,7 @@ function Contacts() {
               <LoadingButton
                 type='submit'
                 isLoading={isSubmitting}
-                className='w-full bg-emerald-900 hover:bg-amber-500 text-white hover:text-emerald-950 font-goldman font-bold py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer text-base uppercase tracking-wider'
+                className='w-full bg-emerald-900 hover:bg-emerald-600 text-white font-goldman font-bold py-3.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 cursor-pointer text-base uppercase tracking-wider'
               >
                 {t.contact_form.submit_button[language]}
               </LoadingButton>
@@ -219,11 +220,11 @@ function Contacts() {
 
         {/* Google Maps Section */}
         <div className='w-full mt-12 mb-10'>
-          <div className='bg-gradient-to-br from-white to-[#edf3ef] rounded-2xl shadow-xl border border-emerald-900/10 p-6 md:p-8'>
+          <div className='bg-white rounded-2xl shadow-xl border border-emerald-900/10 p-6 md:p-8'>
             <h2 className='font-goldman font-bold text-2xl md:text-3xl mb-6 text-emerald-950'>{t.location.title[language]}</h2>
             <div className='w-full h-96 rounded-xl overflow-hidden border border-emerald-900/10 shadow-inner'>
               <iframe
-                src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.1234567890123!2d38.7636!3d9.0054!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zOcKwMDAnMTkuNCJOIDM4wrA0NSc0OS4wIkU!5e0!3m2!1sen!2set!4v1234567890123!5m2!1sen!2set'
+                src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3940.4!2d38.7321941!3d9.0124916!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x164b87d4b7838451%3A0xdda911cfe7f4aa7!2sLideta%20Sub%20City%20Admn!5e0!3m2!1sen!2set!4v1700000000000!5m2!1sen!2set'
                 width='100%'
                 height='100%'
                 style={{ border: 0 }}
@@ -234,12 +235,9 @@ function Contacts() {
                 className='w-full h-full'
               ></iframe>
             </div>
-            <div className='mt-6 font-roboto text-sm border-l-4 border-amber-500 pl-4 py-1'>
-              <p className='font-goldman font-bold text-emerald-950 mb-1 text-sm uppercase tracking-wider'>{t.location.address_label[language]}:</p>
-              <p className='text-gray-650 text-base leading-relaxed'>{t.location.address_value[language]}</p>
-            </div>
           </div>
         </div>
+      </div>
       </div>
       <Notification
         isOpen={notification.isOpen}

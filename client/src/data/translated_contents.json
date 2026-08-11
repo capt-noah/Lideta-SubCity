@@ -539,6 +539,11 @@
       "am": "ክፍሎች",
       "or": "Qoqqooda"
     },
+    "search": {
+      "en": "Search",
+      "am": "ፈልግ",
+      "or": "Barbaadi"
+    },
     "categories": {
       "en": "Categories",
       "am": "ምድቦች",
@@ -1317,6 +1322,11 @@
       "am": "ዜና",
       "or": "Oduu"
     },
+    "search": {
+      "en": "Search",
+      "am": "ፈልግ",
+      "or": "Barbaadi"
+    },
     "categories_section": {
       "title": {
         "en": "Categories",
@@ -1380,6 +1390,11 @@
       "en": "Jobs",
       "am": "ስራዎች",
       "or": "Hojiiwwan"
+    },
+    "search": {
+      "en": "Search",
+      "am": "ፈልግ",
+      "or": "Barbaadi"
     },
     "categories_section": {
       "title": {

@@ -71,16 +71,16 @@ function Sidebar() {
   // ── Role-specific nav items (top section) ──────────────────────────
   const ALL_NAV_ITEMS = [
     { id: 'home',       icon: HomeIcon,      path: '/admin' },
-    { id: 'compliants', icon: CompliantIcon, path: '/admin/compliants' },
+    { id: 'complaints', icon: CompliantIcon, path: '/admin/complaints' },
     { id: 'events',     icon: CalenderIcon,  path: '/admin/events' },
     { id: 'news',       icon: BookIcon,      path: '/admin/news' },
     { id: 'vacancy',    icon: VacancyIcon,   path: '/admin/vacancy' },
   ]
 
   const ROLE_ITEMS = {
-    superadmin:      ['home', 'compliants', 'events', 'news', 'vacancy'],
-    admin:           ['home', 'compliants', 'events', 'news', 'vacancy'],
-    complaint_admin: ['compliants'],
+    superadmin:      ['home', 'complaints', 'events', 'news', 'vacancy'],
+    admin:           ['home', 'complaints', 'events', 'news', 'vacancy'],
+    complaint_admin: ['complaints'],
     event_admin:     ['events'],
     news_admin:      ['news'],
     vacancy_admin:   ['vacancy'],

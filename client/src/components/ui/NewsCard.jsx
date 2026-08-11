@@ -43,43 +43,37 @@ function NewsCard({ id, title, description, date, category, photo }) {
   return (
     <div 
       onClick={handleClick}
-      className='group/card bg-gradient-to-br from-[#FCFAF6] to-[#F3EFE0] w-full rounded-3xl flex flex-col justify-between overflow-hidden relative border border-[#0E351D]/10 shadow-[0_4px_20px_rgba(14,53,29,0.04)] hover:shadow-[0_12px_30px_rgba(14,53,29,0.12)] hover:border-amber-500/30 hover:-translate-y-2 transition-all duration-500 cursor-pointer min-h-[390px] h-full' 
+      className='group/card bg-white w-full rounded-2xl flex flex-col justify-between overflow-hidden relative border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.1)] hover:border-gray-200 hover:-translate-y-1.5 transition-all duration-400 cursor-pointer min-h-[380px] h-full' 
     >
-
-        <div className='w-full h-48 bg-[#F3EFE0] relative overflow-hidden' >
+        <div className='w-full h-48 bg-gray-100 relative overflow-hidden'>
         {
           imageSrc ?
-            <img src={imageSrc} alt='News' className='w-full h-full object-cover transition-transform duration-700 ease-out group-hover/card:scale-108'/>
+            <img src={imageSrc} alt='News' className='w-full h-full object-cover transition-transform duration-700 ease-out group-hover/card:scale-105'/>
             : 
-            <div className='w-full h-full bg-gradient-to-br from-[#0E351D]/10 to-[#0A2615]/5 flex justify-center items-center' >
-              <ImageIcon className="w-12 h-12 text-[#0E351D]/30"  />
+            <div className='w-full h-full bg-gray-100 flex justify-center items-center'>
+              <ImageIcon className="w-12 h-12 text-gray-300"/>
             </div>
         }
-
-          <div className='bg-[#0E351D]/95 text-amber-400 font-goldman font-medium tracking-wide text-[10px] uppercase w-fit px-3 py-1 rounded-full absolute top-4 left-4 shadow-md backdrop-blur-sm border border-amber-500/10' >
+          <div className='bg-emerald-900/90 text-white font-goldman font-medium tracking-wide text-[10px] uppercase w-fit px-3 py-1 rounded-full absolute top-4 left-4 shadow-md backdrop-blur-sm'>
             <p>{date}</p>
           </div>
-
         </div>
 
-        <button className='bg-gradient-to-br from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 w-12 h-12 absolute top-0 right-0 rounded-bl-3xl flex justify-center items-center cursor-pointer shadow-lg transition-all duration-300 group/btn' >
-            <ArrowUpRight className="w-5 h-5 text-[#0E351D] transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform duration-300" />
+        <button className='bg-emerald-900 hover:bg-emerald-800 w-12 h-12 absolute top-0 right-0 rounded-bl-2xl flex justify-center items-center cursor-pointer shadow-lg transition-all duration-300 group/btn'>
+            <ArrowUpRight className="w-5 h-5 text-white transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform duration-300" />
         </button>
 
-        <div className='p-6 flex-grow flex flex-col justify-between gap-4' >
-
-            <div className='flex flex-col gap-3' >
-              <div className='flex items-center gap-2 justify-between flex-wrap' >
+        <div className='p-5 flex-grow flex flex-col justify-between gap-3'>
+            <div className='flex flex-col gap-2'>
+              <div className='flex items-center gap-2 justify-between flex-wrap'>
                 {category && (
-                  <span className='bg-[#FAF8F2] text-[#0E351D] font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-lg border border-[#0E351D]/10' >{category}</span>
+                  <span className='bg-emerald-900 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1 rounded-md'>{category}</span>
                 )}
               </div>
-              <h1 className='text-[#0E351D] text-lg font-goldman font-bold leading-snug line-clamp-2 group-hover/card:text-amber-500 transition-colors duration-300' >{title}</h1>
+              <h1 className='text-gray-900 text-base font-goldman font-bold leading-snug line-clamp-2 group-hover/card:text-emerald-800 transition-colors duration-300'>{title}</h1>
             </div>
-            <p className='text-gray-650 text-sm font-normal leading-relaxed line-clamp-3' >{description}</p>
-
+            <p className='text-gray-500 text-sm font-normal leading-relaxed line-clamp-3'>{description}</p>
         </div>
-
     </div>
   )
 }
