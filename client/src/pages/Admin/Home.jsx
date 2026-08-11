@@ -198,72 +198,85 @@ function Home() {
  if (loading) return (
     <div className='grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-6'>
 
-      {/* ── Left column ── */}
-      <div className='space-y-5'>
+      {/* ── Left column — mirrors grid-rows-[130px_1fr_250px] ── */}
+      <div className='rounded-xl grid grid-rows-[130px_1fr_250px] gap-5'>
 
-        {/* Greeting bar */}
-        <div className='bg-[#3A3A3A] rounded-3xl px-8 py-8 flex justify-between items-center'>
+        {/* Row 1: Greeting bar — h-[130px] */}
+        <div className='bg-[#3A3A3A] rounded-3xl px-8 flex justify-between items-center'>
           <div className='space-y-2'>
-            <div className='skeleton h-8 w-48 rounded' />
-            <div className='skeleton h-4 w-64 rounded' />
+            <div className='h-7 w-44 bg-gray-600 rounded' />
+            <div className='h-4 w-64 bg-gray-700 rounded' />
           </div>
-          <div className='skeleton w-20 h-20 rounded-full' />
+          <div className='w-16 h-16 rounded-full bg-gray-600' />
         </div>
 
-        {/* 4 stat cards */}
+        {/* Row 2: 4 stat cards — auto height */}
         <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-          {[1,2,3,4].map(i => (
-            <div key={i} className='bg-white border-2 border-gray-100 rounded-2xl p-4 space-y-3'>
+          {[
+            { badge: true },
+            { badge: true },
+            { badge: false },
+            { badge: false },
+          ].map((item, i) => (
+            <div key={i} className='bg-white border-2 border-gray-100 rounded-2xl p-4 flex flex-col justify-between'>
               <div className='flex justify-between items-start'>
                 <div className='skeleton w-10 h-10 rounded-lg' />
-                <div className='skeleton w-12 h-5 rounded-full' />
+                {item.badge && <div className='skeleton w-14 h-5 rounded-full' />}
               </div>
-              <div className='skeleton h-8 w-10 rounded' />
-              <div className='skeleton h-3.5 w-24 rounded' />
+              <div className='mt-3 space-y-1.5'>
+                <div className='skeleton h-8 w-10 rounded' />
+                <div className='skeleton h-3.5 w-24 rounded' />
+              </div>
             </div>
           ))}
         </div>
 
-        {/* Featured content — 4-col grid matching real layout */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+        {/* Row 3: Featured 4-col grid — h-[250px] */}
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pb-2'>
+
           {/* Vacancy card */}
-          <div className='bg-white border-2 border-gray-100 rounded-xl p-5 flex flex-col justify-between min-h-[200px]'>
+          <div className='bg-white border-2 border-gray-100 rounded-xl p-5 flex flex-col justify-between overflow-hidden relative'>
+            <div className='absolute top-0 right-0 p-3 opacity-5'>
+              <div className='w-24 h-24 bg-gray-400 rounded' />
+            </div>
             <div className='space-y-2'>
               <div className='skeleton h-4 w-28 rounded-full' />
-              <div className='skeleton h-5 w-full rounded mt-3' />
+              <div className='skeleton h-5 w-full rounded mt-2' />
               <div className='skeleton h-5 w-3/4 rounded' />
-              <div className='skeleton h-3.5 w-1/2 rounded mt-2' />
+              <div className='skeleton h-3 w-1/2 rounded mt-1' />
             </div>
-            <div className='skeleton h-4 w-20 rounded mt-4' />
+            <div className='skeleton h-4 w-24 rounded mt-3' />
           </div>
 
-          {/* Upcoming event — spans 2 cols, dark */}
-          <div className='bg-[#3A3A3A] rounded-xl md:col-span-2 p-6 flex flex-col justify-between min-h-[200px]'>
+          {/* Upcoming event — dark, spans 2 cols */}
+          <div className='bg-[#3A3A3A] rounded-xl md:col-span-2 p-6 flex flex-col justify-between relative overflow-hidden'>
+            <div className='absolute top-0 right-0 w-12 h-12 bg-gray-600 rounded-bl-2xl' />
             <div className='space-y-2'>
               <div className='h-6 w-3/4 bg-gray-600 rounded' />
               <div className='h-4 w-full bg-gray-700 rounded' />
               <div className='h-4 w-5/6 bg-gray-700 rounded' />
             </div>
-            <div className='flex gap-3 mt-4'>
+            <div className='flex gap-3 mt-3'>
               <div className='h-8 w-28 bg-gray-600 rounded-lg' />
               <div className='h-8 w-28 bg-gray-600 rounded-lg' />
             </div>
           </div>
 
           {/* Latest news — image card */}
-          <div className='skeleton rounded-xl min-h-[200px]' />
+          <div className='skeleton rounded-xl' />
+
         </div>
       </div>
 
       {/* ── Right sidebar: Contact Requests ── */}
       <div className='px-2'>
-        <div className='w-full bg-gray-50 rounded-xl py-6 px-4 space-y-5'>
-          <div className='flex justify-between items-center'>
+        <div className='w-full h-full bg-gray-50 rounded-xl py-6 px-4 space-y-5'>
+          <div className='flex justify-between items-center px-1'>
             <div className='skeleton h-6 w-40 rounded' />
             <div className='skeleton h-5 w-8 rounded-full' />
           </div>
-          {[1,2,3,4,5].map(i => (
-            <div key={i} className='bg-white rounded-xl p-4 flex items-center gap-3 border border-gray-100'>
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className='bg-white rounded-xl p-4 flex items-center gap-3 border border-gray-100 shadow-sm'>
               <div className='skeleton w-10 h-10 rounded-full shrink-0' />
               <div className='flex-1 space-y-1.5'>
                 <div className='skeleton h-3.5 w-28 rounded' />
@@ -360,7 +373,7 @@ function Home() {
  <FileIcon className='w-24 h-24 text-gray-800' />
  </div>
  <div>
- <span className='skeleton inline-block px-3 py-1 text-xs font-semibold rounded-full mb-3 uppercase tracking-wide text-gray-600'>
+ <span className='inline-block px-3 py-1 bg-gray-100 text-xs font-semibold rounded-full mb-3 uppercase tracking-wide text-gray-600'>
  Recent Vacancy
  </span>
  <h3 className='text-xl font-bold font-goldman leading-tight mb-1 line-clamp-2'>

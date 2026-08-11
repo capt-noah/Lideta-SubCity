@@ -395,7 +395,7 @@ function Event() {
  {filteredEvents.map(event => (
  <div key={event.events_id} className='bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group'>
  {/* Cover */}
- <div className='skeleton relative w-full h-44 overflow-hidden'>
+ <div className='relative w-full h-44 bg-gray-100 overflow-hidden'>
  {getImageSrc(event.photos) ? (
  <img src={getImageSrc(event.photos)} alt={event.title} className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' />
  ) : (

@@ -412,7 +412,7 @@ function News() {
  {filteredNews.map(news => (
  <div key={news.id} className='bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow group'>
  {/* Cover */}
- <div className='skeleton relative w-full h-44 overflow-hidden'>
+ <div className='relative w-full h-44 bg-gray-100 overflow-hidden'>
  {getImageSrc(news.photo) ? (
  <img src={getImageSrc(news.photo)} alt={news.title} className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' />
  ) : (
