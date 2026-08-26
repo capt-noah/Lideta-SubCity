@@ -121,7 +121,7 @@ function Events() {
         const data = await res.json()
         setEvents(data.map(item => ({
           ...item,
-          id:        item.id?.toString() || item.event_id?.toString() || '',
+          id:        item.id?.toString() || item.events_id?.toString() || item.event_id?.toString() || '',
           startDate: item.start_date || item.startDate || item.date,
           date:      item.start_date || item.startDate || item.date,
           photos:    item.photos || item.photo || null,
