@@ -7,6 +7,7 @@ import CopyIcon from '../../assets/icons/copy_icon.svg?react'
 import TrashIcon from '../../assets/icons/trash_icon.svg?react'
 import { getRoleLabel } from '../../utils/roleLabels'
 import { validatePasswordStrength, generateStrongPassword } from '../../utils/passwordHelper'
+import { validateName, validateUsername, validateEmail, validateEthiopianPhone } from '../../utils/validation'
 import ProfileSkeletons from '../../components/ui/ProfileSkeletons'
 import Notification from '../../components/ui/Notification'
 import ConfirmationDialog from '../../components/ui/ConfirmationDialog'
@@ -21,7 +22,7 @@ const ROLE_COLORS = {
   vacancy_admin:   'bg-teal-100 text-teal-700',
 }
 
-const VALID_ROLES = ['admin', 'complaint_admin', 'event_admin', 'news_admin', 'vacancy_admin', 'superadmin']
+const VALID_ROLES = ['complaint_admin', 'event_admin', 'news_admin', 'vacancy_admin', 'superadmin']
 
 const RoleBadge = ({ role }) => (
   <span className={`text-xs font-bold uppercase px-2.5 py-0.5 rounded-full ${ROLE_COLORS[role] || 'bg-gray-100 text-gray-600'}`}>
@@ -134,21 +135,49 @@ function SuperAdminProfile() {
   }
 
   // ── Create Account ───────────────────────────────────────────────────────────
-  const emptyNewAdmin = { first_name:'', last_name:'', username:'', password:'', confirmPassword:'', email:'', phone_number:'', residency:'', gender:'Male', role:'admin' }
+  const emptyNewAdmin = { first_name:'', last_name:'', username:'', password:'', confirmPassword:'', email:'', phone_number:'', residency:'', gender:'Male', role:'complaint_admin' }
   const [newAdmin,    setNewAdmin]    = useState(emptyNewAdmin)
   const [showNewPass, setShowNewPass] = useState(false)
+  // Touched tracking for create account inline errors
+  const [newAdminTouched, setNewAdminTouched] = useState({})
+  const touchNew = (field) => setNewAdminTouched(p => ({ ...p, [field]: true }))
+
+  const getNewAdminError = (field) => {
+    if (!newAdminTouched[field]) return ''
+    if (field === 'first_name')   return validateName(newAdmin.first_name, 'First name').message
+    if (field === 'last_name')    return validateName(newAdmin.last_name,  'Last name').message
+    if (field === 'username')     return validateUsername(newAdmin.username).message
+    if (field === 'email')        return validateEmail(newAdmin.email).message
+    if (field === 'phone_number') return validateEthiopianPhone(newAdmin.phone_number).message
+    return ''
+  }
+
+  // Border class: default / error / success depending on touch state
+  const newAdminFieldCls = (field) => {
+    if (!newAdminTouched[field]) return inputCls
+    return getNewAdminError(field)
+      ? inputCls + ' !border-red-400'
+      : inputCls + ' !border-green-400'
+  }
 
   const handleCreateAdmin = async () => {
     const { first_name, last_name, username, password, confirmPassword, email, phone_number, role } = newAdmin
-    if (!first_name || !last_name || !username || !password || !email || !phone_number) { notify('Please fill all required fields', 'error'); return }
-    if (password !== confirmPassword) { notify('Passwords do not match', 'error'); return }
+    // Mark all required fields as touched to surface errors
+    setNewAdminTouched({ first_name:true, last_name:true, username:true, email:true, phone_number:true })
+    if (!validateName(first_name, 'First name').isValid)    { notify(validateName(first_name, 'First name').message,   'error'); return }
+    if (!validateName(last_name,  'Last name').isValid)     { notify(validateName(last_name,  'Last name').message,    'error'); return }
+    if (!validateUsername(username).isValid)                { notify(validateUsername(username).message,               'error'); return }
+    if (!validateEmail(email).isValid)                      { notify(validateEmail(email).message,                     'error'); return }
+    if (!validateEthiopianPhone(phone_number).isValid)      { notify(validateEthiopianPhone(phone_number).message,     'error'); return }
+    if (!password || !confirmPassword)                      { notify('Please fill all required fields', 'error'); return }
+    if (password !== confirmPassword)                       { notify('Passwords do not match', 'error'); return }
     const { isValid, feedback } = validatePasswordStrength(password)
     if (!isValid) { notify(`Weak password: ${feedback}`, 'error'); return }
     setIsSaving(true)
     try {
       const res = await fetch(`${BASE_URL}/api/superadmin/create-admin`, { method:'POST', headers:{ 'Content-Type':'application/json', authorization:`Bearer ${token}` }, body: JSON.stringify({ first_name, last_name, username, password, email, phone_number, residency: newAdmin.residency, gender: newAdmin.gender, role }) })
       if (!res.ok) throw new Error((await res.json()).error || 'Failed to create admin')
-      setNewAdmin(emptyNewAdmin); notify(`${getRoleLabel(role)} account created!`); fetchAdminsList()
+      setNewAdmin(emptyNewAdmin); setNewAdminTouched({}); notify(`${getRoleLabel(role)} account created!`); fetchAdminsList()
     } catch(e) { notify(e.message, 'error') } finally { setIsSaving(false) }
   }
 
@@ -422,11 +451,33 @@ function SuperAdminProfile() {
                 </div>
 
                 <div className='grid grid-cols-2 gap-4'>
-                  <div><label className={labelCls}>First Name <span className='text-red-400 normal-case'>*</span></label><input type='text' value={newAdmin.first_name} onChange={e => setNewAdmin(p => ({...p, first_name: e.target.value}))} className={inputCls} /></div>
-                  <div><label className={labelCls}>Last Name <span className='text-red-400 normal-case'>*</span></label><input type='text' value={newAdmin.last_name} onChange={e => setNewAdmin(p => ({...p, last_name: e.target.value}))} className={inputCls} /></div>
-                  <div><label className={labelCls}>Username <span className='text-red-400 normal-case'>*</span></label><input type='text' value={newAdmin.username} onChange={e => setNewAdmin(p => ({...p, username: e.target.value}))} className={inputCls} /></div>
-                  <div><label className={labelCls}>Email <span className='text-red-400 normal-case'>*</span></label><input type='email' value={newAdmin.email} onChange={e => setNewAdmin(p => ({...p, email: e.target.value}))} className={inputCls} /></div>
-                  <div><label className={labelCls}>Phone <span className='text-red-400 normal-case'>*</span></label><input type='tel' value={newAdmin.phone_number} onChange={e => setNewAdmin(p => ({...p, phone_number: e.target.value}))} className={inputCls} /></div>
+                  <div>
+                    <label className={labelCls}>First Name <span className='text-red-400 normal-case'>*</span></label>
+                    <input type='text' value={newAdmin.first_name} onChange={e => setNewAdmin(p => ({...p, first_name: e.target.value}))} onBlur={() => touchNew('first_name')} className={newAdminFieldCls('first_name')} />
+                    {getNewAdminError('first_name') && <p className='text-xs text-red-500 mt-1'>{getNewAdminError('first_name')}</p>}
+                  </div>
+                  <div>
+                    <label className={labelCls}>Last Name <span className='text-red-400 normal-case'>*</span></label>
+                    <input type='text' value={newAdmin.last_name} onChange={e => setNewAdmin(p => ({...p, last_name: e.target.value}))} onBlur={() => touchNew('last_name')} className={newAdminFieldCls('last_name')} />
+                    {getNewAdminError('last_name') && <p className='text-xs text-red-500 mt-1'>{getNewAdminError('last_name')}</p>}
+                  </div>
+                  <div>
+                    <label className={labelCls}>Username <span className='text-red-400 normal-case'>*</span></label>
+                    <input type='text' value={newAdmin.username} onChange={e => setNewAdmin(p => ({...p, username: e.target.value}))} onBlur={() => touchNew('username')} className={newAdminFieldCls('username')} />
+                    {getNewAdminError('username') && <p className='text-xs text-red-500 mt-1'>{getNewAdminError('username')}</p>}
+                  </div>
+                  <div>
+                    <label className={labelCls}>Email <span className='text-red-400 normal-case'>*</span></label>
+                    <input type='email' value={newAdmin.email} onChange={e => setNewAdmin(p => ({...p, email: e.target.value}))} onBlur={() => touchNew('email')} className={newAdminFieldCls('email')} />
+                    {getNewAdminError('email') && <p className='text-xs text-red-500 mt-1'>{getNewAdminError('email')}</p>}
+                  </div>
+                  <div>
+                    <label className={labelCls}>Phone <span className='text-red-400 normal-case'>*</span></label>
+                    <input type='tel' value={newAdmin.phone_number} onChange={e => setNewAdmin(p => ({...p, phone_number: e.target.value}))} onBlur={() => touchNew('phone_number')} className={newAdminFieldCls('phone_number')} placeholder='09XXXXXXXX or +251XXXXXXXXX' />
+                    {getNewAdminError('phone_number')
+                      ? <p className='text-xs text-red-500 mt-1'>{getNewAdminError('phone_number')}</p>
+                      : <p className='text-[10px] text-gray-400 mt-1'>Format: 09XXXXXXXX or +251912345678</p>}
+                  </div>
                   <div>
                     <label className={labelCls}>Gender</label>
                     <select value={newAdmin.gender} onChange={e => setNewAdmin(p => ({...p, gender: e.target.value}))} className={inputCls}>

@@ -65,29 +65,55 @@ function DepartmentDetails() {
   }
 
   return (
-    <div className='w-full px-4 max-w-7xl mx-auto bg-transparent mb-24 animate-fade-in'>
-      {!department ? (
-        'Loading...'
-      ) : (
-        <div className='w-full py-6 font-roboto'>
-          {/* Back Button */}
-          <button
-            onClick={() => navigate(-1)}
-            className='bg-emerald-900 flex items-center gap-2 mb-8 font-goldman font-bold text-sm text-white py-2.5 px-5 rounded-xl hover:bg-amber-500 hover:text-emerald-950 active:scale-95 transition-all cursor-pointer shadow-md'
-          >
-            <ArrowRight className='w-4 h-4 rotate-180' />
-            <span>{t.back_button[language]}</span>
-          </button>
+    <div className='w-full bg-[#f6f9f7] min-h-screen'>
 
+      {/* ── Sticky breadcrumb / back bar ─────────────────────────────────── */}
+      <div className='w-full bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 h-12 flex items-center gap-3'>
+          <button
+            onClick={() => navigate('/departments')}
+            className='flex items-center gap-2 text-sm font-goldman font-bold text-emerald-900 hover:text-amber-600 transition-colors duration-200 cursor-pointer group'
+          >
+            <ArrowRight className='w-3.5 h-3.5 rotate-180 group-hover:-translate-x-0.5 transition-transform duration-200' />
+            {t.back_button[language]}
+          </button>
+          <span className='text-gray-300'>›</span>
+          {department.category && (
+            <>
+              <span className='text-sm font-jost text-gray-500 capitalize'>{department.category}</span>
+              <span className='text-gray-300'>›</span>
+            </>
+          )}
+          <span className='text-sm font-jost text-gray-400 line-clamp-1 flex-1 hidden sm:block'>
+            {department?.title?.[language] || department?.title?.en || ''}
+          </span>
+        </div>
+      </div>
+
+      {/* ── Compact article header ────────────────────────────────────────── */}
+      <div className='w-full bg-white border-b border-gray-100'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 py-5'>
+          <div className='max-w-3xl'>
+            {/* Category pill + meta */}
+            {department.category && (
+              <span className='inline-block bg-amber-500 text-emerald-950 font-goldman font-bold text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full mb-3'>
+                {department.category}
+              </span>
+            )}
+            {/* Title */}
+            <h1 className='font-goldman font-bold text-2xl sm:text-3xl md:text-4xl text-emerald-950 leading-tight'>
+              {department?.title?.[language] || department?.title?.en || 'Department'}
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main content ──────────────────────────────────────────────────── */}
+      <div className='w-full px-4 max-w-7xl mx-auto pb-24'>
+        <div className='w-full py-8 font-roboto'>
           <div className='w-full flex flex-col gap-12 items-start lg:flex-row lg:gap-8'>
             {/* Main Content Area */}
             <div className='w-full flex flex-col md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'>
-              {/* Department Title */}
-              <h1 className='font-goldman font-bold text-3xl md:text-4xl lg:text-5xl mb-2 text-emerald-950 leading-tight'>
-                {department?.title?.[language] || 'Department Title'}
-              </h1>
-              <p className='text-lg text-emerald-900 font-medium mb-6 uppercase font-goldman tracking-wider'>{department?.name?.[language] || ''}</p>
-              
               {/* Department Leader — always shown, placeholder if no photo */}
               <div className="w-full mb-8">
                 {/* Photo or placeholder */}
@@ -338,7 +364,7 @@ function DepartmentDetails() {
             </div>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

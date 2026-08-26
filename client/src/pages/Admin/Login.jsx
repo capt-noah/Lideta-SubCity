@@ -3,6 +3,28 @@ import React, { useState, useRef, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import EyeShowIcon from '../../assets/icons/eye_show_icon.svg?react'
 import EyeHideIcon from '../../assets/icons/eye_hide_icon.svg?react'
+import { validatePasswordStrength } from '../../utils/passwordHelper'
+
+// ─── Strength bar (mirrors UserAuth) ─────────────────────────────────────────
+function StrengthBar({ password }) {
+  if (!password) return null
+  const { score } = validatePasswordStrength(password)
+  const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-400', 'bg-emerald-500', 'bg-emerald-600']
+  const labels = ['Very Weak', 'Weak', 'Fair', 'Strong', 'Very Strong']
+  const idx = Math.min(score ?? 0, 4)
+  return (
+    <div className='mt-1.5'>
+      <div className='flex gap-1'>
+        {[0,1,2,3,4].map(i => (
+          <div key={i} className={`h-1 flex-1 rounded-full ${i <= idx ? colors[idx] : 'bg-gray-200'} transition-all`} />
+        ))}
+      </div>
+      <p className={`text-xs mt-0.5 ${idx < 2 ? 'text-red-500' : idx < 4 ? 'text-yellow-600' : 'text-green-600'}`}>
+        {labels[idx]}
+      </p>
+    </div>
+  )
+}
 
 function Login() {
   const navigate = useNavigate()
@@ -200,7 +222,8 @@ function Login() {
   const handleFpReset = async (e) => {
     e.preventDefault()
     if (fpNewPass !== fpConfirm) { setStatus('Passwords do not match'); return }
-    if (fpNewPass.length < 8)   { setStatus('Password must be at least 8 characters'); return }
+    const { isValid, feedback } = validatePasswordStrength(fpNewPass)
+    if (!isValid) { setStatus(`Weak password: ${feedback}`); return }
     setLoading(true); setStatus('')
     try {
       const res  = await fetch(`${BASE_URL}/api/auth/reset-password`, {
@@ -358,8 +381,11 @@ function Login() {
             {fpStep === 'newpass' && (
               <form onSubmit={handleFpReset} className='flex flex-col gap-4'>
                 <p className='text-sm text-[#3A3A3A]/70 text-center'>Enter your new password.</p>
-                <input type='password' value={fpNewPass} onChange={e => setFpNewPass(e.target.value)}
-                  className={inputCls} placeholder='New password (min 8 chars)' required />
+                <div>
+                  <input type='password' value={fpNewPass} onChange={e => setFpNewPass(e.target.value)}
+                    className={inputCls} placeholder='New password' required />
+                  <StrengthBar password={fpNewPass} />
+                </div>
                 <div>
                   <input type='password' value={fpConfirm} onChange={e => setFpConfirm(e.target.value)}
                     className={inputCls} placeholder='Confirm new password' required />

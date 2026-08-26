@@ -2,245 +2,340 @@ import BASE_URL from '../utils/api'
 import React, { useEffect, useState, useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useLanguage } from '../components/utils/LanguageContext.jsx'
-import EventCard from '../components/ui/EventCard.jsx'
+import EventCard, { CalendarWidget } from '../components/ui/EventCard.jsx'
+import AnimatedCard from '../components/ui/AnimatedCard.jsx'
 import Loading from '../components/ui/Loading.jsx'
 import eventsData from '../data/events.json'
 import translatedContents from '../data/translated_contents.json'
 import ArrowRight from '../assets/icons/arrow_right.svg?react'
-import ImageIcon from '../assets/icons/image_icon.svg'
-import Status from '../components/ui/Status.jsx'
-import CalenderIcon from '../assets/icons/calender_icon.svg?react'
 import LocationIcon from '../assets/icons/location_icon.svg?react'
+import CalenderIcon from '../assets/icons/calender_icon.svg?react'
+import ImageIcon from '../assets/icons/image_icon.svg?react'
 
-const formatFullDate = (dateValue) => {
-  const parsed = new Date(dateValue)
-  if (!isNaN(parsed)) {
-    return parsed.toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-  }
-  return dateValue || ''
+// ─── Status pill (inline, no import from Status.jsx to avoid dependency) ──────
+const STATUS_PILL = {
+  upcoming:  'bg-blue-50 text-blue-700 border-blue-100',
+  pending:   'bg-amber-50 text-amber-700 border-amber-100',
+  complete:  'bg-green-50 text-green-700 border-green-100',
+  completed: 'bg-green-50 text-green-700 border-green-100',
+  canceled:  'bg-red-50 text-red-700 border-red-100',
+  cancelled: 'bg-red-50 text-red-700 border-red-100',
 }
 
+// ─── Photo helper ─────────────────────────────────────────────────────────────
+function getPhotoSrc(photos) {
+  if (!photos) return null
+  if (Array.isArray(photos) && photos.length > 0) {
+    const p = photos[0]
+    return p?.path || (typeof p === 'string' ? p : null)
+  }
+  if (typeof photos === 'object' && photos.path) return photos.path
+  if (typeof photos === 'string') {
+    try {
+      const parsed = JSON.parse(photos)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed[0]?.path || null
+      if (parsed.path) return parsed.path
+    } catch { if (photos.startsWith('/')) return photos }
+  }
+  return null
+}
+
+// ─── Format date range ────────────────────────────────────────────────────────
+const formatDate = (d) => {
+  const p = new Date(d)
+  return isNaN(p) ? d : p.toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+// ─── Reading progress bar ─────────────────────────────────────────────────────
+function ReadingProgress() {
+  const [pct, setPct] = useState(0)
+  useEffect(() => {
+    const fn = () => {
+      const el = document.documentElement
+      const total = el.scrollHeight - el.clientHeight
+      setPct(total > 0 ? (el.scrollTop / total) * 100 : 0)
+    }
+    window.addEventListener('scroll', fn, { passive: true })
+    return () => window.removeEventListener('scroll', fn)
+  }, [])
+  return (
+    <div className='fixed top-0 left-0 right-0 z-50 h-0.5 bg-transparent pointer-events-none'>
+      <div className='h-full bg-amber-500 transition-all duration-100' style={{ width: `${pct}%` }} />
+    </div>
+  )
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 function EventDetails() {
   const { language } = useLanguage()
   const t = translatedContents.events_page.details
   const navigate = useNavigate()
   const { id } = useParams()
 
-  const [, setEvents] = useState(eventsData)
-  const [currentEvent, setCurrentEvent] = useState(eventsData.find(item => item.id === id) || eventsData[0])
-  const [relatedEvents, setRelatedEvents] = useState(eventsData.filter(event => event.id !== (eventsData.find(item => item.id === id)?.id)).slice(0, 6))
+  const [currentEvent, setCurrentEvent] = useState(null)
+  const [relatedEvents, setRelatedEvents] = useState([])
   const [isLoading, setIsLoading] = useState(true)
+  const [imgLoaded, setImgLoaded] = useState(false)
+  const [imgError, setImgError] = useState(false)
 
   useEffect(() => {
+    setIsLoading(true); setImgLoaded(false); setImgError(false)
     async function fetchEvents() {
       try {
         const res = await fetch(`${BASE_URL}/api/events`)
-        if (!res.ok) throw new Error('Failed to load events')
+        if (!res.ok) throw new Error('Failed')
         const data = await res.json()
-
         const formatted = data.map(item => ({
           ...item,
-          id: item.id?.toString() || item.event_id?.toString() || item.events_id?.toString() || item.id,
-          title: item.title,
-          location: item.location || '',
-          status: item.status || 'Upcoming',
-          startDate: item.start_date || item.startDate || item.date,
-          date: item.start_date || item.startDate || item.date,
-          photos: item.photos || item.photo || null,
+          id:          item.id?.toString() || item.event_id?.toString() || '',
+          startDate:   item.start_date || item.startDate || item.date,
+          date:        item.start_date || item.startDate || item.date,
+          photos:      item.photos || item.photo || null,
+          status:      item.status || 'Upcoming',
           description: item.description || '',
-          content: item.content || null,
-          amh: item.amh,
-          orm: item.orm
+          amh:         item.amh,
+          orm:         item.orm,
         }))
-
-        setEvents(formatted)
-
-        const selected = formatted.find(ev => ev.id === id) || formatted[0]
-        setCurrentEvent(selected)
-
-        const related = formatted
-          .filter(ev => ev.id !== selected?.id)
-          .slice(0, 6)
-        setRelatedEvents(related)
-      } catch (error) {
-        console.error('Error fetching events:', error)
-        // fallback to static data
-        const selected = eventsData.find(ev => ev.id === id) || eventsData[0]
-        setCurrentEvent(selected)
-        const related = eventsData
-          .filter(ev => ev.id !== selected?.id)
-          .slice(0, 6)
-        setRelatedEvents(related)
-      } finally {
-        setIsLoading(false)
-      }
+        const ev = formatted.find(e => e.id === id) || formatted[0]
+        setCurrentEvent(ev)
+        setRelatedEvents(formatted.filter(e => e.id !== ev?.id).slice(0, 5))
+      } catch {
+        const ev = eventsData.find(e => e.id === id) || eventsData[0]
+        setCurrentEvent(ev)
+        setRelatedEvents(eventsData.filter(e => e.id !== ev?.id).slice(0, 5))
+      } finally { setIsLoading(false) }
     }
     fetchEvents()
   }, [id])
 
   const contentBlocks = useMemo(() => {
     if (!currentEvent) return []
-    
-    // Translation Logic
-    let description = currentEvent.description;
-    if (language === 'am' && currentEvent.amh?.description) {
-        description = currentEvent.amh.description;
-    } else if (language === 'or' && currentEvent.orm?.description) {
-        description = currentEvent.orm.description;
-    }
-
-    if (currentEvent.content && Array.isArray(currentEvent.content) && currentEvent.content.length) {
-      // Content array handling might be complex for translation if it's structured data. 
-      // For now assume description override is main way or handle content if available in translation?
-      // The prompt implies amh/orm JSON has title/description.
-      // So I will rely on description field from translation.
-      return currentEvent.content // fallback to original content array if no translation logic for it yet, or...
-      // actually if description is translated, we should probably use that.
-      // existing logic prefers content array over description.
-    }
-    
-    if (description) {
-       return description.split('\n').filter(p => p.trim())
-    }
-
-    return ['']
+    let desc = currentEvent.description
+    if (language === 'am' && currentEvent.amh?.description) desc = currentEvent.amh.description
+    else if (language === 'or' && currentEvent.orm?.description) desc = currentEvent.orm.description
+    if (Array.isArray(currentEvent.content) && currentEvent.content.length) return currentEvent.content
+    return desc ? desc.split('\n').map(p => p.trim()).filter(Boolean) : ['No description available.']
   }, [currentEvent, language])
 
   if (isLoading || !currentEvent) {
-    return (
-      <div className='w-full flex justify-center items-center h-screen'>
-        <Loading />
-      </div>
-    )
+    return <div className='w-full flex justify-center items-center min-h-screen bg-[#f0f4f2]'><Loading /></div>
   }
 
+  const title = (language === 'am' && currentEvent.amh?.title) ? currentEvent.amh.title
+              : (language === 'or' && currentEvent.orm?.title) ? currentEvent.orm.title
+              : currentEvent.title
+
+  const location = (language === 'am' && currentEvent.amh?.location) ? currentEvent.amh.location
+                 : (language === 'or' && currentEvent.orm?.location) ? currentEvent.orm.location
+                 : currentEvent.location
+
+  const imageSrc = getPhotoSrc(currentEvent.photos)
+  const statusCls = STATUS_PILL[currentEvent.status?.toLowerCase()] || 'bg-gray-50 text-gray-600 border-gray-200'
+
+  const backLabel    = t?.back_to_events?.[language] || 'Back to Events'
+  const otherLabel   = t?.other_events?.[language]   || 'Other Events'
+
   return (
-    <div className='w-full px-4 max-w-7xl mx-auto bg-transparent mb-24 animate-fade-in'>
+    <>
+      <ReadingProgress />
+      <div className='w-full bg-[#f0f4f2] min-h-screen'>
 
-      <div className='w-full py-6'>
-        <button
-          onClick={() => navigate('/events')}
-          className='bg-emerald-900 flex items-center gap-2 mb-8 font-goldman font-bold text-sm text-white py-2.5 px-5 rounded-xl hover:bg-amber-500 hover:text-emerald-950 active:scale-95 transition-all cursor-pointer shadow-md'
-        >
-          <ArrowRight className='w-4 h-4 rotate-180' />
-          <span>{t.back_to_events[language]}</span>
-        </button>
+        {/* ── Sticky breadcrumb bar ──────────────────────────────────────── */}
+        <div className='w-full bg-white border-b border-gray-100 sticky top-0 z-40 shadow-sm'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 h-12 flex items-center gap-3'>
+            <button
+              onClick={() => navigate('/events')}
+              className='flex items-center gap-2 text-sm font-goldman font-bold text-emerald-900 hover:text-amber-600 transition-colors duration-200 cursor-pointer group'
+            >
+              <ArrowRight className='w-3.5 h-3.5 rotate-180 group-hover:-translate-x-0.5 transition-transform duration-200' />
+              {backLabel}
+            </button>
+            <span className='text-gray-300'>›</span>
+            {currentEvent.status && (
+              <>
+                <span className='text-sm font-jost text-gray-500'>{currentEvent.status}</span>
+                <span className='text-gray-300'>›</span>
+              </>
+            )}
+            <span className='text-sm font-jost text-gray-400 line-clamp-1 flex-1 hidden sm:block'>{title}</span>
+          </div>
+        </div>
 
-        <div className='w-full flex flex-col gap-12 items-start lg:flex-row lg:gap-8'>
-
-          <div className='w-full flex flex-col md:max-w-3xl lg:max-w-3xl xl:max-w-4xl'>
-
-            <h1 className='font-goldman font-bold text-3xl md:text-4xl lg:text-5xl mb-4 text-emerald-950 leading-tight'>
-              {(() => {
-                  if (language === 'am' && currentEvent.amh?.title) return currentEvent.amh.title
-                  if (language === 'or' && currentEvent.orm?.title) return currentEvent.orm.title
-                  return currentEvent.title
-              })()}
-            </h1>
-
-            <div className='flex items-center gap-4 mb-6 font-mono text-xs uppercase tracking-wider text-emerald-800/80 flex-wrap'>
-              <Status status={currentEvent.status} />
-
-              <div className='flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-900/10'>
-                <CalenderIcon className='w-4 h-4 text-emerald-900/60' />
-                <span>{formatFullDate(currentEvent.startDate || currentEvent.date)}</span>
+        {/* ── Compact header ─────────────────────────────────────────────── */}
+        <div className='w-full bg-white border-b border-gray-100'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 py-5'>
+            <div className='max-w-3xl'>
+              {/* Status + date meta row */}
+              <div className='flex items-center gap-2.5 mb-3 flex-wrap'>
+                <span className={`text-[10px] font-goldman font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${statusCls}`}>
+                  {currentEvent.status}
+                </span>
+                {currentEvent.startDate && (
+                  <span className='flex items-center gap-1.5 text-xs text-gray-400 font-jost'>
+                    <CalenderIcon className='w-3 h-3 text-emerald-600/40' />
+                    {formatDate(currentEvent.startDate)}
+                  </span>
+                )}
+                {location && (
+                  <span className='flex items-center gap-1.5 text-xs text-gray-400 font-jost'>
+                    <LocationIcon className='w-3 h-3 text-emerald-600/40' />
+                    {location}
+                  </span>
+                )}
               </div>
 
-              <div className='flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-900/10'>
-                <LocationIcon className='w-4 h-4 text-emerald-900/60' />
-                <span>{currentEvent.location}</span>
-              </div>
+              {/* Event title */}
+              <h1 className='font-goldman font-bold text-2xl sm:text-3xl md:text-4xl leading-tight text-emerald-950'>
+                {title}
+              </h1>
             </div>
+          </div>
+        </div>
 
-            <div className='bg-gradient-to-br from-emerald-950/20 to-emerald-900/5 w-full h-80 sm:h-100 lg:h-120 xl:h-130 rounded-2xl mb-8 flex items-center justify-center overflow-hidden border border-emerald-900/10 shadow-lg relative'>
-              {(() => {
-                let photoSrc = null
-                if (currentEvent?.photos) {
-                  let photo = null
-                  if (Array.isArray(currentEvent.photos) && currentEvent.photos.length > 0) {
-                    photo = currentEvent.photos[0]
-                  } else if (typeof currentEvent.photos === 'object' && currentEvent.photos.path) {
-                    photo = currentEvent.photos
-                  } else if (typeof currentEvent.photos === 'string') {
-                    try {
-                      const parsed = JSON.parse(currentEvent.photos)
-                      if (Array.isArray(parsed) && parsed.length > 0) {
-                        photo = parsed[0]
-                      } else if (parsed.path) {
-                        photo = parsed
-                      }
-                    } catch (err) {
-                      console.warn('Failed to parse event photos JSON:', err)
-                    }
-                  }
-                  if (photo && photo.path) {
-                    photoSrc = photo.path
-                  }
-                }
-                return photoSrc ? (
-                  <img 
-                    src={photoSrc} 
-                    alt={currentEvent.title || 'Event'} 
-                    className='w-full h-full object-cover transition-transform duration-700 hover:scale-102'
-                    onError={(e) => {
-                      e.target.style.display = 'none'
-                      e.target.nextElementSibling.style.display = 'flex'
-                    }}
-                  />
-                ) : null
-              })()}
-              <div className={`${currentEvent?.photos ? 'hidden' : 'flex'} items-center justify-center w-full h-full`}>
-                <img src={ImageIcon} alt='' className='w-24 h-24 text-emerald-900/30' />
+        {/* ── Main layout ────────────────────────────────────────────────── */}
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-24'>
+          <div className='flex flex-col lg:flex-row gap-8 items-start'>
+
+            {/* ── Article column ─────────────────────────────────────────── */}
+            <article className='flex-1 min-w-0'>
+
+              {/* Hero image with calendar widget overlay */}
+              <div
+                className='relative w-full rounded-2xl overflow-hidden bg-emerald-50 mb-8 shadow-[0_4px_32px_rgba(6,78,59,0.12)]'
+                style={{ aspectRatio: '16/9', maxHeight: '480px' }}
+              >
+                {imageSrc && !imgError ? (
+                  <>
+                    {!imgLoaded && <div className='absolute inset-0 bg-gradient-to-br from-emerald-100 to-emerald-50 animate-pulse' />}
+                    <img
+                      src={imageSrc}
+                      alt={title}
+                      className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+                      onLoad={() => setImgLoaded(true)}
+                      onError={() => setImgError(true)}
+                    />
+                    {/* Gradient overlay for calendar legibility */}
+                    <div className='absolute inset-0 bg-gradient-to-t from-emerald-950/60 via-transparent to-transparent' />
+                  </>
+                ) : (
+                  <div className='w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-100 to-emerald-50 min-h-[200px]'>
+                    <ImageIcon className='w-16 h-16 text-emerald-300' />
+                  </div>
+                )}
+
+                {/* Calendar widget — bottom-left overlay */}
+                <div className='absolute bottom-4 left-4 drop-shadow-xl'>
+                  <CalendarWidget event={currentEvent} size='lg' />
+                </div>
+
+                {/* Status badge — bottom-right */}
+                {currentEvent.status && (
+                  <div className='absolute bottom-4 right-4'>
+                    <span className={`text-[10px] font-goldman font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border backdrop-blur-sm ${statusCls}`}>
+                      {currentEvent.status}
+                    </span>
+                  </div>
+                )}
               </div>
-            </div>
 
-            <div className='font-roboto text-gray-700 text-base md:text-lg leading-relaxed space-y-6'>
-              {contentBlocks.map((paragraph, index) => (
-                <p key={index} className='font-light'>
-                  {paragraph}
+              {/* Event info chips */}
+              <div className='flex flex-wrap gap-3 mb-7'>
+                {location && (
+                  <div className='flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-4 py-2.5 shadow-sm'>
+                    <LocationIcon className='w-4 h-4 text-emerald-700 shrink-0' />
+                    <span className='text-sm font-jost font-medium text-emerald-950'>{location}</span>
+                  </div>
+                )}
+                {currentEvent.startDate && (
+                  <div className='flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-4 py-2.5 shadow-sm'>
+                    <CalenderIcon className='w-4 h-4 text-emerald-700 shrink-0' />
+                    <span className='text-sm font-jost font-medium text-emerald-950'>{formatDate(currentEvent.startDate)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Body text — constrained reading column */}
+              <div className='max-w-2xl'>
+                {contentBlocks.map((para, idx) => (
+                  <p
+                    key={idx}
+                    className={`leading-8 text-gray-700 font-roboto mb-6 ${
+                      idx === 0
+                        ? 'text-[1.05rem] font-light text-gray-800 border-l-4 border-amber-500 pl-5 py-1 bg-amber-50/30 rounded-r-lg'
+                        : 'text-base font-light'
+                    }`}
+                  >
+                    {para}
+                  </p>
+                ))}
+              </div>
+            </article>
+
+            {/* ── Sticky sidebar ─────────────────────────────────────────── */}
+            <aside className='w-full lg:w-72 xl:w-80 shrink-0 sticky top-[4.5rem] self-start space-y-5'>
+
+              {/* Other Events */}
+              <div className='bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden'>
+                <div className='px-5 py-4 bg-emerald-950'>
+                  <h2 className='font-goldman font-bold text-[13px] uppercase tracking-widest text-white'>{otherLabel}</h2>
+                </div>
+                <div className='p-3 space-y-2'>
+                  {relatedEvents.length === 0 ? (
+                    <p className='text-xs text-gray-400 font-jost px-2 py-3'>No other events available.</p>
+                  ) : (
+                    relatedEvents.map((ev, idx) => {
+                      const rTitle = (language === 'am' && ev.amh?.title) ? ev.amh.title
+                                   : (language === 'or' && ev.orm?.title) ? ev.orm.title : ev.title
+                      const rLoc   = (language === 'am' && ev.amh?.location) ? ev.amh.location
+                                   : (language === 'or' && ev.orm?.location) ? ev.orm.location : ev.location
+                      return (
+                        <AnimatedCard key={ev.id} index={idx} stagger={60} maxDelay={400}>
+                          <EventCard
+                            event={{ ...ev, title: rTitle, location: rLoc }}
+                            onClick={() => navigate(`/events/${ev.id}`)}
+                          />
+                        </AnimatedCard>
+                      )
+                    })
+                  )}
+                </div>
+                <div className='px-5 py-3 border-t border-gray-100 bg-gray-50/50'>
+                  <button
+                    onClick={() => navigate('/events')}
+                    className='flex items-center gap-1.5 text-[11px] font-goldman font-bold uppercase tracking-wider text-emerald-700 hover:text-emerald-900 transition-colors duration-200 cursor-pointer'
+                  >
+                    { { en: 'All Events', am: 'ሁሉም ዝግጅቶች', or: 'Taatee Hunda' }[language] || 'All Events' }
+                    <ArrowRight className='w-3 h-3' />
+                  </button>
+                </div>
+              </div>
+
+              {/* "You are viewing" card */}
+              <div className='bg-gradient-to-br from-emerald-950 to-emerald-900 rounded-2xl p-5 border border-emerald-800'>
+                <p className='text-[10px] font-goldman font-bold uppercase tracking-widest text-emerald-400/70 mb-2'>
+                  { { en: 'You are viewing', am: 'እያዩ ያሉት', or: 'Ilaachaa jirtu' }[language] || 'You are viewing' }
                 </p>
-              ))}
-            </div>
-          </div>
-
-          <hr className='text-emerald-900/10 w-full lg:hidden my-4' />
-
-          <div className='flex mx-auto flex-col gap-8 lg:max-w-sm xl:max-w-100 2xl:max-w-150'>
-
-            <div>
-              
-              <h2 className='font-goldman font-bold text-lg text-emerald-950 mb-4 uppercase tracking-wider border-b border-emerald-900/10 pb-2'>{t.other_events[language]}</h2>
-
-              <div className='space-y-4 2xl:space-y-6'>
-                {relatedEvents.map(event => {
-                    let rTitle = event.title
-                    let rLocation = event.location
-                    if (language === 'am' && event.amh) {
-                        rTitle = event.amh.title || rTitle
-                        rLocation = event.amh.location || rLocation
-                    } else if (language === 'or' && event.orm) {
-                        rTitle = event.orm.title || rTitle
-                        rLocation = event.orm.location || rLocation
-                    }
-
-                  return (
-                  <EventCard
-                    key={event.id}
-                    event={{...event, title: rTitle, location: rLocation}}
-                    onClick={() => navigate(`/events/${event.id}`)}
-                  />
-                )})}
+                <p className='text-sm font-goldman font-bold text-white leading-snug line-clamp-3 mb-3'>{title}</p>
+                <div className='flex items-center gap-2 flex-wrap'>
+                  {currentEvent.status && (
+                    <span className={`text-[9px] font-goldman font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border ${statusCls}`}>
+                      {currentEvent.status}
+                    </span>
+                  )}
+                  {location && (
+                    <span className='flex items-center gap-1 text-[10px] text-emerald-400/60 font-jost'>
+                      <LocationIcon className='w-3 h-3' />
+                      {location}
+                    </span>
+                  )}
+                </div>
               </div>
-            </div>
-
+            </aside>
           </div>
-
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
 export default EventDetails
-
-

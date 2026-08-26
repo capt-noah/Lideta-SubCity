@@ -7,6 +7,9 @@ import LidetaLogo from '../assets/LidetaLogo.svg?react'
 import LoadingButton from '../components/ui/LoadingButton'
 import Notification from '../components/ui/Notification'
 import { validatePasswordStrength, generateStrongPassword } from '../utils/passwordHelper'
+import { validateName, validateEthiopianPhoneOptional } from '../utils/validation'
+import EyeShowIcon from '../assets/icons/eye_show_icon.svg?react'
+import EyeHideIcon from '../assets/icons/eye_hide_icon.svg?react'
 
 const T = {
   login:        { en: 'Sign In',         am: 'ግባ',              or: 'Seeni' },
@@ -84,7 +87,46 @@ function UserAuth() {
   const notify = (message, type='success') => setNotif({ isOpen:true, message, type })
 
   const [form,    setForm]    = useState({ first_name:'', last_name:'', email:'', phone:'', password:'', confirmPassword:'' })
-  const [showPass,setShowPass]= useState(false)
+  const [showPass,    setShowPass]    = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
+  // Track which fields have been touched (blurred) to show inline errors
+  const [touched, setTouched] = useState({})
+  const touch = (field) => setTouched(p => ({ ...p, [field]: true }))
+
+  // Name fields — only allow letters, spaces, hyphens, apostrophes
+  const handleNameChange = (field) => (e) => {
+    const filtered = e.target.value.replace(/[^A-Za-z\u00C0-\u024F\u1200-\u137F\s'\-]/g, '')
+    setForm(p => ({ ...p, [field]: filtered }))
+  }
+
+  // Phone — strip the +251 prefix before storing, keep only digits, max 9
+  const handlePhoneChange = (e) => {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 9)
+    setForm(p => ({ ...p, phone: digits ? `+251${digits}` : '' }))
+  }
+  // Display value: strip the +251 prefix so the input just shows the 9 digits
+  const phoneDisplayValue = form.phone.startsWith('+251') ? form.phone.slice(4) : form.phone
+
+  // Per-field error getter for the register form
+  const getFieldError = (field) => {
+    if (!touched[field]) return ''
+    if (field === 'first_name') return validateName(form.first_name, 'First name').message
+    if (field === 'last_name')  return validateName(form.last_name, 'Last name').message
+    if (field === 'phone')      return validateEthiopianPhoneOptional(form.phone).message
+    if (field === 'email') {
+      if (!form.email.trim()) return 'Email is required.'
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) return 'Enter a valid email address.'
+    }
+    return ''
+  }
+
+  // Dynamic input border based on touched + validity
+  const fieldCls = (field) => {
+    if (!touched[field]) return inputCls
+    const err = getFieldError(field)
+    if (err) return inputCls.replace('border-slate-200', 'border-red-400').replace('focus:ring-emerald-600/20 focus:border-emerald-600', 'focus:ring-red-400/20 focus:border-red-400')
+    return inputCls.replace('border-slate-200', 'border-green-400').replace('focus:ring-emerald-600/20 focus:border-emerald-600', 'focus:ring-green-400/20 focus:border-green-400')
+  }
 
   // OTP state
   const [otp,          setOtp]          = useState(['','','','','',''])
@@ -136,6 +178,14 @@ function UserAuth() {
   // ── Register ──────────────────────────────────────────────────────────────
   const handleRegister = async (e) => {
     e.preventDefault()
+    // Mark all register fields as touched to surface any outstanding errors
+    setTouched({ first_name: true, last_name: true, phone: true, email: true })
+    const firstErr  = validateName(form.first_name, 'First name')
+    const lastErr   = validateName(form.last_name,  'Last name')
+    const phoneErr  = validateEthiopianPhoneOptional(form.phone)
+    if (!firstErr.isValid) { notify(firstErr.message, 'error'); return }
+    if (!lastErr.isValid)  { notify(lastErr.message,  'error'); return }
+    if (!phoneErr.isValid) { notify(phoneErr.message, 'error'); return }
     if (form.password !== form.confirmPassword) { notify('Passwords do not match', 'error'); return }
     const { isValid, feedback } = validatePasswordStrength(form.password)
     if (!isValid) { notify(`Weak password: ${feedback}`, 'error'); return }
@@ -210,7 +260,8 @@ function UserAuth() {
   const handleResetPassword = async (e) => {
     e.preventDefault()
     if (fpNewPass !== fpConfirm) { notify('Passwords do not match', 'error'); return }
-    if (fpNewPass.length < 8) { notify('Password must be at least 8 characters', 'error'); return }
+    const { isValid, feedback } = validatePasswordStrength(fpNewPass)
+    if (!isValid) { notify(`Weak password: ${feedback}`, 'error'); return }
     setIsLoading(true)
     try {
       const res  = await fetch(`${BASE_URL}/api/auth/reset-password`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email: fpEmail, otp: fpOtp.join(''), newPassword: fpNewPass, entityType:'user' }) })
@@ -244,26 +295,68 @@ function UserAuth() {
               {step === 'register' && (
                 <>
                   <div className='grid grid-cols-2 gap-4'>
-                    <div><label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('first_name')} <span className='text-red-500'>*</span></label><input type='text' value={form.first_name} onChange={set('first_name')} required className={inputCls} /></div>
-                    <div><label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('last_name')} <span className='text-red-500'>*</span></label><input type='text' value={form.last_name} onChange={set('last_name')} required className={inputCls} /></div>
+                    <div>
+                      <label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('first_name')} <span className='text-red-500'>*</span></label>
+                      <input type='text' value={form.first_name} onChange={handleNameChange('first_name')} onBlur={() => touch('first_name')} required className={fieldCls('first_name')} placeholder='Letters only' maxLength={60} />
+                      {getFieldError('first_name') && <p className='text-xs text-red-500 mt-1'>{getFieldError('first_name')}</p>}
+                    </div>
+                    <div>
+                      <label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('last_name')} <span className='text-red-500'>*</span></label>
+                      <input type='text' value={form.last_name} onChange={handleNameChange('last_name')} onBlur={() => touch('last_name')} required className={fieldCls('last_name')} placeholder='Letters only' maxLength={60} />
+                      {getFieldError('last_name') && <p className='text-xs text-red-500 mt-1'>{getFieldError('last_name')}</p>}
+                    </div>
                   </div>
-                  <div><label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('phone')}</label><input type='tel' value={form.phone} onChange={set('phone')} className={inputCls} /></div>
+                  <div>
+                    <label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('phone')}</label>
+                    <div className={`flex rounded-xl border overflow-hidden transition-all ${touched.phone && getFieldError('phone') ? 'border-red-400' : touched.phone && !getFieldError('phone') && form.phone ? 'border-green-400' : 'border-slate-200'} focus-within:ring-2 focus-within:ring-emerald-600/20 focus-within:border-emerald-600`}>
+                      <span className='flex items-center px-3 bg-slate-50 border-r border-slate-200 text-sm font-mono text-slate-500 shrink-0 select-none'>+251</span>
+                      <input
+                        type='tel'
+                        inputMode='numeric'
+                        value={phoneDisplayValue}
+                        onChange={handlePhoneChange}
+                        onBlur={() => touch('phone')}
+                        placeholder='9XXXXXXXX'
+                        maxLength={9}
+                        className='flex-1 px-3 py-2.5 text-sm font-roboto bg-white focus:outline-none'
+                      />
+                    </div>
+                    {getFieldError('phone')
+                      ? <p className='text-xs text-red-500 mt-1'>{getFieldError('phone')}</p>
+                      : <p className='text-[10px] text-gray-400 mt-1'>Ethiopian number — 9 digits after +251</p>
+                    }
+                  </div>
                 </>
               )}
-              <div><label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('email')} <span className='text-red-500'>*</span></label><input type='email' value={form.email} onChange={set('email')} required className={inputCls} /></div>
+              <div>
+                <label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('email')} <span className='text-red-500'>*</span></label>
+                <input type='email' value={form.email} onChange={set('email')} onBlur={() => touch('email')} required className={fieldCls('email')} />
+                {getFieldError('email') && <p className='text-xs text-red-500 mt-1'>{getFieldError('email')}</p>}
+              </div>
               <div>
                 <div className='flex justify-between items-center mb-1.5'>
                   <label className='text-[10px] uppercase tracking-wider font-bold text-slate-550'>{t('password')} <span className='text-red-500'>*</span></label>
                   {step==='register' && <button type='button' onClick={() => { const p=generateStrongPassword(); setForm(f=>({...f,password:p,confirmPassword:p})) }} className='text-[10px] text-slate-800 hover:text-emerald-600 font-goldman font-bold uppercase tracking-wider cursor-pointer'>{t('suggest')}</button>}
                 </div>
                 <div className='relative'>
-                   <input type={showPass?'text':'password'} value={form.password} onChange={set('password')} required className={inputCls+' pr-14'} />
-                   <button type='button' onClick={()=>setShowPass(!showPass)} className='absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] font-goldman font-bold uppercase tracking-wider text-slate-400 hover:text-slate-800 cursor-pointer'>{showPass?'Hide':'Show'}</button>
+                   <input type={showPass?'text':'password'} value={form.password} onChange={set('password')} required className={inputCls+' pr-10'} />
+                   <button type='button' onClick={()=>setShowPass(!showPass)} className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer transition-colors'>
+                     {showPass ? <EyeHideIcon className='w-4 h-4' /> : <EyeShowIcon className='w-4 h-4' />}
+                   </button>
                 </div>
                 {step==='register' && <StrengthBar password={form.password} />}
               </div>
               {step==='register' && (
-                <div><label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('confirm_pass')} <span className='text-red-500'>*</span></label><input type='password' value={form.confirmPassword} onChange={set('confirmPassword')} required className={inputCls} />{form.confirmPassword && form.password !== form.confirmPassword && <p className='text-xs text-red-500 mt-1.5'>Passwords do not match</p>}</div>
+                <div>
+                  <label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('confirm_pass')} <span className='text-red-500'>*</span></label>
+                  <div className='relative'>
+                    <input type={showConfirm?'text':'password'} value={form.confirmPassword} onChange={set('confirmPassword')} required className={inputCls+' pr-10'} />
+                    <button type='button' onClick={()=>setShowConfirm(!showConfirm)} className='absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer transition-colors'>
+                      {showConfirm ? <EyeHideIcon className='w-4 h-4' /> : <EyeShowIcon className='w-4 h-4' />}
+                    </button>
+                  </div>
+                  {form.confirmPassword && form.password !== form.confirmPassword && <p className='text-xs text-red-500 mt-1.5'>Passwords do not match</p>}
+                </div>
               )}
               {step==='login' && <button type='button' onClick={() => setStep('forgot')} className='text-[10px] font-goldman font-bold uppercase tracking-wider text-slate-400 hover:text-slate-800 cursor-pointer w-full text-right'>{t('forgot_pass')}</button>}
               <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-emerald-600 text-white font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md hover:shadow-lg mt-2'>
@@ -348,8 +441,16 @@ function UserAuth() {
           <div className='space-y-6'>
             <div className='text-center'><h2 className='text-2xl font-goldman font-bold text-slate-900 uppercase tracking-wide'>New Password</h2></div>
             <form onSubmit={handleResetPassword} className='space-y-5'>
-              <div><label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('new_pass')}</label><input type='password' value={fpNewPass} onChange={e=>setFpNewPass(e.target.value)} required className={inputCls} /></div>
-              <div><label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>Confirm</label><input type='password' value={fpConfirm} onChange={e=>setFpConfirm(e.target.value)} required className={inputCls} />{fpConfirm && fpNewPass!==fpConfirm && <p className='text-xs text-red-500 mt-1.5'>Passwords do not match</p>}</div>
+              <div>
+                <label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>{t('new_pass')}</label>
+                <input type='password' value={fpNewPass} onChange={e=>setFpNewPass(e.target.value)} required className={inputCls} />
+                <StrengthBar password={fpNewPass} />
+              </div>
+              <div>
+                <label className='block text-[10px] uppercase tracking-wider font-bold text-slate-550 mb-1.5'>Confirm</label>
+                <input type='password' value={fpConfirm} onChange={e=>setFpConfirm(e.target.value)} required className={inputCls} />
+                {fpConfirm && fpNewPass !== fpConfirm && <p className='text-xs text-red-500 mt-1.5'>Passwords do not match</p>}
+              </div>
               <LoadingButton isLoading={isLoading} className='w-full py-3.5 bg-slate-900 hover:bg-emerald-600 text-white  font-goldman font-bold uppercase tracking-wider rounded-xl transition-all duration-300 shadow-md'>Reset Password</LoadingButton>
             </form>
           </div>
