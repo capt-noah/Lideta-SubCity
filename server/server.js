@@ -31,7 +31,9 @@ app.use(express.json())
 app.use(corsMiddleware)
 app.use(logger)
 
-// ── Health check ─────────────────────────────────────────────────────────────
+import { pool as mysqlPool } from './db/index.js'
+
+// ── Health check & Diagnostics ───────────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.status(200).json({
     ok: true,
@@ -39,6 +41,27 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV || 'development',
   })
+})
+
+app.get('/api/db-test', async (req, res) => {
+  try {
+    const [rows] = await mysqlPool.query('SELECT 1 + 1 AS result, NOW() as server_time')
+    const [tables] = await mysqlPool.query('SHOW TABLES')
+    res.json({
+      status: 'connected',
+      test: rows[0],
+      tables: tables.map(t => Object.values(t)[0]),
+      host: process.env.DB_HOST || '10.180.50.142',
+      database: process.env.DB_NAME || 'lideta_db',
+    })
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message,
+      code: err.code,
+      host: process.env.DB_HOST || '10.180.50.142',
+    })
+  }
 })
 
 // ── Static files ──────────────────────────────────────────────────────────────
