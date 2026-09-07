@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>LSC-SRS-001 — Lideta Sub-City Official Website and Administration System</title>
+<style>
+
+/* ════════════════════════════════════════════════════════
+   APA 7th Edition — IEEE SRS Document Stylesheet
+   Times New Roman 12pt · Double-spaced · 1-inch margins
+   Black and white — no decorative color
+   ════════════════════════════════════════════════════════ */
+
+@page {
+  size: A4;
+  margin: 25.4mm 25.4mm 25.4mm 31.75mm;
+}
+
+@page :first {
+  margin: 25.4mm 25.4mm 25.4mm 31.75mm;
+}
+
+@page body-page {
+  size: A4;
+  margin: 25.4mm 25.4mm 25.4mm 31.75mm;
+  @top-left {
+    content: "RUNNING HEAD: LSC OFFICIAL WEBSITE AND ADMINISTRATION SYSTEM — SRS v1.0.0";
+    font-family: "Times New Roman", Times, serif;
+    font-size: 8pt;
+    font-weight: bold;
+    color: #000;
+    margin-top: 8mm;
+  }
+  @top-right {
+    content: counter(page);
+    font-family: "Times New Roman", Times, serif;
+    font-size: 10pt;
+    color: #000;
+    margin-top: 8mm;
+  }
+  @bottom-center {
+    content: "CONFIDENTIAL — LIDETA SUB-CITY ADMINISTRATION — INTERNAL USE ONLY";
+    font-family: "Times New Roman", Times, serif;
+    font-size: 7pt;
+    letter-spacing: 0.05em;
+    color: #000;
+    border-top: 0.5pt solid #000;
+    padding-top: 2mm;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #fff;
+}
+
+body {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12pt;
+  line-height: 2;
+  color: #000;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ════════════════════════════════════════════════════════
+   COVER PAGE — APA title page format
+   Centered block, no color, institutional letterhead style
+   ════════════════════════════════════════════════════════ */
+
+.cover-page {
+  width: 210mm;
+  min-height: 297mm;
+  page-break-after: always;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 25.4mm 31.75mm;
+  font-family: "Times New Roman", Times, serif;
+  background: #fff;
+}
+
+/* Institution header — top of page, centered */
+.cover-institution {
+  width: 100%;
+  text-align: center;
+  border-bottom: 1.5pt solid #000;
+  padding-bottom: 12pt;
+  margin-bottom: 12pt;
+}
+
+.cover-institution-name {
+  font-size: 13pt;
+  font-weight: bold;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  color: #000;
+}
+
+.cover-institution-sub {
+  font-size: 11pt;
+  font-weight: normal;
+  line-height: 1.5;
+  color: #000;
+}
+
+/* Running head line — APA requirement */
+.cover-running-head {
+  width: 100%;
+  font-size: 9pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #000;
+  margin-bottom: 60pt;
+  text-align: left;
+}
+
+/* Title block — vertically centered in upper half */
+.cover-title-block {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 36pt;
+}
+
+.cover-doc-type {
+  font-size: 11pt;
+  font-weight: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #000;
+  margin-bottom: 18pt;
+  line-height: 1.5;
+}
+
+.cover-title {
+  font-size: 18pt;
+  font-weight: bold;
+  line-height: 1.35;
+  color: #000;
+  margin-bottom: 12pt;
+}
+
+.cover-subtitle {
+  font-size: 12pt;
+  font-weight: normal;
+  font-style: italic;
+  line-height: 1.6;
+  color: #000;
+  margin-bottom: 0;
+}
+
+/* Metadata block — lower third of cover */
+.cover-meta {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 48pt;
+}
+
+.cover-meta-rule {
+  border: none;
+  border-top: 1pt solid #000;
+  margin: 0 0 12pt 0;
+}
+
+.cover-meta-row {
+  display: flex;
+  font-size: 11pt;
+  line-height: 1.9;
+  color: #000;
+}
+
+.cover-meta-label {
+  font-weight: bold;
+  width: 130pt;
+  flex-shrink: 0;
+}
+
+.cover-meta-value {
+  flex: 1;
+  font-weight: normal;
+}
+
+.cover-classification-block {
+  margin-top: 24pt;
+  border-top: 1pt solid #000;
+  border-bottom: 1pt solid #000;
+  padding: 8pt 0;
+  text-align: center;
+}
+
+.cover-classification-text {
+  font-size: 10pt;
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #000;
+}
+
+/* ════════════════════════════════════════════════════════
+   BODY PAGES
+   ════════════════════════════════════════════════════════ */
+
+.doc-body {
+  page: body-page;
+  counter-reset: page 1;
+}
+
+/* APA Heading Level 1 — centered, bold, Title Case */
+h1 {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 14pt;
+  font-weight: bold;
+  text-align: center;
+  color: #000;
+  /* No top or bottom margin — paragraph spacing provides separation */
+  margin: 0;
+  padding: 0;
+  line-height: 2;
+  page-break-before: always;
+  page-break-after: avoid;
+  border: none;
+}
+
+.doc-body h1:first-child { page-break-before: auto; }
+
+/* APA Heading Level 2 — left-aligned, bold */
+h2 {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 13pt;
+  font-weight: bold;
+  text-align: left;
+  color: #000;
+  margin: 0;
+  padding: 0;
+  line-height: 2;
+  page-break-after: avoid;
+  border: none;
+}
+
+/* APA Heading Level 3 — left-aligned, bold italic */
+h3 {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12pt;
+  font-weight: bold;
+  font-style: italic;
+  text-align: left;
+  color: #000;
+  margin: 0;
+  padding: 0;
+  line-height: 2;
+  page-break-after: avoid;
+}
+
+/* APA Heading Level 4 — indented, bold */
+h4 {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12pt;
+  font-weight: bold;
+  text-align: left;
+  color: #000;
+  margin: 0;
+  padding: 0 0 0 24pt;
+  line-height: 2;
+  page-break-after: avoid;
+}
+
+/* Body paragraphs */
+p {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12pt;
+  line-height: 2;
+  text-align: justify;
+  margin: 0;
+  color: #000;
+}
+
+/* Lists */
+ul, ol {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12pt;
+  line-height: 2;
+  margin: 0 0 0 36pt;
+  padding: 0;
+  color: #000;
+}
+
+ul { list-style-type: disc; }
+ol { list-style-type: decimal; }
+li { margin: 0; padding-left: 6pt; }
+li p { margin: 0; text-indent: 0; }
+
+/* Horizontal rule */
+hr.section-rule {
+  border: none;
+  border-top: 1pt solid #000;
+  margin: 12pt 0;
+}
+
+/* Blockquote */
+blockquote {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 12pt;
+  line-height: 2;
+  margin: 0 36pt;
+  padding: 0;
+  border: none;
+  color: #000;
+}
+
+blockquote p { text-indent: 0; font-style: italic; }
+
+/* ════════════════════════════════════════════════════════
+   TABLES — strict APA format
+   No vertical borders anywhere, no right border on pre
+   ════════════════════════════════════════════════════════ */
+table {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 10.5pt;
+  line-height: 1.5;
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6pt 0 12pt;
+  page-break-inside: avoid;
+  color: #000;
+  /* APA: no outer box border */
+  border: none;
+}
+
+thead tr {
+  border-top: 1.5pt solid #000;
+  border-bottom: 1pt solid #000;
+}
+
+thead th {
+  font-weight: bold;
+  font-size: 10.5pt;
+  text-align: left;
+  padding: 4pt 8pt;
+  vertical-align: bottom;
+  color: #000;
+  background: #fff;
+  /* No vertical borders */
+  border-left: none;
+  border-right: none;
+}
+
+tbody tr { border: none; }
+
+/* Bottom rule only on last data row */
+tbody tr:last-child {
+  border-bottom: 1.5pt solid #000;
+}
+
+td {
+  padding: 3pt 8pt;
+  vertical-align: top;
+  text-align: left;
+  color: #000;
+  /* No borders at all */
+  border: none;
+  font-size: 10.5pt;
+  line-height: 1.5;
+}
+
+/* Very subtle alternating row — APA-acceptable */
+tbody tr:nth-child(even) td { background: #f5f5f5; }
+
+/* ════════════════════════════════════════════════════════
+   CODE
+   ════════════════════════════════════════════════════════ */
+code {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 9.5pt;
+  background: #f4f4f4;
+  padding: 1pt 3pt;
+  /* Only top and bottom border — no sides */
+  border-top: 0.5pt solid #ccc;
+  border-bottom: 0.5pt solid #ccc;
+  border-left: none;
+  border-right: none;
+  line-height: 1;
+}
+
+pre {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 8.5pt;
+  line-height: 1.45;
+  background: #f8f8f8;
+  /* Only top and bottom border — no left accent, no right border */
+  border-top: 1pt solid #999;
+  border-bottom: 1pt solid #999;
+  border-left: none;
+  border-right: none;
+  padding: 10pt 12pt;
+  margin: 6pt 0 12pt;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-all;
+  page-break-inside: avoid;
+}
+
+pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 8.5pt;
+  color: #000;
+}
+
+/* Links */
+a.doc-link {
+  color: #000;
+  text-decoration: underline;
+}
+
+/* ════════════════════════════════════════════════════════
+   TABLE OF CONTENTS PAGE
+   ════════════════════════════════════════════════════════ */
+.toc-page {
+  page: body-page;
+  page-break-after: always;
+}
+
+.toc-title {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 14pt;
+  font-weight: bold;
+  text-align: center;
+  color: #000;
+  line-height: 2;
+  margin: 0 0 12pt 0;
+}
+
+.toc-entry {
+  font-family: "Times New Roman", Times, serif;
+  font-size: 11pt;
+  line-height: 1.8;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 0.5pt dotted #999;
+  padding: 1pt 0;
+  color: #000;
+}
+
+.toc-entry.level1 { font-weight: bold; margin-top: 4pt; }
+.toc-entry.level2 { padding-left: 18pt; }
+.toc-entry.level3 { padding-left: 36pt; font-style: italic; font-size: 10.5pt; }
+.toc-entry-title  { flex: 1; }
+.toc-entry-page   { flex-shrink: 0; padding-left: 8pt; }
+
+@media print {
+  body { font-size: 12pt; }
+  a { color: #000 !important; }
+  a[href]::after { content: none; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     COVER PAGE — APA Title Page Format
+     ═══════════════════════════════════════════ -->
+<div class="cover-page">
+
+  <!-- Institution header -->
+  <div class="cover-institution">
+    <div class="cover-institution-name">Lideta Sub-City Administration</div>
+    <div class="cover-institution-sub">Information Technology Department &nbsp;|&nbsp; Addis Ababa City Government</div>
+    <div class="cover-institution-sub">Addis Ababa, Ethiopia</div>
+  </div>
+
+  <!-- APA running head line (replicated on cover per APA 7th ed.) -->
+  <div class="cover-running-head">
+    Running head: LSC OFFICIAL WEBSITE AND ADMINISTRATION SYSTEM SRS
+  </div>
+
+  <!-- Title block -->
+  <div class="cover-title-block">
+    <div class="cover-doc-type">Software Requirements Specification</div>
+    <div class="cover-title">
+      Lideta Sub-City Official Website<br>
+      and Administration System
+    </div>
+    <div class="cover-subtitle">
+      A technical specification for system architecture, functional requirements,<br>
+      security requirements, API contracts, and deployment infrastructure
+    </div>
+  </div>
+
+  <!-- Metadata block -->
+  <div class="cover-meta">
+    <div class="cover-meta-rule"></div>
+
+    <div class="cover-meta-row">
+      <span class="cover-meta-label">Document Number:</span>
+      <span class="cover-meta-value">LSC-SRS-001</span>
+    </div>
+    <div class="cover-meta-row">
+      <span class="cover-meta-label">Version:</span>
+      <span class="cover-meta-value">1.0.0 &mdash; Final</span>
+    </div>
+    <div class="cover-meta-row">
+      <span class="cover-meta-label">Date of Issue:</span>
+      <span class="cover-meta-value">August 2026</span>
+    </div>
+    <div class="cover-meta-row">
+      <span class="cover-meta-label">Prepared By:</span>
+      <span class="cover-meta-value">Development Team, Lideta Sub-City Administration IT Department</span>
+    </div>
+    <div class="cover-meta-row">
+      <span class="cover-meta-label">Reviewed By:</span>
+      <span class="cover-meta-value">Information Network Security Administration</span>
+    </div>
+    <div class="cover-meta-row">
+      <span class="cover-meta-label">Approved By:</span>
+      <span class="cover-meta-value">Lideta Sub-City Administration</span>
+    </div>
+    <div class="cover-meta-row">
+      <span class="cover-meta-label">Standard:</span>
+      <span class="cover-meta-value">IEEE Std 830-1998 &nbsp;/&nbsp; APA Publication Manual, 7th Edition</span>
+    </div>
+
+    <div class="cover-meta-rule" style="margin-top:12pt;"></div>
+
+    <div class="cover-classification-block">
+      <div class="cover-classification-text">
+        Confidential &nbsp;&mdash;&nbsp; For Internal Use Only
+      </div>
+      <div style="font-family:'Times New Roman',serif; font-size:9pt; color:#000; margin-top:4pt; line-height:1.4;">
+        Unauthorized reproduction or distribution of this document is strictly prohibited.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TABLE OF CONTENTS
+     ═══════════════════════════════════════════════════════════ -->
+<div class="toc-page">
+  <div class="toc-title">Table of Contents</div>
+
+  <div class="toc-entry level1"><span class="toc-entry-title">1. &nbsp; Introduction</span><span class="toc-entry-page">3</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">1.1 &nbsp; Purpose</span><span class="toc-entry-page">3</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">1.2 &nbsp; Scope</span><span class="toc-entry-page">3</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">1.3 &nbsp; Definitions, Acronyms, and Abbreviations</span><span class="toc-entry-page">4</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">1.4 &nbsp; References</span><span class="toc-entry-page">5</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">1.5 &nbsp; Overview</span><span class="toc-entry-page">5</span></div>
+
+  <div class="toc-entry level1"><span class="toc-entry-title">2. &nbsp; Overall Description</span><span class="toc-entry-page">6</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">2.1 &nbsp; Product Perspective</span><span class="toc-entry-page">6</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">2.2 &nbsp; Product Functions Summary</span><span class="toc-entry-page">6</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">2.3 &nbsp; User Classes and Characteristics</span><span class="toc-entry-page">7</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">2.4 &nbsp; Operating Environment</span><span class="toc-entry-page">7</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">2.5 &nbsp; Design and Implementation Constraints</span><span class="toc-entry-page">8</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">2.6 &nbsp; Assumptions and Dependencies</span><span class="toc-entry-page">8</span></div>
+
+  <div class="toc-entry level1"><span class="toc-entry-title">3. &nbsp; System Architecture</span><span class="toc-entry-page">9</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">3.1 &nbsp; Architectural Pattern</span><span class="toc-entry-page">9</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">3.2 &nbsp; Front-End Architecture</span><span class="toc-entry-page">10</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">3.3 &nbsp; Back-End Architecture</span><span class="toc-entry-page">11</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">3.4 &nbsp; Data Flow Overview</span><span class="toc-entry-page">12</span></div>
+
+  <div class="toc-entry level1"><span class="toc-entry-title">4. &nbsp; Roles and Access Control</span><span class="toc-entry-page">13</span></div>
+  <div class="toc-entry level1"><span class="toc-entry-title">5. &nbsp; Functional Requirements</span><span class="toc-entry-page">16</span></div>
+  <div class="toc-entry level1"><span class="toc-entry-title">6. &nbsp; Non-Functional Requirements</span><span class="toc-entry-page">26</span></div>
+  <div class="toc-entry level1"><span class="toc-entry-title">7. &nbsp; Database Schema</span><span class="toc-entry-page">28</span></div>
+  <div class="toc-entry level1"><span class="toc-entry-title">8. &nbsp; API Specification</span><span class="toc-entry-page">34</span></div>
+  <div class="toc-entry level1"><span class="toc-entry-title">9. &nbsp; Real-Time Communication</span><span class="toc-entry-page">43</span></div>
+  <div class="toc-entry level1"><span class="toc-entry-title">10. Security Requirements</span><span class="toc-entry-page">44</span></div>
+  <div class="toc-entry level1"><span class="toc-entry-title">11. Deployment Architecture</span><span class="toc-entry-page">49</span></div>
+  <div class="toc-entry level1"><span class="toc-entry-title">12. Appendices</span><span class="toc-entry-page">54</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">Appendix A &nbsp; Technology Stack Summary</span><span class="toc-entry-page">54</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">Appendix B &nbsp; Complete Route Tree</span><span class="toc-entry-page">55</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">Appendix C &nbsp; File Upload Paths</span><span class="toc-entry-page">56</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">Appendix D &nbsp; Environment Variable Reference</span><span class="toc-entry-page">56</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">Appendix E &nbsp; Admin Role Default Landing Paths</span><span class="toc-entry-page">57</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">Appendix F &nbsp; Satisfaction Survey Question Reference</span><span class="toc-entry-page">57</span></div>
+  <div class="toc-entry level2"><span class="toc-entry-title">Appendix G &nbsp; Known Limitations and Future Recommendations</span><span class="toc-entry-page">58</span></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     DOCUMENT BODY
+     ═══════════════════════════════════════════════════════════ -->
+<div class="doc-body">
+<h1 id="software-requirements-specification">Software Requirements Specification</h1>
+<h2 id="lideta-sub-city-official-website-and-administration-system">Lideta Sub-City Official Website and Administration System</h2>
+<h3>Version 1.0.0 | Confidential</h3>
+
+<hr class="section-rule">
+
+<p><strong>Document Control</strong></p>
+
+<table>
+<thead><tr><th>Field</th><th>Value</th></tr></thead>
+<tbody><tr><td>Project Name</td><td>Lideta Sub-City Official Website and Administration System</td></tr>
+<tr><td>Document Type</td><td>Software Requirements Specification (SRS)</td></tr>
+<tr><td>Version</td><td>1.0.0</td></tr>
+<tr><td>Status</td><td>Final</td></tr>
+<tr><td>Prepared For</td><td>IT Department / Information Network Security Administration</td></tr>
+<tr><td>Classification</td><td>Confidential — Internal Use Only</td></tr>
+<tr><td>Date</td><td>August 2026</td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<h2 id="table-of-contents">Table of Contents</h2>
+
+<ol>
+  <li><p><a href="#1-introduction" class="doc-link">Introduction</a></p></li>
+  <li><p><a href="#2-overall-description" class="doc-link">Overall Description</a></p></li>
+  <li><p><a href="#3-system-architecture" class="doc-link">System Architecture</a></p></li>
+  <li><p><a href="#4-roles-and-access-control" class="doc-link">Roles and Access Control</a></p></li>
+  <li><p><a href="#5-functional-requirements" class="doc-link">Functional Requirements</a></p></li>
+  <li><p><a href="#6-non-functional-requirements" class="doc-link">Non-Functional Requirements</a></p></li>
+  <li><p><a href="#7-database-schema" class="doc-link">Database Schema</a></p></li>
+  <li><p><a href="#8-api-specification" class="doc-link">API Specification</a></p></li>
+  <li><p><a href="#9-real-time-communication" class="doc-link">Real-Time Communication</a></p></li>
+  <li><p><a href="#10-security-requirements" class="doc-link">Security Requirements</a></p></li>
+  <li><p><a href="#11-deployment-architecture" class="doc-link">Deployment Architecture</a></p></li>
+  <li><p><a href="#12-appendices" class="doc-link">Appendices</a></p></li>
+</ol>
+
+<hr class="section-rule">
+
+<h2 id="1-introduction">1. Introduction</h2>
+
+<h3>1.1 Purpose</h3>
+
+<p>This Software Requirements Specification (SRS) defines the complete functional and non-functional requirements for the Lideta Sub-City Official Website and Administration System. It is intended to serve two primary audiences:</p>
+
+<ol>
+  <li><p><strong>IT Department Developers</strong> — as a technical reference for understanding, maintaining, and extending the system.</p></li>
+  <li><p><strong>Information Network Security Administration</strong> — as a comprehensive baseline document for security analysis, vulnerability assessment, and penetration testing of all system components.</p></li>
+</ol>
+
+<p>This document covers the public-facing citizen portal, the administrative back-office, the RESTful API layer, the database design, access control policies, and the deployment infrastructure.</p>
+
+<h3>1.2 Scope</h3>
+
+<p>The system is a full-stack web application that serves as the official digital platform for Lideta Sub-City Administration, Addis Ababa, Ethiopia. It provides:</p>
+
+<ul>
+  <li><p>A <strong>public citizen portal</strong> for accessing government news, events, department information, job vacancies, and submitting complaints and contact inquiries.</p></li>
+  <li><p>A <strong>citizen account system</strong> allowing registered users to track complaints and job applications.</p></li>
+  <li><p>A <strong>multi-role administration panel</strong> for government staff to manage all content and citizen interactions.</p></li>
+  <li><p>A <strong>super-administration panel</strong> for account management and system-wide oversight.</p></li>
+</ul>
+
+<h3>1.3 Definitions, Acronyms, and Abbreviations</h3>
+
+<table>
+<thead><tr><th>Term</th><th>Definition</th></tr></thead>
+<tbody><tr><td>SRS</td><td>Software Requirements Specification</td></tr>
+<tr><td>API</td><td>Application Programming Interface</td></tr>
+<tr><td>REST</td><td>Representational State Transfer</td></tr>
+<tr><td>JWT</td><td>JSON Web Token</td></tr>
+<tr><td>OTP</td><td>One-Time Password</td></tr>
+<tr><td>CRUD</td><td>Create, Read, Update, Delete</td></tr>
+<tr><td>SPA</td><td>Single-Page Application</td></tr>
+<tr><td>RBAC</td><td>Role-Based Access Control</td></tr>
+<tr><td>ESM</td><td>ECMAScript Modules</td></tr>
+<tr><td>CORS</td><td>Cross-Origin Resource Sharing</td></tr>
+<tr><td>CDN</td><td>Content Delivery Network</td></tr>
+<tr><td>SSL/TLS</td><td>Secure Sockets Layer / Transport Layer Security</td></tr>
+<tr><td>DFD</td><td>Data Flow Diagram</td></tr>
+<tr><td>ER</td><td>Entity-Relationship</td></tr>
+<tr><td>VITE</td><td>Next-generation front-end build tool</td></tr>
+<tr><td>CV</td><td>Curriculum Vitae</td></tr>
+<tr><td>2FA</td><td>Two-Factor Authentication</td></tr></tbody>
+</table>
+
+<h3>1.4 References</h3>
+
+<ul>
+  <li><p>Express.js v5 Documentation — https://expressjs.com</p></li>
+  <li><p>React v19 Documentation — https://react.dev</p></li>
+  <li><p>React Router v7 Documentation — https://reactrouter.com</p></li>
+  <li><p>JSON Web Tokens RFC 7519 — https://tools.ietf.org/html/rfc7519</p></li>
+  <li><p>Cloud OTP Email Service Provider Documentation</p></li>
+  <li><p>OWASP Top 10 Web Application Security Risks — https://owasp.org/Top10</p></li>
+  <li><p>IEEE Std 830-1998 — Recommended Practice for Software Requirements Specifications</p></li>
+</ul>
+
+<h3>1.5 Overview</h3>
+
+<p>This document is structured as follows: Section 2 describes the overall system context and constraints. Section 3 details the system architecture. Section 4 defines all roles and their access permissions. Sections 5 and 6 specify functional and non-functional requirements respectively. Section 7 presents the database schema. Section 8 provides the full API specification. Section 9 addresses real-time communication. Section 10 defines security requirements. Section 11 describes the deployment architecture. Section 12 contains appendices including diagrams.</p>
+
+<hr class="section-rule">
+
+<h2 id="2-overall-description">2. Overall Description</h2>
+
+<h3>2.1 Product Perspective</h3>
+
+<p>The Lideta Sub-City Official Website and Administration System is a greenfield web application developed for Lideta Sub-City Administration, one of the ten sub-cities of Addis Ababa, Ethiopia. It replaces a static informational web presence with a dynamic, database-driven platform that enables two-way interaction between the government and its citizens.</p>
+
+<p>The system operates as a monolithic full-stack application in which a single Node.js/Express server serves both the REST API and the compiled React SPA. It integrates with a cloud OTP email service exclusively for OTP email delivery, while all persistent application data resides in a MySQL database hosted on Plesk.</p>
+
+<h3>2.2 Product Functions Summary</h3>
+
+<p>The system performs the following high-level functions:</p>
+
+<ul>
+  <li><p><strong>Content Publication</strong> — Publishing and managing news articles, events, and department information in three languages (English, Amharic, Oromo).</p></li>
+  <li><p><strong>Citizen Services</strong> — Accepting public complaints, contact inquiries, and service satisfaction surveys.</p></li>
+  <li><p><strong>Career Portal</strong> — Posting job vacancies and processing online applications including CV file uploads.</p></li>
+  <li><p><strong>Citizen Accounts</strong> — User registration, authentication, and a personal dashboard for tracking complaints and applications.</p></li>
+  <li><p><strong>Administration</strong> — Role-segmented back-office for staff to manage all content and citizen interactions.</p></li>
+  <li><p><strong>Super-Administration</strong> — System-wide account management and operational oversight.</p></li>
+</ul>
+
+<h3>2.3 User Classes and Characteristics</h3>
+
+<table>
+<thead><tr><th>User Class</th><th>Description</th><th>Technical Proficiency</th></tr></thead>
+<tbody><tr><td>Anonymous Visitor</td><td>Any person accessing the public site without an account</td><td>Non-technical; general public</td></tr>
+<tr><td>Registered Citizen</td><td>A verified user with an account; can track complaints and applications</td><td>Non-technical; general public</td></tr>
+<tr><td>Complaint Admin</td><td>Staff member managing citizen complaints</td><td>Low-to-medium; office worker</td></tr>
+<tr><td>Event Admin</td><td>Staff member managing event publications</td><td>Low-to-medium; office worker</td></tr>
+<tr><td>News Admin</td><td>Staff member managing news articles</td><td>Low-to-medium; office writer</td></tr>
+<tr><td>Vacancy Admin</td><td>Staff member managing job postings and applicants</td><td>Low-to-medium; HR staff</td></tr>
+<tr><td>General Admin</td><td>Staff member with access to the main dashboard and all content</td><td>Medium; department head</td></tr>
+<tr><td>Super Admin</td><td>System administrator with full access including account management</td><td>High; IT staff</td></tr></tbody>
+</table>
+
+<h3>2.4 Operating Environment</h3>
+
+<ul>
+  <li><p><strong>Client</strong>: Any modern web browser (Chrome, Firefox, Safari, Edge) on desktop or mobile. No native application is required.</p></li>
+  <li><p><strong>Server</strong>: Node.js v18+ runtime on Plesk Obsidian shared web hosting (EthioTelecom infrastructure), running on Linux.</p></li>
+  <li><p><strong>Database</strong>: MySQL (Plesk built-in) for all application data.</p></li>
+  <li><p><strong>Email/OTP</strong>: Cloud email delivery service for OTP dispatch.</p></li>
+  <li><p><strong>File Storage</strong>: Local filesystem on the Plesk server at <code>client/public/uploads/</code>.</p></li>
+</ul>
+
+<h3>2.5 Design and Implementation Constraints</h3>
+
+<ul>
+  <li><p>The system must support three languages: English (<code>en</code>), Amharic (<code>am</code>), and Oromo (<code>or</code>) on all public-facing content.</p></li>
+  <li><p>All API endpoints must use HTTPS in production.</p></li>
+  <li><p>File uploads are constrained to 50MB per file.</p></li>
+  <li><p>The application is deployed as a single server process; horizontal scaling is not currently supported.</p></li>
+  <li><p>The front-end is a Single-Page Application served from the same Express server that handles API requests.</p></li>
+  <li><p>JWT tokens are used for both admin and citizen authentication, stored in <code>localStorage</code> on the client side.</p></li>
+</ul>
+
+<h3>2.6 Assumptions and Dependencies</h3>
+
+<ul>
+  <li><p>The cloud email delivery service is available and reachable. If it is unreachable, OTP-dependent flows (email verification, 2FA) will fail.</p></li>
+  <li><p>The Plesk server has Node.js Passenger module enabled.</p></li>
+  <li><p>The MySQL database is provisioned and accessible to the Node.js process via the connection string in environment variables.</p></li>
+  <li><p>The <code>client/dist</code> directory contains a valid React production build before the server is started.</p></li>
+  <li><p>SMTP/email delivery SLA is governed by the email service provider's infrastructure and is outside the control of this application.</p></li>
+</ul>
+
+<hr class="section-rule">
+
+<h2 id="3-system-architecture">3. System Architecture</h2>
+
+<h3>3.1 Architectural Pattern</h3>
+
+<p>The system follows a <strong>monolithic three-tier architecture</strong>:</p>
+
+<p><pre><code class="lang-text">┌──────────────────────────────────────────────────────────┐
+│                  PRESENTATION TIER                        │
+│   React 19 SPA (Vite build, served as static files)      │
+│   React Router v7 · Framer Motion · Tailwind CSS v4      │
+│   Recharts · Lucide React · vite-plugin-svgr              │
+└────────────────────────┬─────────────────────────────────┘
+                         │ HTTP/HTTPS (REST)
+┌────────────────────────▼─────────────────────────────────┐
+│                  APPLICATION TIER                         │
+│   Express.js v5 (Node.js, ESM)                           │
+│   Middleware: CORS · JSON parser · Request logger        │
+│   Auth: JWT (jsonwebtoken) · bcryptjs                    │
+│   File Handling: Multer v2                               │
+│   OTP: Cloud Email Service Client                             │
+└────────────────────────┬─────────────────────────────────┘
+                         │ TCP (mysql2 / postgres driver)
+┌────────────────────────▼─────────────────────────────────┐
+│                    DATA TIER                              │
+│   MySQL (Plesk built-in)                                 │
+│   All application data: users, admins, content, logs     │
+└──────────────────────────────────────────────────────────┘
+                         │ HTTPS (OTP Email Service API)
+┌────────────────────────▼─────────────────────────────────┐
+│               EXTERNAL SERVICE                            │
+│   Cloud OTP Email Service — OTP email delivery only      │
+└──────────────────────────────────────────────────────────┘
+</code></pre></p>
+
+<h3>3.2 Front-End Architecture</h3>
+
+<p>The client is a React 19 Single-Page Application built with Vite 7.</p>
+
+<p><strong>Key architectural decisions:</strong> <ul>   <li><p><strong>Routing</strong>: React Router v7 with nested layouts. The <code><Home /></code> component is the public layout shell; <code><Admin /></code> is the admin layout shell; <code><SuperAdminLayout /></code> is the superadmin shell.</p></li>   <li><p><strong>State Management</strong>: No external state management library. State is managed via React Context API:</p></li>   <li><p><code>LanguageContext</code> — global language selection (en/am/or), persisted in <code>localStorage</code>.</p></li>   <li><p><code>UserContext</code> — citizen authentication state, token from <code>localStorage</code>.</p></li>   <li><p><code>adminContext</code> — admin authentication state, provided by layout components not a standalone provider.</p></li>   <li><p><strong>Styling</strong>: Tailwind CSS v4 (CSS-first configuration via Vite plugin). Custom fonts (Goldman, Jost, Roboto) loaded via <code>@font-face</code>. Custom animation keyframes defined in <code>index.css</code>.</p></li>   <li><p><strong>Animation</strong>: Framer Motion v13 for page transitions, stagger animations, and <code>AnimatePresence</code> for route changes.</p></li>   <li><p><strong>Internationalization</strong>: Manual i18n via a static <code>translated_contents.json</code> file. All UI strings for public pages are keyed by <code>{ en, am, or }</code>. Dynamic content (news, events, etc.) uses <code>amh</code> and <code>orm</code> JSONB columns from the database.</p></li>   <li><p><strong>SVG Icons</strong>: All icons are SVG files imported as React components via <code>vite-plugin-svgr</code>.</p></li>   <li><p><strong>Charts</strong>: Recharts v3 for the admin dashboard complaint statistics charts.</p></li> </ul></p>
+
+<p><strong>Client directory structure:</strong> <pre><code class="lang-text">client/src/
+├── App.jsx                 — Root router and layout composition
+├── index.css               — Tailwind imports, custom keyframes, font-face declarations
+├── assets/                 — Static assets (images, SVG icons, fonts)
+│   ├── icons/              — 73 SVG icon files
+│   └── fonts/              — Goldman, Jost, Roboto font files
+├── components/
+│   ├── shared/             — Navbar, Footer, AdminTop, Sidebar
+│   ├── ui/                 — Reusable UI components (cards, modals, inputs)
+│   ├── forms/              — GlobalSatisfactionTrigger, ServiceSatisfactionForm
+│   └── utils/              — Context providers, guards, hooks
+├── data/                   — Static JSON data files and department assets
+├── hooks/                  — useInView custom hook
+├── pages/                  — All page components
+│   ├── Admin/              — 8 admin panel pages
+│   └── SuperAdmin/         — 3 superadmin pages
+└── utils/                  — api.js, passwordHelper.js, validation.js, roleLabels.js
+</code></pre></p>
+
+<h3>3.3 Back-End Architecture</h3>
+
+<p>The server is an Express.js v5 application running as a single Node.js process in ESM mode.</p>
+
+<p><strong>Request processing pipeline:</strong></p>
+
+<p><pre><code class="lang-text">Incoming HTTP Request
+        │
+        ▼
+express.json()          — Parse JSON body
+        │
+        ▼
+corsMiddleware          — Validate and set CORS headers
+        │
+        ▼
+logger                  — Log method, URL, status, duration
+        │
+        ▼
+Route matching
+   ├── /health          — Health check (no auth)
+   ├── /uploads/*       — Static file serving (no auth)
+   ├── /auth/*          — Auth router
+   ├── /api/auth/*      — Auth router (dual prefix)
+   ├── /api/user/*      — User router
+   ├── /api/admin/*     — Admin router + authenticateToken
+   ├── /api/superadmin/*— SuperAdmin router + authenticateToken + isSuperadmin
+   ├── /api/news/*      — News router (public GET, protected POST/PUT/DELETE)
+   ├── /api/events/*    — Events router (public GET, protected POST/PUT/DELETE)
+   ├── /api/vacancies/* — Vacancies router (mixed)
+   ├── /api/complaints/*— Complaints router (mixed)
+   └── /api/contacts/*  — Contacts router (mixed)
+        │
+        ▼
+SPA Fallback            — Serve client/dist/index.html for all non-API paths
+</code></pre></p>
+
+<p><strong>Server directory structure:</strong> <pre><code class="lang-text">server/
+├── server.js           — Entry point, middleware and route registration
+├── con/
+│   └── db.js           — Database connection (postgres driver + in-memory mock)
+├── middleware/
+│   ├── auth.js         — authenticateToken, authenticateUser
+│   ├── cors.js         — CORS configuration
+│   ├── logger.js       — Request/response logger
+│   └── upload.js       — Multer disk storage configuration
+├── routes/
+│   ├── auth.js         — Authentication endpoints
+│   ├── user.js         — Citizen user endpoints
+│   ├── admin.js        — Admin profile/settings endpoints
+│   ├── superadmin.js   — Superadmin management endpoints
+│   ├── news.js         — News CRUD
+│   ├── events.js       — Events CRUD
+│   ├── vacancies.js    — Vacancies CRUD + applications
+│   ├── complaints.js   — Complaints CRUD
+│   └── contacts.js     — Contact messages + satisfaction surveys
+├── utils/
+│   ├── mailer.js       — Cloud OTP email send/verify
+│   ├── logActivity.js  — Activity log writer
+│   └── rateLimit.js    — In-memory sliding window rate limiter
+└── scripts/
+    ├── seed_news.mjs   — Database seeding script for news articles
+    └── patch_translations.mjs — Translation backfill script
+</code></pre></p>
+
+<h3>3.4 Data Flow Overview</h3>
+
+<p><pre><code class="lang-text">[Browser]
+    │
+    ├─ Static assets (HTML/JS/CSS) ──────────────── [Express Static / client/dist]
+    │
+    ├─ API calls (JSON over HTTPS) ──────────────── [Express Routes]
+    │                                                      │
+    │                                               [Middleware: JWT verify]
+    │                                                      │
+    │                                               [Route Handler]
+    │                                                      │
+    │                                               [MySQL DB Query]
+    │                                                      │
+    │                                               [JSON Response]
+    │
+    ├─ File uploads (multipart/form-data) ─────── [Multer → /uploads/ filesystem]
+    │
+    └─ OTP flows ─────────────────────────────── [Express → Cloud OTP Email Service]
+                                                         │
+                                                  [Email Service → User Email Inbox]
+</code></pre></p>
+
+<hr class="section-rule">
+
+<h2 id="4-roles-and-access-control">4. Roles and Access Control</h2>
+
+<h3>4.1 Role Overview</h3>
+
+<p>The system implements Role-Based Access Control (RBAC) with seven distinct roles. Roles are stored in the <code>admins.role</code> column. Citizen users are a separate entity stored in the <code>users</code> table and are not part of the admin RBAC system.</p>
+
+<h3>4.2 Role Definitions</h3>
+
+<table>
+<thead><tr><th>Role Key</th><th>Display Name</th><th>Scope</th></tr></thead>
+<tbody><tr><td><code>superadmin</code></td><td>Super Admin</td><td>Full system access; account management</td></tr>
+<tr><td><code>admin</code></td><td>General Admin</td><td>Dashboard + all content management</td></tr>
+<tr><td><code>complaint_admin</code></td><td>Complaint Admin</td><td>Complaints module only</td></tr>
+<tr><td><code>event_admin</code></td><td>Event Admin</td><td>Events module only</td></tr>
+<tr><td><code>news_admin</code></td><td>News Admin</td><td>News module only</td></tr>
+<tr><td><code>vacancy_admin</code></td><td>Vacancy Admin</td><td>Vacancies and applicants module only</td></tr>
+<tr><td><em>(citizen)</em></td><td>Registered User</td><td>Complaint submission and application tracking via <code>/account</code></td></tr></tbody>
+</table>
+
+<h3>4.3 Permission Matrix</h3>
+
+<table>
+<thead><tr><th>Feature / Route</th><th>Super Admin</th><th>General Admin</th><th>Complaint Admin</th><th>Event Admin</th><th>News Admin</th><th>Vacancy Admin</th><th>Citizen</th><th>Anonymous</th></tr></thead>
+<tbody><tr><td>View public website</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+<tr><td>Submit complaint</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+<tr><td>Submit contact form</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+<tr><td>Apply for vacancy</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>—</td></tr>
+<tr><td>View own dashboard</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>—</td></tr>
+<tr><td>Admin dashboard (<code>/admin</code>)</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Manage complaints</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Manage events</td><td>✓</td><td>✓</td><td>—</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Manage news</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>✓</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Manage vacancies + applicants</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>✓</td><td>—</td><td>—</td></tr>
+<tr><td>View admin profile</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>—</td><td>—</td></tr>
+<tr><td>Create peer admin account</td><td>✓</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>View all admin accounts</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Create/edit/delete any admin</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>View system overview stats</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>View all vacancy applications</td><td>✓</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr></tbody>
+</table>
+
+<h3>4.4 Role Enforcement</h3>
+
+<p><strong>Server-side (authoritative):</strong> <ul>   <li><p><code>authenticateToken</code> middleware verifies the admin JWT on all protected routes and attaches <code>req.admin</code>.</p></li>   <li><p><code>isSuperadmin()</code> check in <code>superadmin.js</code> routes returns HTTP 403 if <code>req.admin.role !== 'superadmin'</code>.</p></li>   <li><p>Admin routes do not restrict by specific sub-role on the API level (any authenticated admin can call most <code>/api/admin/*</code> endpoints); role restriction is enforced at the route-guard level on the client.</p></li> </ul></p>
+
+<p><strong>Client-side (UI enforcement, not a security boundary):</strong> <ul>   <li><p><code>RoleGuard</code> component reads <code>adminContext.admin.role</code> and redirects to the role's default landing page if the current route is not permitted.</p></li>   <li><p>Superadmin bypasses all <code>RoleGuard</code> checks.</p></li>   <li><p>Role default landing paths: <code>admin → /admin</code>, <code>complaint<em>admin → /admin/complaints</code>, <code>event</em>admin → /admin/events</code>, <code>news<em>admin → /admin/news</code>, <code>vacancy</em>admin → /admin/vacancy</code>, <code>superadmin → /superadmin/home</code>.</p></li>   <li><p>The admin sidebar renders navigation items conditionally based on the logged-in role.</p></li> </ul></p>
+
+<h3>4.5 Token Management</h3>
+
+<table>
+<thead><tr><th>Token Type</th><th>Storage</th><th>Expiry</th><th>Key</th></tr></thead>
+<tbody><tr><td>Admin JWT</td><td><code>localStorage.getItem('token')</code></td><td>7 days</td><td><code>token</code></td></tr>
+<tr><td>Citizen JWT</td><td><code>localStorage.getItem('userToken')</code></td><td>30 days</td><td><code>userToken</code></td></tr></tbody>
+</table>
+
+<p>Both tokens share the same <code>JWT_SECRET</code> environment variable but are issued by different routes (<code>/auth/admin/login</code> vs <code>/api/auth/user/login</code>) and verified by different middleware (<code>authenticateToken</code> vs <code>authenticateUser</code>).</p>
+
+<hr class="section-rule">
+
+<h2 id="5-functional-requirements">5. Functional Requirements</h2>
+
+<h3>5.1 Public Portal</h3>
+
+<h4>5.1.1 Language Switching</h4>
+<ul>
+  <li><p><strong>FR-001</strong>: The system shall support three display languages: English (en), Amharic (am), and Oromo (or).</p></li>
+  <li><p><strong>FR-002</strong>: Users shall be able to switch language at any time using the navbar language selector.</p></li>
+  <li><p><strong>FR-003</strong>: The selected language shall be persisted in <code>localStorage</code> and restored on subsequent visits.</p></li>
+  <li><p><strong>FR-004</strong>: All dynamic content (news, events, vacancies, departments) shall display in the selected language if a translation exists, falling back to English if not.</p></li>
+</ul>
+
+<h4>5.1.2 Home Page</h4>
+<ul>
+  <li><p><strong>FR-005</strong>: The home page shall display a hero section, a latest news preview (most recent 3 articles), additional services section (events, news, jobs), and a complaints call-to-action.</p></li>
+  <li><p><strong>FR-006</strong>: The home page shall be fully responsive across mobile, tablet, and desktop viewports.</p></li>
+</ul>
+
+<h4>5.1.3 Departments</h4>
+<ul>
+  <li><p><strong>FR-007</strong>: The system shall display all 19 sub-city departments grouped by category.</p></li>
+  <li><p><strong>FR-008</strong>: Departments shall be filterable by category via a horizontal tab bar.</p></li>
+  <li><p><strong>FR-009</strong>: Each department card shall display the department logo (or an initial avatar if no logo exists), name, short description, and category.</p></li>
+  <li><p><strong>FR-010</strong>: Clicking a department card shall navigate to a detail page showing: full name, leader name, head photo, mission statement, vision, services list, core values, and contact information (location, email, phone, office hours, website).</p></li>
+  <li><p><strong>FR-011</strong>: Department data is static (loaded from <code>departments.json</code>) and does not require a database call.</p></li>
+</ul>
+
+<h4>5.1.4 News</h4>
+<ul>
+  <li><p><strong>FR-012</strong>: The news listing page shall display articles in a BBC/NYT-inspired editorial layout: a full-width hero article, a two-article feature row, and a horizontal list of remaining articles.</p></li>
+  <li><p><strong>FR-013</strong>: The page shall include a breaking news banner showing the current date and total article count.</p></li>
+  <li><p><strong>FR-014</strong>: Articles shall be filterable by category via a horizontal tab bar (Technology, Infrastructure, Health, Education, Events, Security, Environment).</p></li>
+  <li><p><strong>FR-015</strong>: A search input shall filter articles in real time across title and description fields in all three languages.</p></li>
+  <li><p><strong>FR-016</strong>: The news detail page shall display: category pill, date, reading time estimate, headline, hero image with blur-up loading, article body with amber lede treatment, social share buttons (Facebook, Telegram, Twitter, Instagram, Email, Copy Link), and a "More from this category" section.</p></li>
+  <li><p><strong>FR-017</strong>: The detail page shall include a sticky right sidebar with "Latest News" items.</p></li>
+  <li><p><strong>FR-018</strong>: An amber reading progress bar shall be shown fixed at the top of the viewport during article reading.</p></li>
+</ul>
+
+<h4>5.1.5 Events</h4>
+<ul>
+  <li><p><strong>FR-019</strong>: The events listing page shall display events grouped by month with a calendar-widget style card showing the event's month header (colored by status) and day number.</p></li>
+  <li><p><strong>FR-020</strong>: Events shall be filterable by status (All, Upcoming, Pending, Complete, Canceled) via a tab bar.</p></li>
+  <li><p><strong>FR-021</strong>: A search input shall filter events by title and location.</p></li>
+  <li><p><strong>FR-022</strong>: The event detail page shall display: status pill, date, location, event title, a hero image with the calendar widget overlaid bottom-left, event description with lede treatment, and a right sidebar with related events.</p></li>
+</ul>
+
+<h4>5.1.6 Vacancies (Career Portal)</h4>
+<ul>
+  <li><p><strong>FR-023</strong>: The vacancy listing page shall default to a category directory view showing all job categories as clickable rows with job counts, matching the EthioJobs-style design.</p></li>
+  <li><p><strong>FR-024</strong>: Clicking a category shall transition to a filtered job list view with a left sidebar for additional filtering.</p></li>
+  <li><p><strong>FR-025</strong>: The sidebar shall support filtering by: search term, category, and job type (Full Time, Part Time, Contract, Internship, Remote).</p></li>
+  <li><p><strong>FR-026</strong>: The sidebar shall be a slide-in off-canvas drawer on mobile and a sticky column on desktop.</p></li>
+  <li><p><strong>FR-027</strong>: Each vacancy card shall display: job title, category, employment type, location, and posting date. Salary shall NOT be displayed.</p></li>
+  <li><p><strong>FR-028</strong>: The vacancy detail page shall display the full job description, responsibilities, qualifications, and required skills.</p></li>
+  <li><p><strong>FR-029</strong>: Unauthenticated users shall see an authentication overlay on the application sidebar and be redirected to <code>/account/auth?next=/vacancy/:id</code> to sign in before applying.</p></li>
+  <li><p><strong>FR-030</strong>: Authenticated users shall be able to apply by submitting their name, email, phone, and a CV file (PDF only, maximum 30MB).</p></li>
+  <li><p><strong>FR-031</strong>: Upon successful application, the system shall return an application reference number in the format <code>APP-XXXXX</code>.</p></li>
+</ul>
+
+<h4>5.1.7 Complaints</h4>
+<ul>
+  <li><p><strong>FR-032</strong>: Any visitor (authenticated or not) shall be able to submit a complaint.</p></li>
+  <li><p><strong>FR-033</strong>: The complaint form shall collect: full name, address, sub-city, woreda, complaint type, description, and optionally media attachments (photos, videos, audio recordings).</p></li>
+  <li><p><strong>FR-034</strong>: The system shall support in-browser audio and video recording via the MediaRecorder API for complaint attachments.</p></li>
+  <li><p><strong>FR-035</strong>: The system shall return a complaint reference number in the format <code>CPL-XXXXX</code> upon successful submission.</p></li>
+  <li><p><strong>FR-036</strong>: Authenticated citizens shall be able to view their submitted complaints and their current status from the <code>/account</code> dashboard.</p></li>
+</ul>
+
+<h4>5.1.8 Contacts</h4>
+<ul>
+  <li><p><strong>FR-037</strong>: Any visitor shall be able to submit a contact message with their name, email, and message.</p></li>
+  <li><p><strong>FR-038</strong>: The system shall record all contact submissions in the database for admin review.</p></li>
+</ul>
+
+<h4>5.1.9 Service Satisfaction Survey</h4>
+<ul>
+  <li><p><strong>FR-039</strong>: A floating <code>GlobalSatisfactionTrigger</code> widget shall appear on the public site after a configurable delay, prompting users to complete a satisfaction survey.</p></li>
+  <li><p><strong>FR-040</strong>: The survey shall collect demographic information (gender, age, marital status, education level, employment status, district, number of visits, services requested) and 11 Likert-scale satisfaction questions.</p></li>
+  <li><p><strong>FR-041</strong>: Survey responses shall be stored in the database and aggregated for admin reporting.</p></li>
+</ul>
+
+<h3>5.2 Citizen Account System</h3>
+
+<h4>5.2.1 Registration and Login</h4>
+<ul>
+  <li><p><strong>FR-042</strong>: Citizens shall register with: first name, last name, email, optional Ethiopian phone number, and a password meeting strength requirements.</p></li>
+  <li><p><strong>FR-043</strong>: Password strength requirements: minimum 8 characters, at least one uppercase letter, one lowercase letter, one digit, and one special character.</p></li>
+  <li><p><strong>FR-044</strong>: Ethiopian phone numbers shall be validated against the pattern: <code>09XXXXXXXX</code>, <code>07XXXXXXXX</code>, <code>+2519XXXXXXXX</code>, or <code>+2517XXXXXXXX</code>.</p></li>
+  <li><p><strong>FR-045</strong>: Upon registration, the system shall send a 6-digit OTP to the registered email address via the system's cloud email service for email verification.</p></li>
+  <li><p><strong>FR-046</strong>: Citizens shall log in using email and password.</p></li>
+  <li><p><strong>FR-047</strong>: The system shall support a forgot-password flow: submit email → receive OTP → enter OTP → set new password meeting strength requirements.</p></li>
+  <li><p><strong>FR-048</strong>: Reset passwords shall be subject to the same strength requirements as registration passwords.</p></li>
+</ul>
+
+<h4>5.2.2 Citizen Dashboard</h4>
+<ul>
+  <li><p><strong>FR-049</strong>: The <code>/account</code> dashboard shall display the citizen's submitted complaints with their current status.</p></li>
+  <li><p><strong>FR-050</strong>: The dashboard shall display the citizen's job applications with the vacancy title and application status.</p></li>
+  <li><p><strong>FR-051</strong>: Citizens shall be able to update their profile (name, phone).</p></li>
+</ul>
+
+<h3>5.3 Administration Panel</h3>
+
+<h4>5.3.1 Admin Authentication</h4>
+<ul>
+  <li><p><strong>FR-052</strong>: Admins shall log in at <code>/auth/login</code> using a username and password.</p></li>
+  <li><p><strong>FR-053</strong>: The login system shall support an optional two-factor authentication (2FA) flow via OTP email if <code>requires2FA</code> is enabled for the account (infrastructure ready, flag currently set to <code>false</code> globally).</p></li>
+  <li><p><strong>FR-054</strong>: Admins shall be able to reset their password via the forgot-password OTP flow.</p></li>
+</ul>
+
+<h4>5.3.2 News Management</h4>
+<ul>
+  <li><p><strong>FR-055</strong>: Authorized admins shall be able to create, edit, and delete news articles.</p></li>
+  <li><p><strong>FR-056</strong>: Each news article shall have: title, short description, full description, category, cover image, and translations for Amharic and Oromo.</p></li>
+  <li><p><strong>FR-057</strong>: The admin panel shall display a searchable, filterable list of all news articles with inline edit and delete actions.</p></li>
+</ul>
+
+<h4>5.3.3 Events Management</h4>
+<ul>
+  <li><p><strong>FR-058</strong>: Authorized admins shall be able to create, edit, and delete events.</p></li>
+  <li><p><strong>FR-059</strong>: Each event shall have: title, description, location, start date, end date, status, photo, and Amharic/Oromo translations.</p></li>
+  <li><p><strong>FR-060</strong>: Admins shall be able to update an event's status (upcoming, pending, complete, canceled).</p></li>
+</ul>
+
+<h4>5.3.4 Vacancies Management</h4>
+<ul>
+  <li><p><strong>FR-061</strong>: Authorized admins shall be able to create, edit, and delete job vacancies.</p></li>
+  <li><p><strong>FR-062</strong>: Each vacancy shall have: title, short description, full description, location, salary, type, category, skills (array), responsibilities (array), qualifications (array), start date, end date, and Amharic/Oromo translations.</p></li>
+  <li><p><strong>FR-063</strong>: Admins shall be able to view all applicants for each vacancy, including their submitted CV file.</p></li>
+  <li><p><strong>FR-064</strong>: Admins shall be able to update an applicant's status (submitted, reviewing, accepted, rejected).</p></li>
+</ul>
+
+<h4>5.3.5 Complaints Management</h4>
+<ul>
+  <li><p><strong>FR-065</strong>: Authorized admins shall be able to view all complaints with filtering by status and type.</p></li>
+  <li><p><strong>FR-066</strong>: Admins shall be able to update complaint status, add notes, and assign a concerned staff member.</p></li>
+  <li><p><strong>FR-067</strong>: Admins shall be able to delete complaints.</p></li>
+  <li><p><strong>FR-068</strong>: The admin dashboard shall display complaint counts by status and a statistical chart.</p></li>
+</ul>
+
+<h4>5.3.6 Contact Management</h4>
+<ul>
+  <li><p><strong>FR-069</strong>: Authorized admins shall be able to view pending contact messages.</p></li>
+  <li><p><strong>FR-070</strong>: Admins shall be able to mark contact messages as resolved.</p></li>
+  <li><p><strong>FR-071</strong>: The satisfaction survey statistics page shall display 30-day averages per question and daily response trends.</p></li>
+</ul>
+
+<h4>5.3.7 Admin Profile</h4>
+<ul>
+  <li><p><strong>FR-072</strong>: All admins shall be able to update their personal information (name, gender, residency, phone, email).</p></li>
+  <li><p><strong>FR-073</strong>: All admins shall be able to change their password after verifying their current password.</p></li>
+  <li><p><strong>FR-074</strong>: All admins shall be able to upload and remove their profile picture.</p></li>
+  <li><p><strong>FR-075</strong>: Admins shall be able to configure their panel preferences: theme, font size, and language.</p></li>
+</ul>
+
+<h3>5.4 Super-Administration</h3>
+
+<ul>
+  <li><p><strong>FR-076</strong>: The superadmin shall be able to view all admin accounts grouped by role.</p></li>
+  <li><p><strong>FR-077</strong>: The superadmin shall be able to create new admin accounts with any role from: Complaint Admin, Event Admin, News Admin, Vacancy Admin, Super Admin.</p></li>
+  <li><p><strong>FR-078</strong>: The superadmin shall be able to edit any admin account's details and role.</p></li>
+  <li><p><strong>FR-079</strong>: The superadmin shall be able to delete any admin account except their own.</p></li>
+  <li><p><strong>FR-080</strong>: The superadmin shall have access to a system overview with total complaints, resolved complaints, pending applications, and active events.</p></li>
+  <li><p><strong>FR-081</strong>: The superadmin shall be able to view all vacancy applicants across all postings with aggregated category statistics.</p></li>
+  <li><p><strong>FR-082</strong>: All admin management actions (create, update, delete) shall be recorded in the activity log.</p></li>
+</ul>
+
+<hr class="section-rule">
+
+<h2 id="6-non-functional-requirements">6. Non-Functional Requirements</h2>
+
+<h3>6.1 Performance</h3>
+
+<ul>
+  <li><p><strong>NFR-001</strong>: The public home page shall achieve a Largest Contentful Paint (LCP) of under 2.5 seconds on a standard broadband connection.</p></li>
+  <li><p><strong>NFR-002</strong>: All REST API endpoints shall respond within 500ms under normal load (single concurrent user on shared hosting).</p></li>
+  <li><p><strong>NFR-003</strong>: The React SPA bundle shall be code-split and optimized by Vite; the main JS chunk shall not exceed 500KB gzipped.</p></li>
+  <li><p><strong>NFR-004</strong>: Database queries shall use indexed lookups where applicable; full-table scans shall be avoided for high-frequency endpoints (news GET, events GET, vacancies GET).</p></li>
+</ul>
+
+<h3>6.2 Availability</h3>
+
+<ul>
+  <li><p><strong>NFR-005</strong>: The system shall maintain availability during routine Plesk maintenance windows by leveraging Phusion Passenger's automatic process management.</p></li>
+  <li><p><strong>NFR-006</strong>: The system shall gracefully handle database connection failures by returning HTTP 500 with a JSON error body rather than crashing the process.</p></li>
+</ul>
+
+<h3>6.3 Scalability</h3>
+
+<ul>
+  <li><p><strong>NFR-007</strong>: The current monolithic deployment is designed for single-instance operation appropriate for sub-city government load volumes. The API layer is stateless (JWT-based auth) allowing future migration to a multi-instance deployment without architectural changes.</p></li>
+</ul>
+
+<h3>6.4 Usability</h3>
+
+<ul>
+  <li><p><strong>NFR-008</strong>: All public-facing pages shall be fully responsive and usable on screens from 320px to 2560px wide.</p></li>
+  <li><p><strong>NFR-009</strong>: The system shall support three languages (EN/AM/OR) on all public pages. Language switching shall take effect immediately without a page reload.</p></li>
+  <li><p><strong>NFR-010</strong>: Form validation errors shall be displayed inline, below the relevant field, and must not rely solely on color to convey meaning.</p></li>
+  <li><p><strong>NFR-011</strong>: All interactive elements (buttons, links, form inputs) shall have accessible focus states and ARIA labels where appropriate.</p></li>
+</ul>
+
+<h3>6.5 Maintainability</h3>
+
+<ul>
+  <li><p><strong>NFR-012</strong>: All server routes shall be organized in separate files by domain (news, events, vacancies, complaints, contacts, auth, user, admin, superadmin).</p></li>
+  <li><p><strong>NFR-013</strong>: All client-side form validation logic shall be centralized in <code>client/src/utils/validation.js</code>.</p></li>
+  <li><p><strong>NFR-014</strong>: Password strength validation shall be centralized in <code>client/src/utils/passwordHelper.js</code> and reused across all forms (registration, create admin, change password, reset password).</p></li>
+  <li><p><strong>NFR-015</strong>: Environment-specific configuration (database URL, JWT secret, email service keys) shall be managed exclusively via environment variables and never hard-coded in source files.</p></li>
+</ul>
+
+<h3>6.6 Reliability</h3>
+
+<ul>
+  <li><p><strong>NFR-016</strong>: The database connection layer (<code>server/con/db.js</code>) shall fall back to an in-memory mock database in development environments where <code>DATABASE_URL</code> is not set, ensuring the server always starts.</p></li>
+  <li><p><strong>NFR-017</strong>: File upload operations shall be atomic: files shall be renamed to their final name only after the database record is confirmed.</p></li>
+  <li><p><strong>NFR-018</strong>: The OTP email system shall implement a 3.5-second retry mechanism when the email delivery service returns a rate-limit error.</p></li>
+</ul>
+
+<h3>6.7 Portability</h3>
+
+<ul>
+  <li><p><strong>NFR-019</strong>: The application shall run on any Node.js v18+ environment with access to a MySQL database.</p></li>
+  <li><p><strong>NFR-020</strong>: The front-end build output (<code>client/dist</code>) shall be deployable to any static file hosting or CDN as a standalone SPA if the API base URL is configured via <code>VITE<em>API</em>URL</code>.</p></li>
+</ul>
+
+<h3>6.8 Internationalisation</h3>
+
+<ul>
+  <li><p><strong>NFR-021</strong>: All translatable UI strings for public pages shall be defined in <code>translated_contents.json</code> with <code>en</code>, <code>am</code>, and <code>or</code> keys.</p></li>
+  <li><p><strong>NFR-022</strong>: Dynamic content stored in the database (news, events, vacancies) shall store Amharic and Oromo translations in JSONB-compatible columns (<code>amh</code>, <code>orm</code>) in the respective translation tables.</p></li>
+  <li><p><strong>NFR-023</strong>: The system shall fall back to the English version of any content where a translation in the requested language does not exist.</p></li>
+</ul>
+
+<hr class="section-rule">
+
+<h2 id="7-database-schema">7. Database Schema</h2>
+
+<h3>7.1 Overview</h3>
+
+<p>The database is MySQL, hosted on Plesk's built-in database server. The schema consists of 14 tables organized into four domains: authentication, content management, citizen interaction, and auditing.</p>
+
+<h3>7.2 Entity-Relationship Diagram (Textual)</h3>
+
+<p><pre><code class="lang-text">ADMINS ──────────────────────────────────────────────────────────────────────
+  │ admin_id (PK)
+  │ first_name, last_name, username (UNIQUE), email (UNIQUE)
+  │ password_hash, role, gender, residency, phone_number, photo
+  │ created_at
+  │
+  ├──&lt; ADMIN_SETTINGS (1:1)
+  │       admin_id (PK, FK → admins)
+  │       theme, font_size, language
+  │
+  └──&lt; ACTIVITY_LOGS (1:N)
+          log_id (PK)
+          admin_id (FK → admins)
+          username, action, entity_type, entity_title
+          details (JSON), created_at
+
+USERS ────────────────────────────────────────────────────────────────────────
+  │ id (PK)
+  │ first_name, last_name, email (UNIQUE), phone
+  │ password_hash, email_verified
+  │ created_at
+  │
+  ├──&lt; COMPLAINTS (1:N via user_id nullable)
+  └──&lt; APPLICANTS  (1:N via user_id nullable)
+
+NEWS ─────────────────────────────────────────────────────────────────────────
+  │ id (PK)
+  │ title, short_description, description
+  │ category, photo (JSON)
+  │ created_at
+  │
+  └──&lt; NEWS_TRANSLATION (1:1)
+          id (PK)
+          news_id (FK → news)
+          amh (JSON: {title, short_description, description, category})
+          orm (JSON: {title, short_description, description, category})
+
+EVENTS ───────────────────────────────────────────────────────────────────────
+  │ events_id (PK)
+  │ title, description, location
+  │ start_date, end_date
+  │ status (upcoming|pending|complete|canceled)
+  │ photos (JSON array)
+  │ created_at
+  │
+  └──&lt; EVENTS_TRANSLATION (1:1)
+          id (PK)
+          event_id (FK → events.events_id)
+          amh (JSON: {title, description, location})
+          orm (JSON: {title, description, location})
+
+VACANCIES ────────────────────────────────────────────────────────────────────
+  │ id (PK)
+  │ title, short_description, description
+  │ location, salary, type, category
+  │ skills (JSON array), responsibilities (JSON array), qualifications (JSON array)
+  │ start_date, end_date
+  │ created_at
+  │
+  ├──&lt; VACANCY_TRANSLATION (1:1)
+  │       id (PK)
+  │       vacancy_id (FK → vacancies)
+  │       amh (JSON: {title, short_description, description, category,
+  │                   skills[], responsibilities[], qualifications[]})
+  │       orm (JSON: same structure)
+  │
+  └──&lt; APPLICANTS (1:N)
+          id (PK)
+          vacancy_id (FK → vacancies)
+          user_id (FK → users, nullable)
+          first_name, last_name, email, phone
+          cv_path, status (submitted|reviewing|accepted|rejected)
+          created_at
+
+COMPLAINTS ───────────────────────────────────────────────────────────────────
+  complaint_id (PK)
+  user_id (FK → users, nullable)
+  full_name, address, complaint_subcity, complaint_woreda
+  type, status (assigning|in progress|resolved|canceled)
+  description
+  photos (JSON array), videos (JSON array), audios (JSON array)
+  concerned_staff_member, ref (CPL-XXXXX)
+  created_at
+
+CONTACTS ─────────────────────────────────────────────────────────────────────
+  id (PK)
+  first_name, last_name, email, description
+  photos (JSON array)
+  status (pending|resolved)
+  created_at
+
+SERVICE_SATISFACTION ─────────────────────────────────────────────────────────
+  id (PK)
+  gender, age, marital_status, education_level, employment_status
+  district, visits, service_requested (JSON array)
+  q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11 (TEXT: very_high|high|medium|low|very_low)
+  additional_comments
+  created_at
+</code></pre></p>
+
+<h3>7.3 Key Relationships</h3>
+
+<table>
+<thead><tr><th>Relationship</th><th>Type</th><th>Notes</th></tr></thead>
+<tbody><tr><td><code>admins</code> → <code>admin<em>settings</code></td><td>1:1</td><td>Created on first settings access; admin</em>id is both PK and FK</td></tr>
+<tr><td><code>admins</code> → <code>activity_logs</code></td><td>1:N</td><td>Logs created for create/update/delete actions</td></tr>
+<tr><td><code>users</code> → <code>complaints</code></td><td>1:N (optional)</td><td><code>user_id</code> is nullable; anonymous complaints allowed</td></tr>
+<tr><td><code>users</code> → <code>applicants</code></td><td>1:N (optional)</td><td><code>user_id</code> is nullable; guest applications allowed</td></tr>
+<tr><td><code>news</code> → <code>news_translation</code></td><td>1:1</td><td>Translation row may not exist; fallback to English</td></tr>
+<tr><td><code>events</code> → <code>events<em>translation</code></td><td>1:1</td><td><code>events</em>id</code> in events maps to <code>event_id</code> in translation table</td></tr>
+<tr><td><code>vacancies</code> → <code>vacancy_translation</code></td><td>1:1</td><td>Translation row may not exist</td></tr>
+<tr><td><code>vacancies</code> → <code>applicants</code></td><td>1:N</td><td>Cascade delete on vacancy deletion</td></tr></tbody>
+</table>
+
+<h3>7.4 Class Diagram (Table Attributes)</h3>
+
+<p><pre><code class="lang-text">┌─────────────────────────────────┐    ┌──────────────────────────────┐
+│ admins                          │    │ admin_settings               │
+├─────────────────────────────────┤    ├──────────────────────────────┤
+│ + admin_id: VARCHAR(PK)         │────│ + admin_id: VARCHAR(PK,FK)   │
+│ + first_name: VARCHAR           │    │ + theme: VARCHAR             │
+│ + last_name: VARCHAR            │    │ + font_size: VARCHAR         │
+│ + username: VARCHAR(UNIQUE)     │    │ + language: VARCHAR          │
+│ + email: VARCHAR(UNIQUE)        │    └──────────────────────────────┘
+│ + password_hash: VARCHAR        │
+│ + role: ENUM(superadmin,admin,  │    ┌──────────────────────────────┐
+│         complaint_admin,        │    │ activity_logs                │
+│         event_admin,news_admin, │    ├──────────────────────────────┤
+│         vacancy_admin)          │───&lt;│ + log_id: INT(PK,AUTO)       │
+│ + gender: VARCHAR               │    │ + admin_id: VARCHAR(FK)      │
+│ + residency: VARCHAR            │    │ + username: VARCHAR          │
+│ + phone_number: VARCHAR         │    │ + action: VARCHAR            │
+│ + photo: VARCHAR                │    │ + entity_type: VARCHAR       │
+│ + created_at: TIMESTAMP         │    │ + entity_title: VARCHAR      │
+└─────────────────────────────────┘    │ + details: JSON              │
+                                       │ + created_at: TIMESTAMP      │
+                                       └──────────────────────────────┘
+
+┌─────────────────────────────────┐    ┌──────────────────────────────┐
+│ users                           │    │ complaints                   │
+├─────────────────────────────────┤    ├──────────────────────────────┤
+│ + id: INT(PK,AUTO)              │───&lt;│ + complaint_id: INT(PK,AUTO) │
+│ + first_name: VARCHAR           │    │ + user_id: INT(FK,NULL)      │
+│ + last_name: VARCHAR            │    │ + full_name: VARCHAR         │
+│ + email: VARCHAR(UNIQUE)        │    │ + address: VARCHAR           │
+│ + phone: VARCHAR                │    │ + complaint_subcity: VARCHAR │
+│ + password_hash: VARCHAR        │    │ + complaint_woreda: VARCHAR  │
+│ + email_verified: BOOLEAN       │    │ + type: VARCHAR              │
+│ + created_at: TIMESTAMP         │───&lt;│ + status: VARCHAR            │
+└─────────────────────────────────┘    │ + description: TEXT          │
+                                       │ + photos: JSON               │
+                                       │ + videos: JSON               │
+                                       │ + audios: JSON               │
+                                       │ + concerned_staff: VARCHAR   │
+                                       │ + ref: VARCHAR               │
+                                       │ + created_at: TIMESTAMP      │
+                                       └──────────────────────────────┘
+
+┌─────────────────────────────────┐    ┌──────────────────────────────┐
+│ news                            │    │ news_translation             │
+├─────────────────────────────────┤    ├──────────────────────────────┤
+│ + id: INT(PK,AUTO)              │────│ + id: INT(PK,AUTO)           │
+│ + title: VARCHAR                │    │ + news_id: INT(FK)           │
+│ + short_description: TEXT       │    │ + amh: JSON                  │
+│ + description: TEXT             │    │ + orm: JSON                  │
+│ + category: VARCHAR             │    └──────────────────────────────┘
+│ + photo: JSON                   │
+│ + created_at: TIMESTAMP         │
+└─────────────────────────────────┘
+
+┌─────────────────────────────────┐    ┌──────────────────────────────┐
+│ events                          │    │ events_translation           │
+├─────────────────────────────────┤    ├──────────────────────────────┤
+│ + events_id: INT(PK,AUTO)       │────│ + id: INT(PK,AUTO)           │
+│ + title: VARCHAR                │    │ + event_id: INT(FK)          │
+│ + description: TEXT             │    │ + amh: JSON                  │
+│ + location: VARCHAR             │    │ + orm: JSON                  │
+│ + start_date: DATE              │    └──────────────────────────────┘
+│ + end_date: DATE                │
+│ + status: VARCHAR               │
+│ + photos: JSON                  │
+│ + created_at: TIMESTAMP         │
+└─────────────────────────────────┘
+
+┌─────────────────────────────────┐    ┌──────────────────────────────┐
+│ vacancies                       │    │ vacancy_translation          │
+├─────────────────────────────────┤    ├──────────────────────────────┤
+│ + id: INT(PK,AUTO)              │────│ + id: INT(PK,AUTO)           │
+│ + title: VARCHAR                │    │ + vacancy_id: INT(FK)        │
+│ + short_description: TEXT       │    │ + amh: JSON                  │
+│ + description: TEXT             │    │ + orm: JSON                  │
+│ + location: VARCHAR             │    └──────────────────────────────┘
+│ + salary: VARCHAR               │
+│ + type: VARCHAR                 │    ┌──────────────────────────────┐
+│ + category: VARCHAR             │    │ applicants                   │
+│ + skills: JSON                  │    ├──────────────────────────────┤
+│ + responsibilities: JSON        │───&lt;│ + id: INT(PK,AUTO)           │
+│ + qualifications: JSON          │    │ + vacancy_id: INT(FK)        │
+│ + start_date: DATE              │    │ + user_id: INT(FK,NULL)      │
+│ + end_date: DATE                │    │ + first_name: VARCHAR        │
+│ + created_at: TIMESTAMP         │    │ + last_name: VARCHAR         │
+└─────────────────────────────────┘    │ + email: VARCHAR             │
+                                       │ + phone: VARCHAR             │
+                                       │ + cv_path: VARCHAR           │
+                                       │ + status: VARCHAR            │
+                                       │ + created_at: TIMESTAMP      │
+                                       └──────────────────────────────┘
+
+┌─────────────────────────────────┐    ┌──────────────────────────────┐
+│ contacts                        │    │ service_satisfaction         │
+├─────────────────────────────────┤    ├──────────────────────────────┤
+│ + id: INT(PK,AUTO)              │    │ + id: INT(PK,AUTO)           │
+│ + first_name: VARCHAR           │    │ + gender: VARCHAR            │
+│ + last_name: VARCHAR            │    │ + age: VARCHAR               │
+│ + email: VARCHAR                │    │ + marital_status: VARCHAR    │
+│ + description: TEXT             │    │ + education_level: VARCHAR   │
+│ + photos: JSON                  │    │ + employment_status: VARCHAR │
+│ + status: VARCHAR               │    │ + district: VARCHAR          │
+│ + created_at: TIMESTAMP         │    │ + visits: VARCHAR            │
+└─────────────────────────────────┘    │ + service_requested: JSON    │
+                                       │ + q1..q11: VARCHAR           │
+                                       │ + additional_comments: TEXT  │
+                                       │ + created_at: TIMESTAMP      │
+                                       └──────────────────────────────┘
+</code></pre></p>
+
+<hr class="section-rule">
+
+<h2 id="8-api-specification">8. API Specification</h2>
+
+<h3>8.1 Base URL and Conventions</h3>
+
+<table>
+<thead><tr><th>Environment</th><th>Base URL</th></tr></thead>
+<tbody><tr><td>Production</td><td><code>https://lidetasubcity.gov.et</code></td></tr>
+<tr><td>Development</td><td><code>http://localhost:3000</code> (Vite proxies <code>/api</code>, <code>/auth</code>, <code>/uploads</code> to this)</td></tr></tbody>
+</table>
+
+<p>All API endpoints are prefixed with <code>/api/</code> except authentication endpoints which also accept the <code>/auth/</code> prefix. All request and response bodies use <code>application/json</code> unless the endpoint accepts <code>multipart/form-data</code> for file uploads. All timestamps are ISO 8601 strings. All successful responses return HTTP 2xx. All error responses return <code>{ "error": "description string" }</code>.</p>
+
+<p><strong>Authentication header format:</strong> <pre><code class="lang-text">Authorization: Bearer &lt;jwt_token&gt;
+</code></pre></p>
+
+<h3>8.2 Authentication Endpoints (<code>/auth/</code> or <code>/api/auth/</code>)</h3>
+
+<h4>POST <code>/auth/admin/login</code></h4>
+Authenticates an admin by username and password.
+
+<p><strong>Request Body:</strong> <pre><code class="lang-json">{ "username": "string", "password": "string" }
+</code></pre> <strong>Response 200:</strong> <pre><code class="lang-json">{
+  "requires2FA": false,
+  "token": "jwt_string",
+  "admin": { "admin_id": "...", "username": "...", "role": "...", "email": "..." },
+  "role": "string"
+}
+</code></pre> <strong>Response 401:</strong> <code>{ "error": "Invalid username or password" }</code></p>
+
+<hr class="section-rule">
+
+<h4>POST <code>/auth/admin/email-lookup</code></h4>
+Returns the email address for a given admin username. Used as a pre-step in 2FA.
+
+<p><strong>Request Body:</strong> <code>{ "username": "string" }</code> <strong>Response 200:</strong> <code>{ "email": "string" }</code></p>
+
+<hr class="section-rule">
+
+<h4>POST <code>/auth/admin/me</code></h4>
+Returns the authenticated admin's profile. Requires <code>Authorization: Bearer <token></code>.
+
+<p><strong>Response 200:</strong> Admin object (no <code>password_hash</code>)</p>
+
+<hr class="section-rule">
+
+<h4>POST <code>/api/auth/user/login</code></h4>
+Authenticates a citizen user.
+
+<p><strong>Request Body:</strong> <code>{ "email": "string", "password": "string" }</code> <strong>Response 200:</strong> <code>{ "requires2FA": false, "token": "jwt_string", "user": { ... } }</code> <strong>Response 401:</strong> <code>{ "error": "Invalid credentials" }</code></p>
+
+<hr class="section-rule">
+
+<h4>POST <code>/api/auth/user/register</code></h4>
+Registers a new citizen account and sends email verification OTP.
+
+<p><strong>Request Body:</strong> <pre><code class="lang-json">{ "first_name": "string", "last_name": "string", "email": "string", "phone": "string", "password": "string" }
+</code></pre> <strong>Response 201:</strong> <pre><code class="lang-json">{ "user": { ... }, "token": "jwt_string", "requiresVerification": true }
+</code></pre></p>
+
+<hr class="section-rule">
+
+<h4>POST <code>/api/auth/verify-otp</code></h4>
+Verifies a 6-digit OTP code for both admin 2FA and user email verification.
+
+<p><strong>Request Body:</strong> <code>{ "email": "string", "otp": "string", "entityType": "admin|user" }</code> <strong>Response 200:</strong> <code>{ "token": "jwt_string", "admin|user": { ... } }</code> <strong>Response 400:</strong> <code>{ "error": "Invalid or expired OTP" }</code></p>
+
+<hr class="section-rule">
+
+<h4>POST <code>/api/auth/resend-otp</code></h4>
+Resends the OTP. Rate-limited to 5 attempts per 10 minutes per email address.
+
+<p><strong>Request Body:</strong> <code>{ "email": "string", "entityType": "admin|user", "purpose": "2fa<em>login|verify</em>email|reset_password" }</code> <strong>Response 200:</strong> <code>{ "message": "OTP sent" }</code> <strong>Response 429:</strong> <code>{ "error": "Too many requests" }</code></p>
+
+<hr class="section-rule">
+
+<h4>POST <code>/api/auth/send-verification</code></h4>
+Sends email verification OTP to the currently authenticated user. Requires user JWT.
+
+<p><strong>Response 200:</strong> <code>{ "message": "Verification email sent" }</code></p>
+
+<hr class="section-rule">
+
+<h4>POST <code>/api/auth/verify-email</code></h4>
+Verifies the user's email address with OTP. Requires user JWT.
+
+<p><strong>Request Body:</strong> <code>{ "otp": "string" }</code> <strong>Response 200:</strong> <code>{ "message": "Email verified" }</code></p>
+
+<hr class="section-rule">
+
+<h4>POST <code>/api/auth/forgot-password</code></h4>
+Initiates password reset by sending OTP to the email address. Always returns 200 to prevent email enumeration.
+
+<p><strong>Request Body:</strong> <code>{ "email": "string", "entityType": "admin|user" }</code> <strong>Response 200:</strong> <code>{ "message": "If this email exists, a code was sent" }</code></p>
+
+<hr class="section-rule">
+
+<h4>POST <code>/api/auth/reset-password</code></h4>
+Resets the password after OTP verification.
+
+<p><strong>Request Body:</strong> <code>{ "email": "string", "otp": "string", "newPassword": "string", "entityType": "admin|user" }</code> <strong>Response 200:</strong> <code>{ "message": "Password reset successfully" }</code> <strong>Response 400:</strong> <code>{ "error": "Invalid OTP" }</code></p>
+
+<hr class="section-rule">
+
+<h3>8.3 User Endpoints (<code>/api/user/</code>)</h3>
+
+<p>All endpoints require <code>Authorization: Bearer <user_jwt></code>.</p>
+
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+<tbody><tr><td>GET</td><td><code>/api/user/me</code></td><td>Returns <code>{ id, first<em>name, last</em>name, email, phone }</code></td></tr>
+<tr><td>GET</td><td><code>/api/user/dashboard</code></td><td>Returns <code>{ complaints: [...], applications: [...] }</code></td></tr>
+<tr><td>PATCH</td><td><code>/api/user/profile</code></td><td>Updates name and/or phone. Body: <code>{ first<em>name, last</em>name, phone, currentPassword?, newPassword? }</code></td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<h3>8.4 Admin Endpoints (<code>/api/admin/</code>)</h3>
+
+<p>All endpoints require <code>Authorization: Bearer <admin_jwt></code>.</p>
+
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+<tbody><tr><td>POST</td><td><code>/api/admin/update/profile-picture</code></td><td><code>multipart/form-data</code> with <code>profile_picture</code> field. Returns updated admin object.</td></tr>
+<tr><td>DELETE</td><td><code>/api/admin/delete/profile-picture</code></td><td>Removes profile picture.</td></tr>
+<tr><td>GET</td><td><code>/api/admin/activities</code></td><td>Returns last 20 activity log entries.</td></tr>
+<tr><td>POST</td><td><code>/api/admin/update/profile</code></td><td>Updates personal info. Body: <code>{ first<em>name, last</em>name, gender, residency, phone_number, email }</code></td></tr>
+<tr><td>POST</td><td><code>/api/admin/update/admin-info</code></td><td>Updates username. Only superadmin can change role.</td></tr>
+<tr><td>POST</td><td><code>/api/admin/update/password</code></td><td>Changes password. Body: <code>{ currentPassword, newPassword }</code></td></tr>
+<tr><td>GET</td><td><code>/api/admin/settings</code></td><td>Returns admin settings; creates defaults if none exist.</td></tr>
+<tr><td>POST</td><td><code>/api/admin/update/settings</code></td><td>Upserts settings. Body: <code>{ theme, font_size, language }</code></td></tr>
+<tr><td>POST</td><td><code>/api/admin/upload</code></td><td>Generic file upload. Returns <code>{ name, path, size, mimetype }</code></td></tr>
+<tr><td>POST</td><td><code>/api/admin/create-peer</code></td><td>Creates admin with same role as caller.</td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<h3>8.5 Superadmin Endpoints (<code>/api/superadmin/</code>)</h3>
+
+<p>All endpoints require <code>Authorization: Bearer <superadmin_jwt></code>. Returns HTTP 403 for non-superadmin tokens.</p>
+
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+<tbody><tr><td>GET</td><td><code>/api/superadmin/admins</code></td><td>Returns all admin accounts (array, no password_hash).</td></tr>
+<tr><td>POST</td><td><code>/api/superadmin/create-admin</code></td><td>Creates new admin. Body: all admin fields + <code>role</code>.</td></tr>
+<tr><td>POST</td><td><code>/api/superadmin/update-admin/:id</code></td><td>Updates admin by <code>admin_id</code>.</td></tr>
+<tr><td>DELETE</td><td><code>/api/superadmin/delete-admin/:id</code></td><td>Deletes admin. Cannot delete own account.</td></tr>
+<tr><td>GET</td><td><code>/api/superadmin/overview</code></td><td>Returns <code>{ totalComplaints, resolvedComplaints, pendingApplications, activeEvents }</code></td></tr>
+<tr><td>GET</td><td><code>/api/superadmin/vacancy-applications</code></td><td>Returns all applicants with vacancy info and category stats.</td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<h3>8.6 News Endpoints (<code>/api/news/</code>)</h3>
+
+<h4>GET <code>/api/news</code></h4>
+Returns all news articles with translations.
+
+<p><strong>Response 200:</strong> <pre><code class="lang-json">[
+  {
+    "id": 1,
+    "title": "string",
+    "short_description": "string",
+    "description": "string",
+    "category": "string",
+    "photo": { "path": "string", "name": "string" },
+    "formatted_date": "Jan 01, 2026",
+    "amh": { "title": "...", "short_description": "...", "description": "...", "category": "..." },
+    "orm": { "title": "...", "short_description": "...", "description": "...", "category": "..." }
+  }
+]
+</code></pre></p>
+
+<h4>GET <code>/api/news/admin</code></h4>
+Same as public GET. Requires admin JWT.
+
+<h4>POST <code>/api/news/admin</code></h4>
+Creates a news article. Requires admin JWT.
+
+<p><strong>Request Body:</strong> <pre><code class="lang-json">{
+  "title": "string", "description": "string", "category": "string",
+  "shortDescription": "string",
+  "photo": { "path": "string", "name": "string" },
+  "amh": { "title": "...", "short_description": "...", "description": "...", "category": "..." },
+  "orm": { "title": "...", "short_description": "...", "description": "...", "category": "..." }
+}
+</code></pre> <strong>Response 201:</strong> Created news object.</p>
+
+<h4>PUT <code>/api/news/admin</code></h4>
+Updates a news article by <code>id</code>. Requires admin JWT. Same body as POST plus <code>id</code> field.
+
+<h4>DELETE <code>/api/news/admin/:id</code></h4>
+Deletes a news article and its translation. Requires admin JWT.
+
+<hr class="section-rule">
+
+<h3>8.7 Events Endpoints (<code>/api/events/</code>)</h3>
+
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr></thead>
+<tbody><tr><td>GET</td><td><code>/api/events</code></td><td>None</td><td>All events with translations and formatted date.</td></tr>
+<tr><td>GET</td><td><code>/api/events/admin</code></td><td>Admin JWT</td><td>Same as public GET.</td></tr>
+<tr><td>POST</td><td><code>/api/events/admin</code></td><td>Admin JWT</td><td>Create event. Body wrapped in <code>formData</code> object.</td></tr>
+<tr><td>PUT</td><td><code>/api/events/admin</code></td><td>Admin JWT</td><td>Update event. Body wrapped in <code>formData</code> object.</td></tr>
+<tr><td>DELETE</td><td><code>/api/events/admin/:id</code></td><td>Admin JWT</td><td>Delete event and translation.</td></tr></tbody>
+</table>
+
+<p><strong>Event object shape:</strong> <pre><code class="lang-json">{
+  "events_id": 1, "title": "string", "description": "string",
+  "location": "string", "start_date": "ISO date", "end_date": "ISO date",
+  "status": "upcoming|pending|complete|canceled",
+  "photos": [{ "path": "string", "name": "string" }],
+  "start_date_short": "Mon. Jan, 01 2026",
+  "amh": { "title": "...", "description": "...", "location": "..." },
+  "orm": { "title": "...", "description": "...", "location": "..." }
+}
+</code></pre></p>
+
+<hr class="section-rule">
+
+<h3>8.8 Vacancies Endpoints (<code>/api/vacancies/</code>)</h3>
+
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr></thead>
+<tbody><tr><td>GET</td><td><code>/api/vacancies</code></td><td>None</td><td>All vacancies with translations.</td></tr>
+<tr><td>POST</td><td><code>/api/vacancies/upload-cv</code></td><td>None</td><td>Upload CV file. Returns <code>{ path: "/uploads/cvs/filename" }</code></td></tr>
+<tr><td>POST</td><td><code>/api/vacancies/applicants</code></td><td>None</td><td>Submit job application. Returns <code>{ ...applicant, ref: "APP-XXXXX" }</code></td></tr>
+<tr><td>GET</td><td><code>/api/vacancies/admin</code></td><td>Admin JWT</td><td>All vacancies for admin view.</td></tr>
+<tr><td>POST</td><td><code>/api/vacancies/admin</code></td><td>Admin JWT</td><td>Create vacancy.</td></tr>
+<tr><td>PUT</td><td><code>/api/vacancies/admin</code></td><td>Admin JWT</td><td>Update vacancy.</td></tr>
+<tr><td>DELETE</td><td><code>/api/vacancies/admin/:id</code></td><td>Admin JWT</td><td>Delete vacancy, applicants, and translation.</td></tr>
+<tr><td>GET</td><td><code>/api/vacancies/applicants/admin</code></td><td>Admin/Vacancy JWT</td><td>All applicants with vacancy info.</td></tr>
+<tr><td>GET</td><td><code>/api/vacancies/applicants/admin/:id</code></td><td>Admin/Vacancy JWT</td><td>Single applicant detail.</td></tr>
+<tr><td>PUT</td><td><code>/api/vacancies/applicants/admin/:id</code></td><td>Admin/Vacancy JWT</td><td>Update applicant (status, CV).</td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<h3>8.9 Complaints Endpoints (<code>/api/complaints/</code>)</h3>
+
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr></thead>
+<tbody><tr><td>POST</td><td><code>/api/complaints</code></td><td>None</td><td>Submit complaint. Returns <code>{ complaint_id, ref: "CPL-XXXXX" }</code></td></tr>
+<tr><td>GET</td><td><code>/api/complaints/types</code></td><td>None</td><td>Returns list of complaint types.</td></tr>
+<tr><td>GET</td><td><code>/api/complaints/admin</code></td><td>Admin JWT</td><td>Returns <code>{ complaints[], counts: {total, pending, resolved}, stats[] }</code></td></tr>
+<tr><td>POST</td><td><code>/api/complaints/admin</code></td><td>Admin JWT</td><td>Admin creates complaint record.</td></tr>
+<tr><td>POST</td><td><code>/api/complaints/admin/update</code></td><td>Admin JWT</td><td>Update complaint (status, notes, etc.).</td></tr>
+<tr><td>DELETE</td><td><code>/api/complaints/admin/:id</code></td><td>Admin JWT</td><td>Delete complaint by <code>complaint_id</code>.</td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<h3>8.10 Contacts Endpoints (<code>/api/contacts/</code>)</h3>
+
+<table>
+<thead><tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr></thead>
+<tbody><tr><td>POST</td><td><code>/api/contacts</code></td><td>None</td><td>Submit contact message.</td></tr>
+<tr><td>POST</td><td><code>/api/contacts/satisfaction</code></td><td>None</td><td>Submit satisfaction survey.</td></tr>
+<tr><td>GET</td><td><code>/api/contacts/admin</code></td><td>Admin JWT</td><td>View pending contact messages.</td></tr>
+<tr><td>PUT</td><td><code>/api/contacts/admin/:id/resolve</code></td><td>Admin JWT</td><td>Mark contact as resolved.</td></tr>
+<tr><td>GET</td><td><code>/api/contacts/satisfaction/stats</code></td><td>Admin JWT</td><td>30-day satisfaction stats: averages + daily counts.</td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<h3>8.11 Static File Endpoints</h3>
+
+<table>
+<thead><tr><th>Path</th><th>Description</th></tr></thead>
+<tbody><tr><td><code>GET /uploads/photos/*</code></td><td>Publicly accessible uploaded photos</td></tr>
+<tr><td><code>GET /uploads/videos/*</code></td><td>Publicly accessible uploaded videos</td></tr>
+<tr><td><code>GET /uploads/audios/*</code></td><td>Publicly accessible uploaded audio files</td></tr>
+<tr><td><code>GET /uploads/cvs/*</code></td><td>Uploaded CVs — <strong>publicly accessible by direct URL</strong></td></tr>
+<tr><td><code>GET /uploads/admin_profiles/*</code></td><td>Admin profile pictures — publicly accessible</td></tr>
+<tr><td><code>GET /health</code></td><td>Health check: <code>{ ok: true, message, timestamp, env }</code></td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<h2 id="9-real-time-communication">9. Real-Time Communication</h2>
+
+<h3>9.1 Current Implementation</h3>
+
+<p>The Lideta Sub-City system does <strong>not</strong> implement any real-time communication mechanism in the current version. All communication between the client and server is strictly request-response over HTTP/HTTPS using the REST API defined in Section 8.</p>
+
+<p>There are no WebSocket connections, no Server-Sent Events (SSE), no long-polling mechanisms, and no third-party push notification services (Firebase Cloud Messaging, Pusher, etc.) in use.</p>
+
+<p><strong>Security implication for penetration testers:</strong> There are no WebSocket upgrade handshake paths to test. All <code>/api/<em></code> and <code>/auth/</em></code> paths are standard HTTP endpoints; no <code>Upgrade: websocket</code> header handling exists.</p>
+
+<h3>9.2 Future Considerations</h3>
+
+<p>If real-time features are added in future versions, the following would be in scope for security review:</p>
+
+<ul>
+  <li><p><strong>Complaint status push notifications</strong> — Notifying a citizen when their complaint status changes without requiring a page refresh.</p></li>
+  <li><p><strong>Admin live notifications</strong> — Alerting admin staff of new complaint submissions or new contact messages in real time.</p></li>
+  <li><p><strong>Proposed technology</strong>: Socket.io (WebSocket with HTTP long-poll fallback) integrated into the existing Express server.</p></li>
+  <li><p><strong>Security considerations for future implementation</strong>: WebSocket connections would require JWT-based handshake authentication, per-connection rate limiting, input sanitization for all message payloads, and protection against Cross-Site WebSocket Hijacking (CSWSH).</p></li>
+</ul>
+
+<hr class="section-rule">
+
+<h2 id="10-security-requirements">10. Security Requirements</h2>
+
+<h3>10.1 Authentication Security</h3>
+
+<ul>
+  <li><p><strong>SR-001</strong>: All admin and citizen passwords shall be hashed using <code>bcryptjs</code> with a minimum work factor of 10 salt rounds before storage.</p></li>
+  <li><p><strong>SR-002</strong>: JWT tokens shall be signed with a minimum 256-bit random secret (<code>JWT_SECRET</code>) stored in environment variables. The secret shall never be committed to source control.</p></li>
+  <li><p><strong>SR-003</strong>: Admin JWTs shall expire after 7 days. Citizen JWTs shall expire after 30 days.</p></li>
+  <li><p><strong>SR-004</strong>: The token verification middleware (<code>authenticateToken</code>, <code>authenticateUser</code>) shall reject tokens that are expired, malformed, or signed with a different secret.</p></li>
+  <li><p><strong>SR-005</strong>: The password reset flow shall not confirm whether a given email address exists in the system (always returns HTTP 200 with a generic message) to prevent user enumeration.</p></li>
+  <li><p><strong>SR-006</strong>: Password reset and email verification OTP codes are single-use, 6-digit numeric codes generated and verified by the OTP email service.</p></li>
+  <li><p><strong>SR-007</strong>: OTP resend operations are rate-limited to 5 attempts per 10-minute sliding window per email address, enforced server-side.</p></li>
+</ul>
+
+<h3>10.2 Password Policy</h3>
+
+<ul>
+  <li><p><strong>SR-008</strong>: All passwords (registration, admin creation, password change, password reset) shall meet the following requirements: minimum 8 characters, at least one uppercase letter, at least one lowercase letter, at least one digit, at least one special character.</p></li>
+  <li><p><strong>SR-009</strong>: Password strength is validated both client-side (with visual feedback) and enforced server-side. Client-side validation is a UX enhancement only and does not constitute a security boundary.</p></li>
+</ul>
+
+<h3>10.3 Transport Security</h3>
+
+<ul>
+  <li><p><strong>SR-010</strong>: All communication in production shall be over HTTPS/TLS. HTTP requests shall be redirected to HTTPS by the Plesk web server configuration.</p></li>
+  <li><p><strong>SR-011</strong>: The database connection uses SSL with <code>{ rejectUnauthorized: false }</code> in the current configuration. This should be upgraded to certificate pinning in a hardened production environment.</p></li>
+  <li><p><strong>SR-012</strong>: The OTP email service API calls use HTTPS by default.</p></li>
+</ul>
+
+<h3>10.4 Input Validation</h3>
+
+<ul>
+  <li><p><strong>SR-013</strong>: All API endpoint input shall be treated as untrusted. Database queries use the <code>postgres</code> tagged template literal driver which parameterizes all values, preventing SQL injection.</p></li>
+  <li><p><strong>SR-014</strong>: File uploads are validated by MIME type (images, video, audio, PDF, Word documents only) and limited to 50MB per file.</p></li>
+  <li><p><strong>SR-015</strong>: CV file uploads are restricted to <code>application/pdf</code> only at the application layer (in addition to the general multer MIME type filter).</p></li>
+  <li><p><strong>SR-016</strong>: Ethiopian phone number inputs are validated server-side and client-side against the pattern <code>/^(\+251(9|7)\d{8}|0(9|7)\d{8})$/</code>.</p></li>
+  <li><p><strong>SR-017</strong>: File names are sanitized on upload: non-alphanumeric characters are replaced with underscores and a random suffix is appended to prevent path traversal and filename collision.</p></li>
+</ul>
+
+<h3>10.5 CORS Policy</h3>
+
+<ul>
+  <li><p><strong>SR-018</strong>: The CORS policy allows requests only from explicitly whitelisted origins: <code>localhost</code> (development), <code>https://lideta-official.vercel.app</code>, <code>https://lidetasubcity.gov.et</code>, <code>https://www.lidetasubcity.gov.et</code>, any <code>*.run.app</code> origin, and the <code>CLIENT_ORIGIN</code> environment variable.</p></li>
+  <li><p><strong>SR-019</strong>: <code>credentials: true</code> is set in the CORS configuration, allowing cookies and Authorization headers from whitelisted origins.</p></li>
+  <li><p><strong>SR-020</strong>: Requests from non-whitelisted origins are rejected with an HTTP CORS error.</p></li>
+</ul>
+
+<h3>10.6 File Upload Security</h3>
+
+<ul>
+  <li><p><strong>SR-021</strong>: All uploaded files are stored on the server filesystem at <code>client/public/uploads/</code>. This directory is served as a static endpoint (<code>GET /uploads/*</code>) and files are publicly accessible by direct URL.</p></li>
+  <li><p><strong>SR-022</strong>: CV files (<code>/uploads/cvs/*</code>) are publicly accessible by direct URL. Access should be restricted to authenticated admin users in a future hardening iteration.</p></li>
+  <li><p><strong>SR-023</strong>: Uploaded filenames include a timestamp and random 9-digit suffix to prevent predictable URL enumeration.</p></li>
+  <li><p><strong>SR-024</strong>: No executable file types (<code>.js</code>, <code>.php</code>, <code>.sh</code>, <code>.exe</code>) are permitted by the file filter.</p></li>
+</ul>
+
+<h3>10.7 Session and Token Security</h3>
+
+<ul>
+  <li><p><strong>SR-025</strong>: Both admin and citizen JWTs are stored in the browser's <code>localStorage</code>. This makes them accessible to JavaScript running on the page.</p></li>
+  <li><p><strong>SR-026</strong>: No <code>HttpOnly</code> cookie-based token storage is currently implemented. <code>localStorage</code> storage is susceptible to XSS-based token theft. Migrating to <code>HttpOnly</code> cookies is recommended for future versions.</p></li>
+  <li><p><strong>SR-027</strong>: No explicit token revocation mechanism (blocklist) is implemented. Token invalidation relies solely on expiry.</p></li>
+</ul>
+
+<h3>10.8 Activity Logging</h3>
+
+<ul>
+  <li><p><strong>SR-028</strong>: All create, update, and delete operations performed by admin accounts shall be recorded in the <code>activity<em>logs</code> table with: admin</em>id, username, action, entity<em>type, entity</em>title, changed fields, and timestamp.</p></li>
+  <li><p><strong>SR-029</strong>: Activity logs are read-only through the API (no delete endpoint exists for activity logs).</p></li>
+</ul>
+
+<h3>10.9 Data Flow Security (DFD Level 1)</h3>
+
+<p><pre><code class="lang-text">External Entities         Processes                  Data Stores
+─────────────────         ─────────────              ──────────────
+
+[Browser / Citizen] ──1──▶[1.0 Register/Login]──2──▶[MySQL: users]
+                          [   + OTP Verify    ]──3──▶[Cloud OTP Email Service]
+
+[Browser / Citizen] ──4──▶[2.0 Complaint      ]──5──▶[MySQL: complaints]
+                          [   Submission       ]──6──▶[/uploads/ : media files]
+
+[Browser / Citizen] ──7──▶[3.0 CV Upload +    ]──8──▶[/uploads/cvs/ : CV files]
+                          [   Job Application  ]──9──▶[MySQL: applicants]
+
+[Browser / Admin  ] ──10─▶[4.0 Admin Auth     ]──11─▶[MySQL: admins]
+                          [   + JWT Issuance   ]
+
+[Browser / Admin  ] ──12─▶[5.0 Content CRUD   ]──13─▶[MySQL: news/events/vacancies]
+                          [   (News/Events/    ]──14─▶[/uploads/ : content images]
+                          [    Vacancies)      ]──15─▶[MySQL: *_translation]
+
+[Browser / Admin  ] ──16─▶[6.0 Complaint      ]──17─▶[MySQL: complaints]
+                          [   Management      ]
+
+[Browser/SuperAdmin]──18─▶[7.0 Admin Account  ]──19─▶[MySQL: admins]
+                          [   Management      ]──20─▶[MySQL: activity_logs]
+
+Data Flows of Security Interest:
+  Flow 1:  HTTPS POST with plaintext credentials → must be TLS-protected
+  Flow 3:  OTP verification — depends on external email service availability
+  Flow 6:  Media file storage — publicly accessible static files
+  Flow 8:  CV file storage — publicly accessible, contains PII
+  Flow 10: Admin credentials → JWT issued with 7-day expiry
+  Flow 20: All admin mutations logged — integrity of logs is critical
+</code></pre></p>
+
+<hr class="section-rule">
+
+<h2 id="11-deployment-architecture">11. Deployment Architecture</h2>
+
+<h3>11.1 Production Environment</h3>
+
+<p>The system is deployed on <strong>EthioTelecom Plesk Obsidian shared web hosting</strong> using the <strong>Phusion Passenger</strong> Node.js application server module.</p>
+
+<p><pre><code class="lang-text">┌──────────────────────────────────────────────────────────────────┐
+│                    EthioTelecom Data Centre                       │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │                 Plesk Obsidian Panel                      │    │
+│  │                                                          │    │
+│  │  ┌──────────────────────────────────────────────────┐   │    │
+│  │  │  Apache / Nginx Web Server (Plesk managed)        │   │    │
+│  │  │  - HTTPS termination (Let's Encrypt TLS)          │   │    │
+│  │  │  - Document Root: /client/dist                    │   │    │
+│  │  │  - Application Root: /  (project root)            │   │    │
+│  │  │  - Startup File: app.js                           │   │    │
+│  │  └─────────────────┬────────────────────────────────┘   │    │
+│  │                    │ Phusion Passenger                    │    │
+│  │  ┌─────────────────▼────────────────────────────────┐   │    │
+│  │  │  Node.js Process (Express.js v5, ESM)             │   │    │
+│  │  │  - Serves: React SPA (client/dist)                │   │    │
+│  │  │  - Serves: REST API (/api/*, /auth/*)             │   │    │
+│  │  │  - Serves: Static uploads (/uploads/*)            │   │    │
+│  │  │  - Port: assigned by Plesk/Passenger              │   │    │
+│  │  └─────────────────┬────────────────────────────────┘   │    │
+│  │                    │                                      │    │
+│  │  ┌─────────────────▼────────────────────────────────┐   │    │
+│  │  │  MySQL Database (Plesk built-in)                  │   │    │
+│  │  │  - All application data                           │   │    │
+│  │  │  - Local socket or localhost:3306                 │   │    │
+│  │  └──────────────────────────────────────────────────┘   │    │
+│  │                                                          │    │
+│  │  File System: client/public/uploads/ (persistent)       │    │
+│  └──────────────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────────────┘
+                              │
+                              │ HTTPS (OTP only)
+                              ▼
+                    ┌─────────────────────┐
+                    │  Cloud OTP Service      │
+                    │  (OTP Email Delivery) │
+                    └─────────────────────┘
+</code></pre></p>
+
+<h3>11.2 Plesk Configuration</h3>
+
+<table>
+<thead><tr><th>Setting</th><th>Value</th></tr></thead>
+<tbody><tr><td>Application Type</td><td>Node.js (Phusion Passenger)</td></tr>
+<tr><td>Application Root</td><td><code>/</code> (project root)</td></tr>
+<tr><td>Document Root</td><td><code>/client/dist</code></td></tr>
+<tr><td>Startup File</td><td><code>app.js</code></td></tr>
+<tr><td>Node.js Version</td><td>18+</td></tr>
+<tr><td>Application Mode</td><td>Production</td></tr>
+<tr><td>Environment Variables</td><td>Set via Plesk Node.js panel: <code>DATABASE<em>URL</code>, <code>JWT</em>SECRET</code>, <code>OTP<em>SERVICE</em>URL</code>, <code>OTP<em>SERVICE</em>KEY</code>, <code>SERVER<em>PORT</code>, <code>CLIENT</em>ORIGIN</code>, <code>NODE_ENV=production</code></td></tr></tbody>
+</table>
+
+<p><strong>app.js</strong> (root entry point) is a one-line ESM import that starts the Express server: <pre><code class="lang-js">import './server/server.js';
+</code></pre> This file exists because Plesk's Phusion Passenger requires a startup file at the configured path.</p>
+
+<h3>11.3 URL Routing in Production</h3>
+
+<p>Plesk's web server is configured to proxy all requests to the Node.js Passenger process. The Express server handles routing internally:</p>
+
+<table>
+<thead><tr><th>Request Pattern</th><th>Handler</th></tr></thead>
+<tbody><tr><td><code>/api/*</code></td><td>Express API routes</td></tr>
+<tr><td><code>/auth/*</code></td><td>Express auth routes</td></tr>
+<tr><td><code>/uploads/*</code></td><td>Express static file serving</td></tr>
+<tr><td><code>/health</code></td><td>Express health check</td></tr>
+<tr><td>All others</td><td>SPA fallback → <code>client/dist/index.html</code></td></tr></tbody>
+</table>
+
+<h3>11.4 Static File Serving</h3>
+
+<p>The React SPA is built by running <code>npm run build:client</code> from the project root, which executes <code>vite build</code> in the <code>client/</code> directory. The output is placed in <code>client/dist/</code>. Express serves this directory as static files.</p>
+
+<p>User-uploaded files (images, videos, audio, CVs, profile pictures) are stored at <code>client/public/uploads/</code> and served via <code>app.use('/uploads', express.static(...))</code>.</p>
+
+<h3>11.5 TLS / HTTPS</h3>
+
+<p>TLS termination is handled by Plesk's Apache/Nginx layer using Let's Encrypt certificates. The Node.js application does not handle TLS directly. All HTTP traffic is redirected to HTTPS by the Plesk web server configuration.</p>
+
+<h3>11.6 Environment Variables</h3>
+
+<table>
+<thead><tr><th>Variable</th><th>Required</th><th>Description</th></tr></thead>
+<tbody><tr><td><code>DATABASE_URL</code></td><td>Yes</td><td>Full MySQL connection string</td></tr>
+<tr><td><code>JWT_SECRET</code></td><td>Yes</td><td>HS256 signing secret for all JWTs</td></tr>
+<tr><td><code>SERVER_PORT</code></td><td>Yes</td><td>Port assigned by Plesk/Passenger</td></tr>
+<tr><td><code>OTP<em>SERVICE</em>URL</code></td><td>Yes</td><td>Cloud OTP email service endpoint URL</td></tr>
+<tr><td><code>OTP<em>SERVICE</em>KEY</code></td><td>Yes</td><td>Cloud OTP email service authentication key</td></tr>
+<tr><td><code>CLIENT_ORIGIN</code></td><td>Recommended</td><td>Additional allowed CORS origin</td></tr>
+<tr><td><code>NODE_ENV</code></td><td>Recommended</td><td>Set to <code>production</code> in live environment</td></tr></tbody>
+</table>
+
+<h3>11.7 Development Environment</h3>
+
+<p>For local development, the system uses a split setup:</p>
+
+<table>
+<thead><tr><th>Component</th><th>Command</th><th>Port</th></tr></thead>
+<tbody><tr><td>Express API server</td><td><code>npm run dev</code> (from project root)</td><td>3000</td></tr>
+<tr><td>React Vite dev server</td><td><code>npm run dev</code> (from <code>client/</code>)</td><td>5173</td></tr></tbody>
+</table>
+
+<p>The Vite dev server proxies the following paths to <code>localhost:3000</code>:</p>
+
+<p><pre><code class="lang-text">/api     → http://localhost:3000
+/auth    → http://localhost:3000
+/uploads → http://localhost:3000
+</code></pre></p>
+
+<p>This allows the React SPA at port 5173 to call API endpoints without CORS issues during development. In production, there is no Vite dev server; Express serves the built SPA directly.</p>
+
+<p>If <code>DATABASE_URL</code> is not set in development, the server falls back to an in-memory mock database seeded from the static JSON files in <code>client/src/data/</code>. Default credentials in mock mode: all accounts use password <code>admin123</code>.</p>
+
+<hr class="section-rule">
+
+<h2 id="12-appendices">12. Appendices</h2>
+
+<h3>Appendix A — Technology Stack Summary</h3>
+
+<table>
+<thead><tr><th>Layer</th><th>Technology</th><th>Version</th></tr></thead>
+<tbody><tr><td><strong>Front-End Framework</strong></td><td>React</td><td>19.2.0</td></tr>
+<tr><td><strong>Front-End Build Tool</strong></td><td>Vite</td><td>7.2.4</td></tr>
+<tr><td><strong>Front-End Routing</strong></td><td>React Router</td><td>7.9.6</td></tr>
+<tr><td><strong>CSS Framework</strong></td><td>Tailwind CSS</td><td>4.1.17</td></tr>
+<tr><td><strong>Animation</strong></td><td>Framer Motion</td><td>13.1.0</td></tr>
+<tr><td><strong>Charts</strong></td><td>Recharts</td><td>3.5.1</td></tr>
+<tr><td><strong>Icons</strong></td><td>SVG (vite-plugin-svgr)</td><td>4.5.0</td></tr>
+<tr><td><strong>Back-End Framework</strong></td><td>Express.js</td><td>5.2.1</td></tr>
+<tr><td><strong>Runtime</strong></td><td>Node.js</td><td>18+</td></tr>
+<tr><td><strong>Module System</strong></td><td>ESM (<code>"type": "module"</code>)</td><td>—</td></tr>
+<tr><td><strong>Database</strong></td><td>MySQL (Plesk built-in)</td><td>—</td></tr>
+<tr><td><strong>DB Driver</strong></td><td><code>postgres</code> (tagged template)</td><td>3.4.7</td></tr>
+<tr><td><strong>Authentication</strong></td><td>JSON Web Tokens (jsonwebtoken)</td><td>9.0.3</td></tr>
+<tr><td><strong>Password Hashing</strong></td><td>bcryptjs</td><td>3.0.3</td></tr>
+<tr><td><strong>File Uploads</strong></td><td>Multer</td><td>2.0.2</td></tr>
+<tr><td><strong>OTP Email</strong></td><td>Cloud Email Delivery Client</td><td>—</td></tr>
+<tr><td><strong>CORS</strong></td><td>cors (npm)</td><td>2.8.5</td></tr>
+<tr><td><strong>Deployment</strong></td><td>Plesk / Phusion Passenger</td><td>—</td></tr>
+<tr><td><strong>TLS</strong></td><td>Let's Encrypt (via Plesk)</td><td>—</td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<h3>Appendix B — Complete Route Tree</h3>
+
+<p><pre><code class="lang-text">PUBLIC ROUTES (layout: &lt;Home /&gt;)
+├── /                        → HomePage
+├── /about_us                → AboutUs
+├── /departments             → Departments
+├── /departments/:id         → DepartmentDetails
+├── /news                    → News
+├── /news/:id                → NewsDetails
+├── /events                  → Events
+├── /events/:id              → EventDetails
+├── /vacancy                 → Vacancy
+│   └── (legacy: /vaccancy → redirect /vacancy)
+├── /vacancy/:id             → VacancyDetails
+├── /complaints              → Complaints
+│   └── (legacy: /compliants → redirect /complaints)
+└── /contacts                → Contacts
+
+CITIZEN AUTH
+├── /account/auth            → UserAuth  (login / register / OTP / forgot-password)
+└── /account                 → UserDashboard
+
+ADMIN AUTH
+└── /auth/login              → Login (admin only)
+
+ADMIN PANEL (layout: &lt;Admin /&gt;, provides adminContext)
+├── /admin                   → AdminHome        [role: admin]
+├── /admin/complaints        → AdminComplaints  [role: admin, complaint_admin]
+│   └── (legacy: /admin/compliants → redirect)
+├── /admin/events            → AdminEvent       [role: admin, event_admin]
+├── /admin/news              → AdminNews        [role: admin, news_admin]
+├── /admin/vacancy           → AdminVacancy     [role: admin, vacancy_admin]
+└── /admin/profile           → AdminProfile     [role: all admin roles]
+
+SUPERADMIN PANEL (layout: &lt;SuperAdminLayout /&gt;)
+├── /superadmin              → redirect /superadmin/home
+├── /superadmin/home         → SuperAdminHome
+└── /superadmin/profile      → SuperAdminProfile
+</code></pre></p>
+
+<hr class="section-rule">
+
+<h3>Appendix C — File Upload Paths</h3>
+
+<table>
+<thead><tr><th>Upload Type</th><th>Field Name</th><th>Storage Path</th><th>Public URL</th></tr></thead>
+<tbody><tr><td>News/Event photos</td><td><code>photo</code> / <code>image</code></td><td><code>client/public/uploads/photos/</code></td><td><code>/uploads/photos/<filename></code></td></tr>
+<tr><td>Complaint photos</td><td><code>photo</code></td><td><code>client/public/uploads/photos/</code></td><td><code>/uploads/photos/<filename></code></td></tr>
+<tr><td>Complaint videos</td><td><code>video</code></td><td><code>client/public/uploads/videos/</code></td><td><code>/uploads/videos/<filename></code></td></tr>
+<tr><td>Complaint audio</td><td><code>audio</code></td><td><code>client/public/uploads/audios/</code></td><td><code>/uploads/audios/<filename></code></td></tr>
+<tr><td>Admin profile pics</td><td><code>profile<em>picture</code></td><td><code>client/public/uploads/admin</em>profiles/</code></td><td><code>/uploads/admin_profiles/<filename></code></td></tr>
+<tr><td>Applicant CVs</td><td><code>cv</code></td><td><code>client/public/uploads/cvs/</code></td><td><code>/uploads/cvs/<applicant_id>.pdf</code></td></tr></tbody>
+</table>
+
+<p>All uploaded files are publicly accessible by direct URL. No authentication is required to download any uploaded file.</p>
+
+<hr class="section-rule">
+
+<h3>Appendix D — Environment Variable Reference</h3>
+
+<p><pre><code class="lang-bash"># Database
+DATABASE_URL=mysql://user:password@localhost:3306/lideta_db
+
+# Security
+JWT_SECRET=&lt;minimum-256-bit-random-string&gt;
+
+# Server
+SERVER_PORT=&lt;assigned-by-plesk&gt;
+NODE_ENV=production
+
+# OTP Email Service
+OTP_SERVICE_URL=https://&lt;otp-service-endpoint&gt;
+OTP_SERVICE_KEY=&lt;otp-service-api-key&gt;
+
+# CORS
+CLIENT_ORIGIN=https://lidetasubcity.gov.et
+</code></pre></p>
+
+<hr class="section-rule">
+
+<h3>Appendix E — Admin Role Default Landing Paths</h3>
+
+<table>
+<thead><tr><th>Role</th><th>Default Path After Login</th></tr></thead>
+<tbody><tr><td><code>superadmin</code></td><td><code>/superadmin/home</code></td></tr>
+<tr><td><code>admin</code></td><td><code>/admin</code></td></tr>
+<tr><td><code>complaint_admin</code></td><td><code>/admin/complaints</code></td></tr>
+<tr><td><code>event_admin</code></td><td><code>/admin/events</code></td></tr>
+<tr><td><code>news_admin</code></td><td><code>/admin/news</code></td></tr>
+<tr><td><code>vacancy_admin</code></td><td><code>/admin/vacancy</code></td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<h3>Appendix F — Satisfaction Survey Question Reference</h3>
+
+<p>The service satisfaction survey collects responses to 11 questions (q1–q11), each scored on a 5-point Likert scale: <code>very<em>high (5)</code>, <code>high (4)</code>, <code>medium (3)</code>, <code>low (2)</code>, <code>very</em>low (1)</code>.</p>
+
+<table>
+<thead><tr><th>Question ID</th><th>Subject</th></tr></thead>
+<tbody><tr><td>q1</td><td>Overall satisfaction with the service</td></tr>
+<tr><td>q2</td><td>Staff courtesy and professionalism</td></tr>
+<tr><td>q3</td><td>Speed and timeliness of service</td></tr>
+<tr><td>q4</td><td>Clarity of information provided</td></tr>
+<tr><td>q5</td><td>Ease of accessing the service</td></tr>
+<tr><td>q6</td><td>Physical environment / office conditions</td></tr>
+<tr><td>q7</td><td>Resolution of complaints or issues</td></tr>
+<tr><td>q8</td><td>Transparency of the process</td></tr>
+<tr><td>q9</td><td>Availability of staff when needed</td></tr>
+<tr><td>q10</td><td>Digital/online service satisfaction</td></tr>
+<tr><td>q11</td><td>Likelihood of recommending the service</td></tr></tbody>
+</table>
+
+<p>Aggregate statistics are calculated server-side and exposed at <code>GET /api/contacts/satisfaction/stats</code> as 30-day averages per question plus daily response volume.</p>
+
+<hr class="section-rule">
+
+<h3>Appendix G — Known Limitations and Future Recommendations</h3>
+
+<table>
+<thead><tr><th>Item</th><th>Current State</th><th>Recommendation</th></tr></thead>
+<tbody><tr><td>JWT storage</td><td><code>localStorage</code> (XSS-susceptible)</td><td>Migrate to <code>HttpOnly</code> + <code>SameSite=Strict</code> cookies</td></tr>
+<tr><td>CV file access</td><td>Publicly accessible by direct URL</td><td>Restrict to authenticated admin users via signed URLs or middleware auth check</td></tr>
+<tr><td>2FA flag</td><td><code>requires2FA: false</code> hardcoded for all accounts</td><td>Implement per-account 2FA toggle in admin settings</td></tr>
+<tr><td>Real-time notifications</td><td>Not implemented</td><td>Add Socket.io for live complaint status updates</td></tr>
+<tr><td>Horizontal scaling</td><td>Single process</td><td>Externalize session/token store if scaling to multiple instances</td></tr>
+<tr><td>Activity log integrity</td><td>No tamper protection</td><td>Add append-only database permission or external log export</td></tr>
+<tr><td>File type validation</td><td>MIME type only (spoofable)</td><td>Add magic byte / file signature validation for uploads</td></tr>
+<tr><td>SSL certificate pinning</td><td><code>rejectUnauthorized: false</code> for DB</td><td>Enable full certificate validation in production</td></tr></tbody>
+</table>
+
+<hr class="section-rule">
+
+<p><em>End of SRS.md — Lideta Sub-City Official Website and Administration System v1.0.0</em></p>
+</div>
+
+</body>
+</html>

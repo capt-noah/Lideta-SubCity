@@ -122,7 +122,64 @@ function createMockPool() {
     vacancies: [],
     vacancy_translation: [],
     applicants: [],
-    complaints: [],
+    complaints: [
+      {
+        complaint_id: 101,
+        id: 101,
+        user_id: 1,
+        first_name: 'Abebe',
+        last_name: 'Bikila',
+        email: 'user@lideta.gov',
+        phone: '+251 911 223344',
+        complainer_city: 'Addis Ababa',
+        complainer_subcity: 'Lideta',
+        complainer_woreda: '04',
+        complainer_house_number: '512',
+        complaint_subcity: 'Lideta',
+        complaint_woreda: '04',
+        type: 'Water Supply Bureau',
+        status: 'in progress',
+        description: 'Frequent water interruption occurring on block 12 for the past 4 days without prior notice.',
+        concerned_staff_member: 'Ato Kebede (District Engineer)',
+        estimated_resolution_timeframe: '3 - 5 Days',
+        estimated_resolution_date: '2026-09-12',
+        admin_response: 'Our water maintenance crew has inspected the pipeline and replacement parts have been ordered. The service will be restored promptly.',
+        admin_contact_phone: '0911223344',
+        photos: [],
+        videos: [],
+        audios: [],
+        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        updated_at: new Date()
+      },
+      {
+        complaint_id: 102,
+        id: 102,
+        user_id: 1,
+        first_name: 'Abebe',
+        last_name: 'Bikila',
+        email: 'user@lideta.gov',
+        phone: '+251 911 223344',
+        complainer_city: 'Addis Ababa',
+        complainer_subcity: 'Lideta',
+        complainer_woreda: '02',
+        complainer_house_number: '104',
+        complaint_subcity: 'Lideta',
+        complaint_woreda: '02',
+        type: 'Roads and Transport Bureau',
+        status: 'assigning',
+        description: 'Large potholes on the main access road creating traffic blockage and safety hazard for pedestrians.',
+        concerned_staff_member: null,
+        estimated_resolution_timeframe: '5 - 7 Days',
+        estimated_resolution_date: null,
+        admin_response: 'Complaint logged and assigned to Lideta Sub-City Infrastructure Department for on-site assessment.',
+        admin_contact_phone: '8080',
+        photos: [],
+        videos: [],
+        audios: [],
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        updated_at: new Date()
+      }
+    ],
     contacts: []
   };
 
@@ -294,11 +351,21 @@ function createMockPool() {
 
       // 7. SELECT * FROM complaints
       if (lowerQuery.includes('from complaints')) {
+        if (lowerQuery.includes('count(*)')) {
+          const total = tables.complaints.length;
+          const pending = tables.complaints.filter(c => ['assigning', 'in progress'].includes((c.status || '').toLowerCase())).length;
+          const resolved = tables.complaints.filter(c => (c.status || '').toLowerCase() === 'resolved').length;
+          return [{ total, pending, resolved }];
+        }
         if (lowerQuery.includes('complaint_id = ?')) {
           const id = args[0];
           return tables.complaints.filter(c => String(c.complaint_id) === String(id));
         }
-        return tables.complaints.sort((a, b) => b.created_at - a.created_at);
+        if (lowerQuery.includes('user_id = ?')) {
+          const userId = args[0];
+          return tables.complaints.filter(c => String(c.user_id) === String(userId)).sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+        }
+        return [...tables.complaints].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
       }
 
       // 8. SELECT * FROM contacts

@@ -16,8 +16,11 @@ router.get('/dashboard', authenticateUser, async (req, res) => {
     const userId = req.user.id
 
     const complaints = await pool`
-      SELECT complaint_id AS id, first_name, last_name, type, status, description,
-             created_at, complaint_subcity, complainer_subcity
+      SELECT complaint_id AS id, first_name, last_name, email, phone, type, status, description,
+             created_at, complaint_subcity, complaint_woreda, complainer_city, complainer_subcity,
+             complainer_woreda, complainer_house_number, concerned_staff_member,
+             estimated_resolution_timeframe, estimated_resolution_date,
+             admin_response, admin_contact_phone, photos, videos, audios
       FROM complaints
       WHERE user_id = ${userId}
       ORDER BY created_at DESC`

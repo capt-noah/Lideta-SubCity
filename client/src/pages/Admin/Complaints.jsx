@@ -32,78 +32,104 @@ const sectorGroups = [
  'General Education Quality and Inspection Bureau','Traffic Management Bureau'
 ]
 
+const TIMEFRAME_PRESETS = [
+  '24 - 48 Hours',
+  '3 - 5 Days',
+  '5 - 7 Days',
+  '1 - 2 Weeks',
+  '2 - 3 Weeks'
+]
+
 const EMPTY_FORM = {
- id:'', first_name:'', last_name:'', email:'', phone:'',
- address_city:'', address_subcity:'', address_woreda:'', address_house_number:'',
- complaint_subcity:'', complaint_woreda:'',
- complaint_sector_group:'', type:'', status:'', description:'',
- concerned_staff_member:'', photo:null, video:null, audio:null
+  id:'', first_name:'', last_name:'', email:'', phone:'',
+  address_city:'', address_subcity:'', address_woreda:'', address_house_number:'',
+  complaint_subcity:'', complaint_woreda:'',
+  complaint_sector_group:'', type:'', status:'', description:'',
+  concerned_staff_member:'',
+  estimated_resolution_timeframe: '',
+  estimated_resolution_date: '',
+  admin_response: '',
+  admin_contact_phone: '',
+  photo:null, video:null, audio:null
 }
 
 // ── Slide-over panel (create / edit) ─────────────────────────────────────────
 function ComplaintPanel({ isOpen, onClose, selectedComplaint, token, onSaved }) {
- const [formData, setFormData] = useState(EMPTY_FORM)
- const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formData, setFormData] = useState(EMPTY_FORM)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
- useEffect(() => {
- const timer = setTimeout(() => {
- if (selectedComplaint) {
- const parseMedia = (raw) => {
- if (!raw) return []
- if (typeof raw === 'string') { try { raw = JSON.parse(raw) } catch { /* ignore */ } }
- if (Array.isArray(raw)) return raw
- if (typeof raw === 'object' && raw !== null) return [raw]
- return []
- }
- setFormData({
- id: selectedComplaint.complaint_id,
- first_name: selectedComplaint.first_name || '',
- last_name: selectedComplaint.last_name || '',
- email: selectedComplaint.email || '',
- phone: selectedComplaint.phone || '',
- address_city: selectedComplaint.complainer_city || '',
- address_subcity: selectedComplaint.complainer_subcity || '',
- address_woreda: selectedComplaint.complainer_woreda || '',
- address_house_number: selectedComplaint.complainer_house_number || '',
- complaint_subcity: selectedComplaint.complaint_subcity || '',
- complaint_woreda: selectedComplaint.complaint_woreda || '',
- complaint_sector_group: selectedComplaint.type || '',
- type: selectedComplaint.type || '',
- status: selectedComplaint.status || '',
- description: selectedComplaint.description || '',
- concerned_staff_member: selectedComplaint.concerned_staff_member || '',
- photo: parseMedia(selectedComplaint.photos),
- video: parseMedia(selectedComplaint.videos),
- audio: parseMedia(selectedComplaint.audios),
- })
- } else {
- setFormData(EMPTY_FORM)
- }
- }, 0)
- return () => clearTimeout(timer)
- }, [selectedComplaint, isOpen])
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (selectedComplaint) {
+        const parseMedia = (raw) => {
+          if (!raw) return []
+          if (typeof raw === 'string') { try { raw = JSON.parse(raw) } catch { /* ignore */ } }
+          if (Array.isArray(raw)) return raw
+          if (typeof raw === 'object' && raw !== null) return [raw]
+          return []
+        }
+        setFormData({
+          id: selectedComplaint.complaint_id,
+          first_name: selectedComplaint.first_name || '',
+          last_name: selectedComplaint.last_name || '',
+          email: selectedComplaint.email || '',
+          phone: selectedComplaint.phone || '',
+          address_city: selectedComplaint.complainer_city || '',
+          address_subcity: selectedComplaint.complainer_subcity || '',
+          address_woreda: selectedComplaint.complainer_woreda || '',
+          address_house_number: selectedComplaint.complainer_house_number || '',
+          complaint_subcity: selectedComplaint.complaint_subcity || '',
+          complaint_woreda: selectedComplaint.complaint_woreda || '',
+          complaint_sector_group: selectedComplaint.type || '',
+          type: selectedComplaint.type || '',
+          status: selectedComplaint.status || '',
+          description: selectedComplaint.description || '',
+          concerned_staff_member: selectedComplaint.concerned_staff_member || '',
+          estimated_resolution_timeframe: selectedComplaint.estimated_resolution_timeframe || '',
+          estimated_resolution_date: selectedComplaint.estimated_resolution_date ? selectedComplaint.estimated_resolution_date.slice(0, 10) : '',
+          admin_response: selectedComplaint.admin_response || '',
+          admin_contact_phone: selectedComplaint.admin_contact_phone || '',
+          photo: parseMedia(selectedComplaint.photos),
+          video: parseMedia(selectedComplaint.videos),
+          audio: parseMedia(selectedComplaint.audios),
+        })
+      } else {
+        setFormData(EMPTY_FORM)
+      }
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [selectedComplaint, isOpen])
 
- const handleChange = (e) => {
- const { name, value } = e.target
- setFormData(p => ({ ...p, [name]: value }))
- }
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData(p => ({ ...p, [name]: value }))
+  }
 
- const handleSubmit = async (e) => {
- e.preventDefault()
- setIsSubmitting(true)
- try {
- const fetchType = formData.id === '' ? 'create' : 'update'
- const toArr = (v) => Array.isArray(v) ? v : (v ? [v] : [])
- const submitData = { ...formData, type: formData.complaint_sector_group,
- concerned_staff_member: formData.concerned_staff_member || null,
- photo: toArr(formData.photo), video: toArr(formData.video), audio: toArr(formData.audio) }
- 
- let url = `${BASE_URL}/api/complaints/admin`
- let bodyPayload = { formData: submitData }
- if (fetchType === 'update') {
- url = `${BASE_URL}/api/complaints/admin/update`
- bodyPayload = submitData
- }
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    try {
+      const fetchType = formData.id === '' ? 'create' : 'update'
+      const toArr = (v) => Array.isArray(v) ? v : (v ? [v] : [])
+      const submitData = {
+        ...formData,
+        type: formData.complaint_sector_group,
+        concerned_staff_member: formData.concerned_staff_member || null,
+        estimated_resolution_timeframe: formData.estimated_resolution_timeframe || null,
+        estimated_resolution_date: formData.estimated_resolution_date || null,
+        admin_response: formData.admin_response || null,
+        admin_contact_phone: formData.admin_contact_phone || null,
+        photo: toArr(formData.photo),
+        video: toArr(formData.video),
+        audio: toArr(formData.audio)
+      }
+  
+      let url = `${BASE_URL}/api/complaints/admin`
+      let bodyPayload = { formData: submitData }
+      if (fetchType === 'update') {
+        url = `${BASE_URL}/api/complaints/admin/update`
+        bodyPayload = submitData
+      }
 
  const res = await fetch(url, {
  method: 'POST',
@@ -185,26 +211,112 @@ function ComplaintPanel({ isOpen, onClose, selectedComplaint, token, onSaved }) 
 
  {/* Complaint Details */}
  <div className='border-t border-gray-100 pt-4'>
- <p className={sectionTitle}>Complaint Details</p>
- <div className='space-y-3'>
- <div><label className={labelCls}>Sector Group <span className='text-red-400'>*</span></label>
- <select required name='complaint_sector_group' value={formData.complaint_sector_group} onChange={handleChange} className={inputCls + ' bg-white'}>
- <option value=''>Select sector group</option>
- {sectorGroups.map(g => <option key={g} value={g}>{g}</option>)}
- </select></div>
- <div><label className={labelCls}>Staff Member Concerned</label>
- <input type='text' name='concerned_staff_member' value={formData.concerned_staff_member} onChange={handleChange} placeholder='Name of staff member (if any)' className={inputCls} /></div>
- <div><label className={labelCls}>Status <span className='text-red-400'>*</span></label>
- <select required name='status' value={formData.status} onChange={handleChange} className={inputCls + ' bg-white'}>
- <option value=''>Select status</option>
- <option value='assigning'>Assigning</option>
- <option value='in progress'>In Progress</option>
- <option value='resolved'>Resolved</option>
- </select></div>
- <div><label className={labelCls}>Description <span className='text-red-400'>*</span></label>
- <textarea required name='description' value={formData.description} onChange={handleChange} rows={5} placeholder='Describe the complaint…' className={inputCls + ' resize-none'} /></div>
- </div>
- </div>
+  <p className={sectionTitle}>Complaint Details</p>
+  <div className='space-y-3'>
+  <div><label className={labelCls}>Sector Group <span className='text-red-400'>*</span></label>
+  <select required name='complaint_sector_group' value={formData.complaint_sector_group} onChange={handleChange} className={inputCls + ' bg-white'}>
+  <option value=''>Select sector group</option>
+  {sectorGroups.map(g => <option key={g} value={g}>{g}</option>)}
+  </select></div>
+  <div><label className={labelCls}>Staff Member Concerned</label>
+  <input type='text' name='concerned_staff_member' value={formData.concerned_staff_member} onChange={handleChange} placeholder='Name of staff member (if any)' className={inputCls} /></div>
+  <div><label className={labelCls}>Status <span className='text-red-400'>*</span></label>
+  <select required name='status' value={formData.status} onChange={handleChange} className={inputCls + ' bg-white'}>
+  <option value=''>Select status</option>
+  <option value='assigning'>Assigning</option>
+  <option value='in progress'>In Progress</option>
+  <option value='resolved'>Resolved</option>
+  </select></div>
+  <div><label className={labelCls}>Description <span className='text-red-400'>*</span></label>
+  <textarea required name='description' value={formData.description} onChange={handleChange} rows={4} placeholder='Describe the complaint…' className={inputCls + ' resize-none'} /></div>
+  </div>
+
+  {/* Admin Resolution & Citizen Communication */}
+  <div className='border-t border-gray-100 pt-4 mt-6 bg-emerald-50/50 -mx-6 px-6 py-4 rounded-xl border border-emerald-100/80'>
+    <div className='flex items-center gap-2 mb-3'>
+      <span className='text-base'>⏱️</span>
+      <p className='text-sm font-bold text-emerald-950'>Resolution Timeline & Citizen Communication</p>
+    </div>
+    
+    <div className='space-y-3.5'>
+      {/* Estimated Timeframe Presets */}
+      <div>
+        <label className={labelCls}>Proposed Resolution Timeframe</label>
+        <div className='flex flex-wrap gap-1.5 mb-2'>
+          {TIMEFRAME_PRESETS.map(preset => (
+            <button
+              key={preset}
+              type='button'
+              onClick={() => setFormData(p => ({ ...p, estimated_resolution_timeframe: preset }))}
+              className={`text-xs px-2.5 py-1 rounded-full font-medium transition-all cursor-pointer ${
+                formData.estimated_resolution_timeframe === preset
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-700'
+              }`}
+            >
+              {preset}
+            </button>
+          ))}
+          {formData.estimated_resolution_timeframe && !TIMEFRAME_PRESETS.includes(formData.estimated_resolution_timeframe) && (
+            <span className='text-xs px-2.5 py-1 rounded-full font-medium bg-emerald-600 text-white'>
+              Custom
+            </span>
+          )}
+        </div>
+        <div className='grid grid-cols-2 gap-3'>
+          <div>
+            <input
+              type='text'
+              name='estimated_resolution_timeframe'
+              value={formData.estimated_resolution_timeframe}
+              onChange={handleChange}
+              placeholder='e.g. 3 - 5 Days'
+              className={inputCls + ' bg-white'}
+            />
+          </div>
+          <div>
+            <input
+              type='date'
+              name='estimated_resolution_date'
+              value={formData.estimated_resolution_date}
+              onChange={handleChange}
+              className={inputCls + ' bg-white'}
+            />
+          </div>
+        </div>
+        <p className='text-[11px] text-slate-500 mt-1'>Timeframe / target date displayed to the citizen on their profile.</p>
+      </div>
+
+      {/* Direct Escalation Contact Phone */}
+      <div>
+        <label className={labelCls}>Escalation / Support Contact Phone</label>
+        <input
+          type='text'
+          name='admin_contact_phone'
+          value={formData.admin_contact_phone}
+          onChange={handleChange}
+          placeholder='e.g. 0911223344 or 8080 (Lideta Complaints Hotline)'
+          className={inputCls + ' bg-white'}
+        />
+        <p className='text-[11px] text-slate-500 mt-1'>Citizen will be given this number to contact if not resolved within timeframe.</p>
+      </div>
+
+      {/* Official Response / Citizen Note */}
+      <div>
+        <label className={labelCls}>Official Response / Notes to Citizen</label>
+        <textarea
+          name='admin_response'
+          value={formData.admin_response}
+          onChange={handleChange}
+          rows={3}
+          placeholder='e.g. The issue has been dispatched to the sub-city maintenance team...'
+          className={inputCls + ' resize-none bg-white'}
+        />
+        <p className='text-[11px] text-slate-500 mt-1'>This message will be shown directly on the citizen&apos;s complaint profile view.</p>
+      </div>
+    </div>
+  </div>
+  </div>
 
  {/* Media */}
  <div className='border-t border-gray-100 pt-4'>
@@ -470,12 +582,19 @@ function Complaints() {
  <span className='truncate block'>{c.type || '—'}</span>
  </td>
  <td className='px-4 py-3.5'>
+ <div className='flex flex-col gap-1.5'>
  <select value={c.status || ''} onChange={e => handleStatusChange(c.complaint_id, e.target.value)}
  className='text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-[#3A3A3A] cursor-pointer'>
  <option value='assigning'>Assigning</option>
  <option value='in progress'>In Progress</option>
  <option value='resolved'>Resolved</option>
  </select>
+ {c.estimated_resolution_timeframe && (
+ <span className='inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.5 rounded-md w-fit'>
+   ⏱️ {c.estimated_resolution_timeframe}
+ </span>
+ )}
+ </div>
  </td>
  <td className='px-4 py-3.5 text-gray-400 hidden md:table-cell text-xs'>
  {c.created_at ? new Date(c.created_at).toLocaleDateString() : '—'}

@@ -85,7 +85,9 @@ router.post('/admin', async (req, res) => {
         complainer_city, complainer_subcity, complainer_woreda, complainer_house_number,
         complaint_subcity, complaint_woreda,
         type, status, description, photos, videos, audios,
-        concerned_staff_member, user_id
+        concerned_staff_member, user_id,
+        estimated_resolution_timeframe, estimated_resolution_date,
+        admin_response, admin_contact_phone
       ) VALUES (
         ${d.first_name}, ${d.last_name}, ${d.email}, ${d.phone},
         ${d.address_city || null}, ${d.address_subcity || null}, ${d.address_woreda || null}, ${d.address_house_number || null},
@@ -94,7 +96,9 @@ router.post('/admin', async (req, res) => {
         ${pool.json(parseMediaField(d.photo))},
         ${pool.json(parseMediaField(d.video))},
         ${pool.json(parseMediaField(d.audio))},
-        ${d.concerned_staff_member || null}, ${d.user_id || null}
+        ${d.concerned_staff_member || null}, ${d.user_id || null},
+        ${d.estimated_resolution_timeframe || null}, ${d.estimated_resolution_date || null},
+        ${d.admin_response || null}, ${d.admin_contact_phone || null}
       ) RETURNING complaint_id`
 
     const id = result[0].complaint_id
@@ -119,23 +123,27 @@ router.post('/admin/update', authenticateToken, async (req, res) => {
 
     await pool`
       UPDATE complaints SET
-        first_name               = ${d.first_name || null},
-        last_name                = ${d.last_name || null},
-        email                    = ${d.email || null},
-        phone                    = ${d.phone || ''},
-        complainer_city          = ${city},
-        complainer_subcity       = ${subcity},
-        complainer_woreda        = ${woreda},
-        complainer_house_number  = ${house},
-        complaint_subcity        = ${d.complaint_subcity || null},
-        complaint_woreda         = ${d.complaint_woreda || null},
-        type                     = ${d.type || 'customer service'},
-        status                   = ${d.status || 'assigning'},
-        description              = ${d.description || null},
-        photos                   = ${pool.json(parseMediaField(photos))},
-        videos                   = ${pool.json(parseMediaField(videos))},
-        audios                   = ${pool.json(parseMediaField(audios))},
-        concerned_staff_member   = ${d.concerned_staff_member || null}
+        first_name                     = ${d.first_name || null},
+        last_name                      = ${d.last_name || null},
+        email                          = ${d.email || null},
+        phone                          = ${d.phone || ''},
+        complainer_city                = ${city},
+        complainer_subcity             = ${subcity},
+        complainer_woreda              = ${woreda},
+        complainer_house_number        = ${house},
+        complaint_subcity              = ${d.complaint_subcity || null},
+        complaint_woreda               = ${d.complaint_woreda || null},
+        type                           = ${d.type || 'customer service'},
+        status                         = ${d.status || 'assigning'},
+        description                    = ${d.description || null},
+        photos                         = ${pool.json(parseMediaField(photos))},
+        videos                         = ${pool.json(parseMediaField(videos))},
+        audios                         = ${pool.json(parseMediaField(audios))},
+        concerned_staff_member         = ${d.concerned_staff_member || null},
+        estimated_resolution_timeframe = ${d.estimated_resolution_timeframe || null},
+        estimated_resolution_date      = ${d.estimated_resolution_date || null},
+        admin_response                 = ${d.admin_response || null},
+        admin_contact_phone            = ${d.admin_contact_phone || null}
       WHERE complaint_id = ${d.id}`
 
     res.json({ message: 'Complaint updated successfully' })
