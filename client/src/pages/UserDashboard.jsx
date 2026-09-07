@@ -576,7 +576,7 @@ function UserDashboard() {
       </div>
 
       <div className='max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10'>
-        {/* Page Header with Action Button */}
+        {/* Page Header */}
         <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8'>
           <div>
             <h1 className='text-2xl sm:text-3xl font-goldman font-bold text-slate-900 uppercase tracking-wide'>
@@ -586,16 +586,10 @@ function UserDashboard() {
               {t('dashboard_subtitle')}
             </p>
           </div>
-
-          <Link
-            to='/complaints'
-            className='px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-goldman font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 shadow-md hover:scale-105 active:scale-95 text-center shrink-0'
-          >
-            {t('submit_one')}
-          </Link>
         </div>
 
-        {/* Email verification banner */}
+        {/* Email verification banner (commented out for later implementation) */}
+        {/*
         {user && !user.email_verified && (
           <div className='mb-8 bg-emerald-50 border border-emerald-600/30 rounded-2xl p-5 shadow-xs'>
             {!showVerify ? (
@@ -656,6 +650,7 @@ function UserDashboard() {
             )}
           </div>
         )}
+        */}
 
         {/* Navigation Tabs */}
         <div className='flex gap-2 border-b border-slate-200 mb-6 overflow-x-auto'>
@@ -751,12 +746,6 @@ function UserDashboard() {
                 </div>
                 <p className='font-goldman font-bold text-lg uppercase tracking-wide text-slate-800'>{t('no_complaints')}</p>
                 <p className='text-xs text-slate-500 max-w-sm mt-1.5 leading-relaxed'>{t('no_complaints_sub')}</p>
-                <Link
-                  to='/complaints'
-                  className='mt-6 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-goldman font-bold uppercase tracking-widest rounded-xl transition-all duration-300 shadow-md hover:scale-105 active:scale-95 text-xs'
-                >
-                  {t('submit_one')}
-                </Link>
               </div>
             ) : filteredComplaints.length === 0 ? (
               <div className='bg-white border border-slate-200 rounded-2xl p-10 text-center text-slate-500'>
