@@ -11,7 +11,27 @@ function translatePgToMysql(sql) {
   q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"][^'"]+['"]\s*\)/gi, "DATE_FORMAT($1, '%Y-%m-%d')");
 
   // 2. Convert COUNT(*) FILTER (WHERE condition) -> COUNT(CASE WHEN condition THEN 1 END)
-  q = q.replace(/COUNT\s*\(\s*\*\s*\)\s+FILTER\s*\(\s*WHERE\s+([^)]+)\)/gi, 'COUNT(CASE WHEN $1 THEN 1 END)');
+  const filterRegex = /COUNT\s*\(\s*\*\s*\)\s+FILTER\s*\(\s*WHERE\s+/gi;
+  let match;
+  let filteredSql = '';
+  let lastIdx = 0;
+  while ((match = filterRegex.exec(q)) !== null) {
+    filteredSql += q.slice(lastIdx, match.index);
+    const startOfCond = filterRegex.lastIndex;
+    let depth = 1;
+    let i = startOfCond;
+    while (i < q.length && depth > 0) {
+      if (q[i] === '(') depth++;
+      else if (q[i] === ')') depth--;
+      i++;
+    }
+    const cond = q.slice(startOfCond, i - 1);
+    filteredSql += `COUNT(CASE WHEN ${cond} THEN 1 END)`;
+    lastIdx = i;
+    filterRegex.lastIndex = i;
+  }
+  filteredSql += q.slice(lastIdx);
+  q = filteredSql;
 
   // 3. Convert type casts ::jsonb, ::json, ::text, etc.
   q = q.replace(/::jsonb/gi, '');
