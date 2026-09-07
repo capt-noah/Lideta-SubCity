@@ -147,7 +147,7 @@ function HomePage() {
 
         <div className="w-full max-w-7xl grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 xl:gap-8">
           {isLoading ? (
-            <div className="col-span-full flex justify-center">
+            <div className="col-span-full flex justify-center py-12">
               <Loading />
             </div>
           ) : (
@@ -181,6 +181,19 @@ function HomePage() {
             })
           )}
         </div>
+
+        {/* View All News Button */}
+        {!isLoading && latestNews.length > 0 && (
+          <AnimatedSection variant="up" threshold={0.1}>
+            <Link
+              to="/news"
+              className="group px-7 py-3.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-xl font-goldman font-bold text-xs uppercase tracking-widest shadow-md hover:shadow-xl hover:shadow-emerald-700/20 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2.5"
+            >
+              <span>{t.latest_news?.view_all?.[language] || "View All News"}</span>
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+            </Link>
+          </AnimatedSection>
+        )}
       </div>
 
       {/* ── Additional Services ───────────────────────────────────────────── */}
