@@ -18,7 +18,7 @@ import eventsRouter     from './routes/events.js'
 import vacanciesRouter  from './routes/vacancies.js'
 import complaintsRouter from './routes/complaints.js'
 import contactsRouter   from './routes/contacts.js'
-import { uploadBasePath } from './middleware/upload.js'
+import { upload, uploadBasePath } from './middleware/upload.js'
 
 const app        = express()
 const __filename = fileURLToPath(import.meta.url)
@@ -44,6 +44,20 @@ app.get('/health', (req, res) => {
 // ── Static files ──────────────────────────────────────────────────────────────
 app.use(express.static(distPath))
 app.use('/uploads', express.static(uploadBasePath))
+
+// ── Universal Upload Endpoints ───────────────────────────────────────────────
+app.post('/api/upload', upload.any(), (req, res) => {
+  if (!req.files?.length) return res.status(400).json({ error: 'No file uploaded' })
+  const file = req.files[0]
+  const subDirMap = { profile_picture: 'admin_profiles/', video: 'videos/', audio: 'audios/', photo: 'photos/', image: 'photos/', cv: 'cvs/' }
+  const dir = subDirMap[file.fieldname] || (file.mimetype.startsWith('image/') ? 'photos/' : file.mimetype.startsWith('video/') ? 'videos/' : file.mimetype.startsWith('audio/') ? 'audios/' : file.mimetype === 'application/pdf' ? 'cvs/' : '')
+  res.json({ name: file.originalname, path: `/uploads/${dir}${file.filename}`, size: file.size, mimetype: file.mimetype })
+})
+
+app.post('/api/upload-cv', upload.single('cv'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No CV file uploaded' })
+  res.json({ path: `/uploads/cvs/${req.file.filename}` })
+})
 
 // ── API routes ────────────────────────────────────────────────────────────────
 app.use('/auth',              authRouter)         // /auth/admin/login, /auth/user/login, etc.
@@ -79,7 +93,6 @@ console.log(`[server] INDEX PATH   : ${indexPath}`)
 console.log(`[server] INDEX EXISTS : ${fs.existsSync(indexPath) ? '✓ FOUND' : '✗ MISSING'}`)
 console.log(`[server] DATABASE_URL : ${process.env.DATABASE_URL ? '✓' : '✗ MISSING'}`)
 console.log(`[server] JWT_SECRET   : ${process.env.JWT_SECRET  ? '✓' : '✗ MISSING'}`)
-console.log(`[server] SUPABASE_KEY : ${process.env.SUPABASE_ANON_KEY ? '✓' : '✗ MISSING'}`)
 
 if (!port) {
   throw new Error('PORT is missing. Plesk must provide the app port.')

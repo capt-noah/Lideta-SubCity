@@ -8,9 +8,16 @@ const __dirname  = path.dirname(__filename)
 
 export const uploadBasePath = path.join(__dirname, '..', '..', 'client', 'public', 'uploads')
 
-// Ensure base uploads dir exists
+// Pre-create all standard upload subdirectories
+const uploadSubdirs = ['admin_profiles', 'photos', 'videos', 'audios', 'cvs', 'documents']
 if (!fs.existsSync(uploadBasePath)) {
   fs.mkdirSync(uploadBasePath, { recursive: true })
+}
+for (const sub of uploadSubdirs) {
+  const fullSub = path.join(uploadBasePath, sub)
+  if (!fs.existsSync(fullSub)) {
+    fs.mkdirSync(fullSub, { recursive: true })
+  }
 }
 
 const storage = multer.diskStorage({
@@ -21,8 +28,10 @@ const storage = multer.diskStorage({
       audio:           'audios',
       photo:           'photos',
       image:           'photos',
+      cv:              'cvs',
+      document:        'documents',
     }
-    const subDir     = subDirMap[file.fieldname] || ''
+    const subDir     = subDirMap[file.fieldname] || (file.mimetype.startsWith('image/') ? 'photos' : file.mimetype.startsWith('video/') ? 'videos' : file.mimetype.startsWith('audio/') ? 'audios' : file.mimetype === 'application/pdf' ? 'cvs' : 'documents')
     const targetPath = path.join(uploadBasePath, subDir)
 
     if (!fs.existsSync(targetPath)) fs.mkdirSync(targetPath, { recursive: true })

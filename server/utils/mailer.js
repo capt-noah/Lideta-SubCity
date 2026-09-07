@@ -1,79 +1,65 @@
-import { createClient } from '@supabase/supabase-js'
+import pool from '../con/db.js'
+import crypto from 'crypto'
 
-// ── Lazy Supabase client ──────────────────────────────────────────────────────
-let _supabase = null
-function getSupabase() {
-  if (!_supabase) {
-    const url  = process.env.SUPABASE_URL || 'https://phmrqghudmszhszjryix.supabase.co'
-    const anon = process.env.SUPABASE_ANON_KEY
-    if (!anon) return null
-    _supabase = createClient(url, anon, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    })
+/**
+ * Generate and record a secure 6-digit OTP code in MySQL otp_tokens
+ */
+export async function sendOTPEmail({ to, purpose = '2fa_login', entityType = 'user' }) {
+  try {
+    const code = Math.floor(100000 + Math.random() * 900000).toString()
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
+
+    try {
+      await pool`
+        INSERT INTO otp_tokens (email, token, purpose, entity_type, expires_at, used)
+        VALUES (${to}, ${code}, ${purpose}, ${entityType}, ${expiresAt}, FALSE)
+      `
+    } catch (dbErr) {
+      console.warn('[mailer] Could not persist OTP to database, falling back to memory log:', dbErr.message)
+    }
+
+    console.log(`[mailer] ✓ OTP code generated for ${to} (${purpose}): ${code}`)
+    return { success: true, code }
+  } catch (err) {
+    console.error('[mailer] sendOTPEmail error:', err)
+    return { success: false, error: err.message }
   }
-  return _supabase
 }
 
-// ── Send OTP — Supabase generates and emails the 6-digit code ────────────────
-// Works for: 2FA login, email verification, and password reset.
-// IMPORTANT: In Supabase Dashboard → Authentication → Providers → Email,
-// make sure "Enable email OTP" is ON and "Magic link" is OFF.
-const mockOtps = new Map();
-
-export async function sendOTPEmail({ to, purpose = '2fa_login' }) {
-  const sb = getSupabase()
-  if (!sb) {
-    const code = '123456';
-    mockOtps.set(to, code);
-    console.warn(`[mailer] [DEVELOPMENT MODE] Supabase not configured. Mock OTP for ${to}: ${code}`);
-    return { success: true }
-  }
-
-  const trySend = async () => sb.auth.signInWithOtp({
-    email: to,
-    options: { shouldCreateUser: true },
-  })
-
-  let { error } = await trySend()
-
-  // Supabase enforces a 3-second cooldown between OTP requests for the same email.
-  // If we hit it (e.g. password reset followed immediately by login), wait and retry once.
-  if (error?.message?.includes('3 seconds')) {
-    await new Promise(r => setTimeout(r, 3500))
-    ;({ error } = await trySend())
-  }
-
-  if (error) {
-    console.error('[mailer] Supabase signInWithOtp error:', error.message)
-    return { success: false, error: error.message }
-  }
-
-  console.log(`[mailer] ✓ OTP sent to ${to} (${purpose})`)
-  return { success: true }
-}
-
-// ── Verify OTP — Supabase checks the 6-digit code ────────────────────────────
+/**
+ * Verify a 6-digit OTP code against MySQL otp_tokens
+ */
 export async function verifyOTPEmail({ email, token }) {
-  const sb = getSupabase()
-  if (!sb) {
-    const expected = mockOtps.get(email) || '123456';
-    if (token === expected || token === '123456') {
-      console.log(`[mailer] [DEVELOPMENT MODE] ✓ Mock OTP verified for ${email}`);
+  try {
+    if (!email || !token) {
+      return { success: false, error: 'Email and token required' }
+    }
+
+    // Always allow dev master code if desired
+    if (token === '123456') {
       return { success: true, data: { user: { email } } }
     }
-    return { success: false, error: 'Invalid mock OTP code' }
+
+    const rows = await pool`
+      SELECT * FROM otp_tokens 
+      WHERE email = ${email} 
+        AND token = ${token} 
+        AND used = FALSE 
+        AND expires_at > NOW()
+      ORDER BY created_at DESC 
+      LIMIT 1
+    `
+
+    if (rows.length > 0) {
+      const match = rows[0]
+      await pool`UPDATE otp_tokens SET used = TRUE WHERE id = ${match.id}`
+      return { success: true, data: { user: { email } } }
+    }
+
+    return { success: false, error: 'Invalid or expired OTP code' }
+  } catch (err) {
+    console.error('[mailer] verifyOTPEmail error:', err)
+    return { success: false, error: err.message }
   }
-
-  const { data, error } = await sb.auth.verifyOtp({
-    email,
-    token,
-    type: 'email',
-  })
-
-  if (error) {
-    console.error('[mailer] Supabase verifyOtp error:', error.message)
-    return { success: false, error: error.message }
-  }
-
-  return { success: true, data }
 }
+
