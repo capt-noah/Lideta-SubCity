@@ -114,7 +114,8 @@ console.log(`[server] PORT         : ${port || '✗ MISSING'}`)
 console.log(`[server] DIST PATH    : ${distPath}`)
 console.log(`[server] INDEX PATH   : ${indexPath}`)
 console.log(`[server] INDEX EXISTS : ${fs.existsSync(indexPath) ? '✓ FOUND' : '✗ MISSING'}`)
-console.log(`[server] DATABASE_URL : ${process.env.DATABASE_URL ? '✓' : '✗ MISSING'}`)
+console.log(`[server] DB_HOST      : ${process.env.DB_HOST || '10.180.50.142'}`)
+console.log(`[server] DB_NAME      : ${process.env.DB_NAME || 'lideta_db'}`)
 console.log(`[server] JWT_SECRET   : ${process.env.JWT_SECRET  ? '✓' : '✗ MISSING'}`)
 
 if (!port) {
