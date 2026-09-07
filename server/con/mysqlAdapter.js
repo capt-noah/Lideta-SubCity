@@ -3,42 +3,38 @@ import mysql from 'mysql2/promise';
 function translatePgToMysql(sql) {
   let q = sql;
 
-  // 1. Convert RETURNING clause
-  // Handled outside for insertId extraction
-
-  // 2. Convert TO_CHAR(x, 'Mon DD, YYYY') -> DATE_FORMAT(x, '%b %d, %Y')
+  // 1. Convert TO_CHAR(x, 'Mon DD, YYYY') -> DATE_FORMAT(x, '%b %d, %Y')
   q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"]Mon DD, YYYY['"]\s*\)/gi, "DATE_FORMAT($1, '%b %d, %Y')");
   q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"]Dy\. Mon, DD YYYY['"]\s*\)/gi, "DATE_FORMAT($1, '%a. %b, %d %Y')");
   q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"]DY, Mon DD YYYY['"]\s*\)/gi, "DATE_FORMAT($1, '%a, %b %d %Y')");
   q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"]DD\/MM\/YYYY['"]\s*\)/gi, "DATE_FORMAT($1, '%d/%m/%Y')");
   q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"][^'"]+['"]\s*\)/gi, "DATE_FORMAT($1, '%Y-%m-%d')");
 
-  // 3. Convert COUNT(*) FILTER (WHERE condition) -> COUNT(CASE WHEN condition THEN 1 END)
+  // 2. Convert COUNT(*) FILTER (WHERE condition) -> COUNT(CASE WHEN condition THEN 1 END)
   q = q.replace(/COUNT\s*\(\s*\*\s*\)\s+FILTER\s*\(\s*WHERE\s+([^)]+)\)/gi, 'COUNT(CASE WHEN $1 THEN 1 END)');
 
-  // 4. Convert type casts ::jsonb, ::json, ::text, etc.
+  // 3. Convert type casts ::jsonb, ::json, ::text, etc.
   q = q.replace(/::jsonb/gi, '');
   q = q.replace(/::json/gi, '');
   q = q.replace(/::text/gi, '');
 
-  // 5. Convert ILIKE -> LIKE
+  // 4. Convert ILIKE -> LIKE
   q = q.replace(/\bILIKE\b/gi, 'LIKE');
 
-  // 6. Convert NOW() or CURRENT_TIMESTAMP
   return q;
 }
 
-export function createMysqlPoolAdapter(configOrUrl) {
+export function createMysqlPoolAdapter(poolOrConfig) {
   let pool;
-  if (typeof configOrUrl === 'string') {
-    pool = mysql.createPool(configOrUrl);
+  if (poolOrConfig && typeof poolOrConfig.query === 'function') {
+    pool = poolOrConfig;
   } else {
     pool = mysql.createPool({
-      host: configOrUrl.host || '127.0.0.1',
-      port: Number(configOrUrl.port) || 3306,
-      user: configOrUrl.user || 'root',
-      password: configOrUrl.password || 'admin123',
-      database: configOrUrl.database || 'lideta_db',
+      host:     poolOrConfig?.host     || process.env.DB_HOST     || '127.0.0.1',
+      port:     Number(poolOrConfig?.port || process.env.DB_PORT) || 3306,
+      user:     poolOrConfig?.user     || process.env.DB_USER     || 'root',
+      password: poolOrConfig?.password || process.env.DB_PASSWORD || 'admin123',
+      database: poolOrConfig?.database || process.env.DB_NAME     || 'lideta_db',
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0,

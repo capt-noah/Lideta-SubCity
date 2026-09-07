@@ -12,28 +12,27 @@ dotenv.config()
 let pool;
 let isMock = false;
 
+import { pool as mysqlRawPool } from '../db/index.js'
 import { createMysqlPoolAdapter } from './mysqlAdapter.js'
 
 // Pre-hash password for development mode
 const DEV_PASSWORD_HASH = bcrypt.hashSync('admin123', 10);
 
-const mysqlConnUrl = process.env.MYSQL_URL || process.env.MYSQL_DATABASE_URL || (process.env.DATABASE_URL?.startsWith('mysql://') ? process.env.DATABASE_URL : null);
-
 try {
-  if (mysqlConnUrl) {
-    pool = createMysqlPoolAdapter(mysqlConnUrl);
+  if (mysqlRawPool) {
+    pool = createMysqlPoolAdapter(mysqlRawPool);
     console.log('[db] Connected to real MySQL database');
-  } else if (process.env.DATABASE_URL) {
+  } else if (process.env.DATABASE_URL && (process.env.DATABASE_URL.startsWith('postgres://') || process.env.DATABASE_URL.startsWith('postgresql://'))) {
     pool = postgres(process.env.DATABASE_URL, {
       ssl: { rejectUnauthorized: false },
       prepare: false
     });
     console.log('[db] Connected to real PostgreSQL database');
   } else {
-    throw new Error('No database URL provided');
+    throw new Error('No database connection available');
   }
 } catch (err) {
-  console.warn('[db] Database URL missing or connection failed. Using in-memory SQL database mock fallback.');
+  console.warn('[db] Database connection failed. Using in-memory SQL database mock fallback:', err.message);
   isMock = true;
   pool = createMockPool();
 }
