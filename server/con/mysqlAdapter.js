@@ -50,10 +50,10 @@ export function createMysqlPoolAdapter(poolOrConfig) {
     pool = poolOrConfig;
   } else {
     pool = mysql.createPool({
-      host:     poolOrConfig?.host     || process.env.DB_HOST     || '127.0.0.1',
+      host:     poolOrConfig?.host     || process.env.DB_HOST     || '10.180.50.142',
       port:     Number(poolOrConfig?.port || process.env.DB_PORT) || 3306,
-      user:     poolOrConfig?.user     || process.env.DB_USER     || 'root',
-      password: poolOrConfig?.password || process.env.DB_PASSWORD || 'admin123',
+      user:     poolOrConfig?.user     || process.env.DB_USER     || 'lideta_admin',
+      password: poolOrConfig?.password || process.env.DB_PASSWORD || 'TysZs~Bjp9?xbd09',
       database: poolOrConfig?.database || process.env.DB_NAME     || 'lideta_db',
       waitForConnections: true,
       connectionLimit: 10,
