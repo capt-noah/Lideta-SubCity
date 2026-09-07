@@ -7,6 +7,10 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "db:generate": "drizzle-kit generate --config=drizzle.config.js",
+    "db:push": "drizzle-kit push --config=drizzle.config.js",
+    "db:migrate": "node scripts/dump_and_migrate_to_mysql.mjs",
+    "db:studio": "drizzle-kit studio --config=drizzle.config.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,6 +21,7 @@
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
@@ -24,5 +29,8 @@
     "node-fetch": "^3.3.2",
     "pg": "^8.16.3",
     "postgres": "^3.4.7"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.10"
   }
 }
