@@ -21,7 +21,7 @@ router.post('/', async (req, res) => {
     const woreda = d.complainer_woreda || d.address_woreda || null
     const house = d.complainer_house_number || d.address_house_number || null
 
-    await pool`
+    const result = await pool`
       INSERT INTO complaints (
         first_name, last_name, email, phone,
         complainer_city, complainer_subcity, complainer_woreda, complainer_house_number,
@@ -38,7 +38,13 @@ router.post('/', async (req, res) => {
         ${pool.json(parseMediaField(d.audios || d.audio))},
         ${d.concerned_staff_member || null}, ${d.user_id || null}
       )`
-    res.status(201).json({ message: 'Complaint submitted successfully' })
+
+    const id = result.insertId || result[0]?.id || result[0]?.complaint_id
+    res.status(201).json({
+      message: 'Complaint submitted successfully',
+      complaint_id: id,
+      ref: `CPL-${String(id).padStart(5, '0')}`
+    })
   } catch (err) {
     console.error('[complaints] Submit error:', err)
     res.status(500).json({ error: 'Failed to submit complaint' })
@@ -60,7 +66,7 @@ router.get('/types', async (req, res) => {
 
 router.get('/admin', authenticateToken, async (req, res) => {
   try {
-    const complaints = await pool`SELECT * FROM complaints`
+    const complaints = await pool`SELECT * FROM complaints ORDER BY created_at DESC`
     const counts     = await pool`
       SELECT COUNT(*) AS total,
              COUNT(*) FILTER (WHERE status IN ('assigning','in progress')) AS pending,
@@ -76,7 +82,7 @@ router.get('/admin', authenticateToken, async (req, res) => {
   }
 })
 
-router.post('/admin', async (req, res) => {
+router.post('/admin', authenticateToken, async (req, res) => {
   try {
     const d = req.body.formData
     const result = await pool`
@@ -99,9 +105,9 @@ router.post('/admin', async (req, res) => {
         ${d.concerned_staff_member || null}, ${d.user_id || null},
         ${d.estimated_resolution_timeframe || null}, ${d.estimated_resolution_date || null},
         ${d.admin_response || null}, ${d.admin_contact_phone || null}
-      ) RETURNING complaint_id`
+      )`
 
-    const id = result[0].complaint_id
+    const id = result.insertId || result[0]?.complaint_id || result[0]?.id
     res.status(201).json({ complaint_id: id, ref: `CPL-${String(id).padStart(5, '0')}` })
   } catch (err) {
     console.error('[complaints] Admin create error:', err)
@@ -120,6 +126,9 @@ router.post('/admin/update', authenticateToken, async (req, res) => {
     const photos = d.photo !== undefined ? d.photo : (d.photos !== undefined ? d.photos : [])
     const videos = d.video !== undefined ? d.video : (d.videos !== undefined ? d.videos : [])
     const audios = d.audio !== undefined ? d.audio : (d.audios !== undefined ? d.audios : [])
+
+    const complaintId = d.id || d.complaint_id
+    if (!complaintId) return res.status(400).json({ error: 'Complaint ID required' })
 
     await pool`
       UPDATE complaints SET
@@ -144,9 +153,11 @@ router.post('/admin/update', authenticateToken, async (req, res) => {
         estimated_resolution_date      = ${d.estimated_resolution_date || null},
         admin_response                 = ${d.admin_response || null},
         admin_contact_phone            = ${d.admin_contact_phone || null}
-      WHERE complaint_id = ${d.id}`
+      WHERE complaint_id = ${complaintId}`
 
-    res.json({ message: 'Complaint updated successfully' })
+    const updated = await pool`SELECT * FROM complaints WHERE complaint_id = ${complaintId}`
+    if (updated.length === 0) return res.status(404).json({ error: 'Complaint not found' })
+    res.json(updated[0])
   } catch (err) {
     console.error('[complaints] Admin update error:', err)
     res.status(500).json({ error: 'Failed to update complaint' })

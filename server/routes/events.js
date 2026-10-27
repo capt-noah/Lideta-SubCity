@@ -50,22 +50,27 @@ router.post('/admin', authenticateToken, async (req, res) => {
     const result = await pool`
       INSERT INTO events (title, description, location, start_date, end_date, status, photos)
       VALUES (${f.title}, ${f.description}, ${f.location}, ${f.start_date}, ${f.end_date},
-              ${'upcoming'}, ${photoData ? JSON.stringify([photoData]) : null}::jsonb)
-      RETURNING *`
+              ${'upcoming'}, ${photoData ? [photoData] : null})`
 
-    const eventId = result[0].events_id
+    const eventId = result.insertId || result[0]?.events_id || result[0]?.id
 
     if (f.amh || f.orm) {
       const existing = await pool`SELECT 1 FROM events_translation WHERE event_id = ${eventId}`
       if (existing.length > 0) {
-        await pool`UPDATE events_translation SET amh = ${f.amh || {}}::jsonb, orm = ${f.orm || {}}::jsonb WHERE event_id = ${eventId}`
+        await pool`UPDATE events_translation SET amh = ${f.amh || {}}, orm = ${f.orm || {}} WHERE event_id = ${eventId}`
       } else {
-        await pool`INSERT INTO events_translation (event_id, amh, orm) VALUES (${eventId}, ${f.amh || {}}::jsonb, ${f.orm || {}}::jsonb)`
+        await pool`INSERT INTO events_translation (event_id, amh, orm) VALUES (${eventId}, ${f.amh || {}}, ${f.orm || {}})`
       }
     }
 
+    const created = await pool`
+      SELECT e.*, et.amh, et.orm 
+      FROM events e 
+      LEFT JOIN events_translation et ON e.events_id = et.event_id 
+      WHERE e.events_id = ${eventId}`
+
     logActivity(req.admin.admin_id, req.admin.username, 'CREATED', 'EVENT', f.title)
-    res.status(201).json(result[0])
+    res.status(201).json(created[0] || { events_id: eventId, ...f })
   } catch (err) {
     console.error('[events] Create error:', err)
     res.status(500).json({ error: 'Failed to create event' })
@@ -84,8 +89,9 @@ router.put('/admin', authenticateToken, async (req, res) => {
 
     const oldResult = await pool`SELECT * FROM events WHERE events_id = ${f.events_id}`
     const old = oldResult[0]
+    if (!old) return res.status(404).json({ error: 'Event not found' })
 
-    const result = await pool`
+    await pool`
       UPDATE events
       SET title       = ${f.title},
           description = ${f.description},
@@ -93,11 +99,8 @@ router.put('/admin', authenticateToken, async (req, res) => {
           start_date  = ${f.start_date},
           end_date    = ${f.end_date},
           status      = ${f.status || 'upcoming'},
-          photos      = ${photoData ? JSON.stringify([photoData]) : null}::jsonb
-      WHERE events_id = ${f.events_id}
-      RETURNING *`
-
-    if (result.count === 0) return res.status(404).json({ error: 'Event not found' })
+          photos      = ${photoData ? [photoData] : null}
+      WHERE events_id = ${f.events_id}`
 
     // Build diff
     const fields  = { title: 'Title', description: 'Description', location: 'Location', status: 'Status' }
@@ -112,14 +115,20 @@ router.put('/admin', authenticateToken, async (req, res) => {
     if (f.amh || f.orm) {
       const existing = await pool`SELECT 1 FROM events_translation WHERE event_id = ${f.events_id}`
       if (existing.length > 0) {
-        await pool`UPDATE events_translation SET amh = ${f.amh || {}}::jsonb, orm = ${f.orm || {}}::jsonb WHERE event_id = ${f.events_id}`
+        await pool`UPDATE events_translation SET amh = ${f.amh || {}}, orm = ${f.orm || {}} WHERE event_id = ${f.events_id}`
       } else {
-        await pool`INSERT INTO events_translation (event_id, amh, orm) VALUES (${f.events_id}, ${f.amh || {}}::jsonb, ${f.orm || {}}::jsonb)`
+        await pool`INSERT INTO events_translation (event_id, amh, orm) VALUES (${f.events_id}, ${f.amh || {}}, ${f.orm || {}})`
       }
     }
 
+    const updated = await pool`
+      SELECT e.*, et.amh, et.orm 
+      FROM events e 
+      LEFT JOIN events_translation et ON e.events_id = et.event_id 
+      WHERE e.events_id = ${f.events_id}`
+
     logActivity(req.admin.admin_id, req.admin.username, 'UPDATED', 'EVENT', f.title, Object.keys(details).length ? details : null)
-    res.json(result[0])
+    res.json(updated[0] || { events_id: f.events_id, ...f })
   } catch (err) {
     console.error('[events] Update error:', err)
     res.status(500).json({ error: 'Failed to update event' })

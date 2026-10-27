@@ -16,10 +16,12 @@ router.post('/update/profile-picture', authenticateToken, upload.single('profile
     if (!req.file) return res.status(400).json({ error: 'No image uploaded' })
 
     const relativePath = `/uploads/admin_profiles/${req.file.filename}`
-    const result = await pool`UPDATE admins SET photo = ${relativePath} WHERE admin_id = ${req.admin.admin_id} RETURNING *`
-    if (result.length === 0) return res.status(404).json({ error: 'Admin not found' })
+    await pool`UPDATE admins SET photo = ${relativePath} WHERE admin_id = ${req.admin.admin_id}`
 
-    const { password_hash, ...safe } = result[0]
+    const updated = await pool`SELECT * FROM admins WHERE admin_id = ${req.admin.admin_id}`
+    if (updated.length === 0) return res.status(404).json({ error: 'Admin not found' })
+
+    const { password_hash, ...safe } = updated[0]
     logActivity(req.admin.admin_id, req.admin.username, 'UPDATED', 'PROFILE', 'Profile Picture')
     res.json(safe)
   } catch (err) {
@@ -30,10 +32,12 @@ router.post('/update/profile-picture', authenticateToken, upload.single('profile
 
 router.delete('/delete/profile-picture', authenticateToken, async (req, res) => {
   try {
-    const result = await pool`UPDATE admins SET photo = NULL WHERE admin_id = ${req.admin.admin_id} RETURNING *`
-    if (result.length === 0) return res.status(404).json({ error: 'Admin not found' })
+    await pool`UPDATE admins SET photo = NULL WHERE admin_id = ${req.admin.admin_id}`
 
-    const { password_hash, ...safe } = result[0]
+    const updated = await pool`SELECT * FROM admins WHERE admin_id = ${req.admin.admin_id}`
+    if (updated.length === 0) return res.status(404).json({ error: 'Admin not found' })
+
+    const { password_hash, ...safe } = updated[0]
     logActivity(req.admin.admin_id, req.admin.username, 'DELETED', 'PROFILE', 'Profile Picture')
     res.json(safe)
   } catch (err) {
@@ -71,14 +75,18 @@ router.get('/activities', authenticateToken, async (req, res) => {
 router.post('/update/profile', authenticateToken, async (req, res) => {
   try {
     const f = req.body
-    const result = await pool`
+    await pool`
       UPDATE admins SET
         first_name   = ${f.first_name}, last_name  = ${f.last_name},
         gender       = ${f.gender},     residency  = ${f.residency},
         phone_number = ${f.phone_number}, email    = ${f.email}
-      WHERE admin_id = ${req.admin.admin_id} RETURNING *`
-    if (result.count === 0) return res.status(404).json({ error: 'Admin not found' })
-    res.json(result[0])
+      WHERE admin_id = ${req.admin.admin_id}`
+
+    const updated = await pool`SELECT * FROM admins WHERE admin_id = ${req.admin.admin_id}`
+    if (updated.length === 0) return res.status(404).json({ error: 'Admin not found' })
+
+    const { password_hash, ...safe } = updated[0]
+    res.json(safe)
   } catch (err) {
     console.error('[admin] Update profile error:', err)
     res.status(500).json({ error: 'Failed to update profile' })
@@ -100,12 +108,15 @@ router.post('/update/admin-info', authenticateToken, async (req, res) => {
 
     const newRole = req.admin.role === 'superadmin' ? (f.role || req.admin.role) : req.admin.role
 
-    const result = await pool`
+    await pool`
       UPDATE admins SET username = ${f.username || req.admin.username}, role = ${newRole}
-      WHERE admin_id = ${adminId} RETURNING *`
+      WHERE admin_id = ${adminId}`
 
-    if (result.count === 0) return res.status(404).json({ error: 'Admin not found' })
-    res.json(result[0])
+    const updated = await pool`SELECT * FROM admins WHERE admin_id = ${adminId}`
+    if (updated.length === 0) return res.status(404).json({ error: 'Admin not found' })
+
+    const { password_hash, ...safe } = updated[0]
+    res.json(safe)
   } catch (err) {
     console.error('[admin] Update admin-info error:', err)
     res.status(500).json({ error: 'Failed to update admin information' })
@@ -154,18 +165,19 @@ router.post('/update/settings', authenticateToken, async (req, res) => {
     const adminId = req.admin.admin_id
     const existing = await pool`SELECT * FROM admin_settings WHERE admin_id = ${adminId}`
 
-    let result
     if (existing.length === 0) {
-      result = await pool`
+      await pool`
         INSERT INTO admin_settings (admin_id, theme, font_size, language)
-        VALUES (${adminId}, ${theme||'light'}, ${font_size||'medium'}, ${language||'english'}) RETURNING *`
+        VALUES (${adminId}, ${theme||'light'}, ${font_size||'medium'}, ${language||'english'})`
     } else {
-      result = await pool`
+      await pool`
         UPDATE admin_settings
         SET theme = ${theme||existing[0].theme}, font_size = ${font_size||existing[0].font_size}, language = ${language||existing[0].language}
-        WHERE admin_id = ${adminId} RETURNING *`
+        WHERE admin_id = ${adminId}`
     }
-    res.json(result[0])
+
+    const updated = await pool`SELECT * FROM admin_settings WHERE admin_id = ${adminId}`
+    res.json(updated[0])
   } catch (err) {
     console.error('[admin] Settings update error:', err)
     res.status(500).json({ error: 'Failed to update settings' })
@@ -174,7 +186,7 @@ router.post('/update/settings', authenticateToken, async (req, res) => {
 
 // ── File upload (generic) ─────────────────────────────────────────────────────
 
-router.post('/upload', upload.any(), (req, res) => {
+router.post('/upload', authenticateToken, upload.any(), (req, res) => {
   try {
     if (!req.files?.length) return res.status(400).json({ error: 'No file uploaded' })
     const file = req.files[0]
@@ -199,13 +211,14 @@ router.post('/create-peer', authenticateToken, async (req, res) => {
     if (dupe.length > 0) return res.status(400).json({ error: 'Username, phone or email already exists' })
 
     const hashed = await bcrypt.hash(password, 10)
-    const result = await pool`
+    await pool`
       INSERT INTO admins (first_name, last_name, username, password_hash, email, phone_number, gender, residency, role)
-      VALUES (${first_name}, ${last_name}, ${username}, ${hashed}, ${email}, ${phone_number}, ${gender}, ${residency}, ${peerRole})
-      RETURNING admin_id, first_name, last_name, username, email, phone_number, gender, residency, role`
+      VALUES (${first_name}, ${last_name}, ${username}, ${hashed}, ${email}, ${phone_number}, ${gender}, ${residency}, ${peerRole})`
+
+    const created = await pool`SELECT admin_id, first_name, last_name, username, email, phone_number, gender, residency, role FROM admins WHERE username = ${username}`
 
     logActivity(req.admin.admin_id, req.admin.username, 'CREATED', 'PEER_ADMIN', username)
-    res.status(201).json(result[0])
+    res.status(201).json(created[0])
   } catch (err) {
     console.error('[admin] Create peer error:', err)
     res.status(500).json({ error: 'Failed to create peer admin account' })

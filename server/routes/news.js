@@ -86,17 +86,18 @@ router.put('/admin', authenticateToken, async (req, res) => {
     const oldResult = await pool`SELECT * FROM news WHERE id = ${newsId}`
     const old = oldResult[0]
 
-    const result = await pool`
+    await pool`
       UPDATE news
       SET title             = ${f.title},
           description       = ${f.description},
           category          = ${f.category},
           short_description = ${f.shortDescription},
           photo             = ${photoData ? JSON.stringify(photoData) : null}::jsonb
-      WHERE id = ${newsId}
-      RETURNING *`
+      WHERE id = ${newsId}`
 
-    if (result.count === 0) return res.status(404).json({ error: 'News not found' })
+    const updatedRows = await pool`SELECT * FROM news WHERE id = ${newsId}`
+    if (updatedRows.length === 0) return res.status(404).json({ error: 'News not found' })
+    const updated = updatedRows[0]
 
     // Build diff for activity log
     const fields = { title: 'Title', description: 'Description', category: 'Category' }
@@ -117,7 +118,7 @@ router.put('/admin', authenticateToken, async (req, res) => {
     }
 
     logActivity(req.admin.admin_id, req.admin.username, 'UPDATED', 'NEWS', f.title, Object.keys(details).length ? details : null)
-    res.json(result[0])
+    res.json(updated)
   } catch (err) {
     console.error('[news] Update error:', err)
     res.status(500).json({ error: 'Failed to update news' })

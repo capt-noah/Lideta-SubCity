@@ -113,7 +113,11 @@ function App() {
           </Route>
 
           {/* ── Super Admin ───────────────────────────────────────────── */}
-          <Route path='/superadmin' element={<SuperAdminLayout />}>
+          <Route path='/superadmin' element={
+            <RoleGuard allowedRoles={['superadmin']}>
+              <SuperAdminLayout />
+            </RoleGuard>
+          }>
             <Route index element={<Navigate to='home' replace />} />
             <Route path='home' element={<SuperAdminHome />} />
             <Route path='profile' element={<SuperAdminProfile />} />

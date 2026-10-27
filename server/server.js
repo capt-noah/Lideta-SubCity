@@ -8,6 +8,8 @@ import { fileURLToPath } from 'url'
 
 import corsMiddleware from './middleware/cors.js'
 import logger         from './middleware/logger.js'
+import { securityHeaders, stripServerHeaders } from './middleware/security.js'
+import probeBlocker   from './middleware/probeBlocker.js'
 
 import authRouter       from './routes/auth.js'
 import userRouter       from './routes/user.js'
@@ -25,6 +27,12 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname  = path.dirname(__filename)
 const distPath   = path.join(__dirname, '..', 'client', 'dist')
 const indexPath  = path.join(distPath, 'index.html')
+
+// ── Security Hardening (Pillar 1, 2, 3) ───────────────────────────────────────
+app.disable('x-powered-by')
+app.use(stripServerHeaders)
+app.use(securityHeaders)
+app.use(probeBlocker)
 
 // ── Core middleware ───────────────────────────────────────────────────────────
 app.use(express.json())
@@ -91,9 +99,11 @@ app.use('/api/superadmin',    superadminRouter)   // /api/superadmin/admins, ove
 app.use('/api/news',          newsRouter)         // /api/news (public) + /api/news/admin (protected)
 app.use('/api/events',        eventsRouter)       // /api/events (public) + /api/events/admin (protected)
 app.use('/api/vacancies',     vacanciesRouter)    // /api/vacancies (public) + /api/vacancies/admin, etc.
+app.use('/api/applicants',    vacanciesRouter)    // /api/applicants -> vacancy application submission
 app.use('/api/complaints',    complaintsRouter)   // /api/complaints (public) + /api/complaints/admin, etc.
 app.use('/api/complaint-types', complaintsRouter) // /api/complaint-types → complaints/types
 app.use('/api/contacts',      contactsRouter)     // /api/contacts (public) + /api/contacts/admin, etc.
+app.use('/api/contact',       contactsRouter)     // /api/contact alias
 app.use('/api/service-satisfaction', contactsRouter) // /api/service-satisfaction
 
 // ── SPA fallback — React Router handles all non-API routes ───────────────────

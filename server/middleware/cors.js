@@ -12,13 +12,20 @@ const allowedOrigins = [
 export default cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true)
+
+    const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+    const isGovSubdomain = /^https:\/\/[a-zA-Z0-9-]+\.lidetasubcity\.gov\.et$/.test(origin)
+
     if (
       allowedOrigins.includes(origin) ||
+      isLocalhost ||
+      isGovSubdomain ||
       origin.endsWith('.run.app') ||
-      origin.endsWith('.googleusercontent.com') ||
-      origin.includes('localhost') ||
-      origin.includes('127.0.0.1')
-    ) return callback(null, true)
+      origin.endsWith('.googleusercontent.com')
+    ) {
+      return callback(null, true)
+    }
+
     console.warn(`[cors] Blocked origin: ${origin}`)
     callback(new Error(`CORS: origin ${origin} not allowed`))
   },

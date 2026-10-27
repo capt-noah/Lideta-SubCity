@@ -47,19 +47,21 @@ router.post('/create-admin', authenticateToken, async (req, res) => {
     if (dupe.length > 0) return res.status(400).json({ error: 'Username, phone or email already exists' })
 
     const hashed = await bcrypt.hash(password, 10)
-    const result = await pool`
+    await pool`
       INSERT INTO admins (first_name, last_name, username, password_hash, email, phone_number, gender, residency, role)
-      VALUES (${first_name}, ${last_name}, ${username}, ${hashed}, ${email}, ${phone_number}, ${gender}, ${residency}, ${role})
-      RETURNING admin_id, first_name, last_name, username, email, phone_number, gender, residency, role`
+      VALUES (${first_name}, ${last_name}, ${username}, ${hashed}, ${email}, ${phone_number}, ${gender}, ${residency}, ${role})`
 
-    // Send a verification code to the new admin or superadmin account's email
+    const created = await pool`
+      SELECT admin_id, first_name, last_name, username, email, phone_number, gender, residency, role, created_at 
+      FROM admins WHERE username = ${username}`
+
     try {
-      await sendOTPEmail({ to: email, purpose: 'verify_email' })
+      await sendOTPEmail({ to: email, purpose: 'verify_email', entityType: 'admin' })
     } catch (mailErr) {
-      console.error('[superadmin] Failed to send verification email to newly created admin:', mailErr)
+      console.error('[superadmin] Failed to send verification email:', mailErr)
     }
 
-    res.status(201).json(result[0])
+    res.status(201).json(created[0])
   } catch (err) {
     console.error('[superadmin] Create admin error:', err)
     res.status(500).json({ error: 'Failed to create admin' })
@@ -80,7 +82,7 @@ router.post('/update-admin/:id', authenticateToken, async (req, res) => {
       if (dupe.length > 0) return res.status(400).json({ error: 'Username already exists' })
     }
 
-    const result = await pool`
+    await pool`
       UPDATE admins SET
         first_name   = COALESCE(${first_name   || null}, first_name),
         last_name    = COALESCE(${last_name    || null}, last_name),
@@ -90,11 +92,14 @@ router.post('/update-admin/:id', authenticateToken, async (req, res) => {
         residency    = COALESCE(${residency    || null}, residency),
         gender       = COALESCE(${gender       || null}, gender),
         role         = COALESCE(${role         || null}, role)
-      WHERE admin_id = ${id}
-      RETURNING admin_id, first_name, last_name, username, email, phone_number, gender, residency, role`
+      WHERE admin_id = ${id}`
 
-    if (result.count === 0) return res.status(404).json({ error: 'Admin not found' })
-    res.json(result[0])
+    const updated = await pool`
+      SELECT admin_id, first_name, last_name, username, email, phone_number, gender, residency, role 
+      FROM admins WHERE admin_id = ${id}`
+
+    if (updated.length === 0) return res.status(404).json({ error: 'Admin not found' })
+    res.json(updated[0])
   } catch (err) {
     console.error('[superadmin] Update admin error:', err)
     res.status(500).json({ error: 'Failed to update admin' })
@@ -105,7 +110,7 @@ router.delete('/delete-admin/:id', authenticateToken, async (req, res) => {
   if (!isSuperadmin(req, res)) return
   try {
     const { id } = req.params
-    if (parseInt(id) === req.admin.admin_id)
+    if (String(id) === String(req.admin.admin_id))
       return res.status(400).json({ error: 'You cannot delete your own account' })
 
     const found = await pool`SELECT username FROM admins WHERE admin_id = ${id}`
@@ -120,22 +125,22 @@ router.delete('/delete-admin/:id', authenticateToken, async (req, res) => {
   }
 })
 
-// ── Stats ─────────────────────────────────────────────────────────────────────
+// ── Stats & Overview ──────────────────────────────────────────────────────────
 
 router.get('/overview', authenticateToken, async (req, res) => {
   if (!isSuperadmin(req, res)) return
   try {
     const [total, resolved, pending, active] = await Promise.all([
-      pool`SELECT COUNT(*) FROM complaints`,
-      pool`SELECT COUNT(*) FROM complaints WHERE status = 'resolved'`,
-      pool`SELECT COUNT(*) FROM applicants WHERE status IN ('submitted','reviewing')`,
-      pool`SELECT COUNT(*) FROM events WHERE status = 'upcoming'`,
+      pool`SELECT COUNT(*) AS total FROM complaints`,
+      pool`SELECT COUNT(*) AS total FROM complaints WHERE status = 'resolved'`,
+      pool`SELECT COUNT(*) AS total FROM applicants WHERE status IN ('submitted','reviewing')`,
+      pool`SELECT COUNT(*) AS total FROM events WHERE status = 'upcoming'`,
     ])
     res.json({
-      totalComplaints:     parseInt(total[0].count),
-      resolvedComplaints:  parseInt(resolved[0].count),
-      pendingApplications: parseInt(pending[0].count),
-      activeEvents:        parseInt(active[0].count),
+      totalComplaints:     parseInt(total[0]?.total ?? total[0]?.['COUNT(*)'] ?? 0),
+      resolvedComplaints:  parseInt(resolved[0]?.total ?? resolved[0]?.['COUNT(*)'] ?? 0),
+      pendingApplications: parseInt(pending[0]?.total ?? pending[0]?.['COUNT(*)'] ?? 0),
+      activeEvents:        parseInt(active[0]?.total ?? active[0]?.['COUNT(*)'] ?? 0),
     })
   } catch (err) {
     console.error('[superadmin] Overview error:', err)
@@ -157,10 +162,57 @@ router.get('/vacancy-applications', authenticateToken, async (req, res) => {
       pool`SELECT COUNT(*) AS total FROM applicants`,
       pool`SELECT v.category, COUNT(a.id) AS count FROM applicants a INNER JOIN vacancies v ON a.vacancy_id = v.id GROUP BY v.category`,
     ])
-    res.json({ vacants: applications, counts: count[0], stats })
+    res.json({ vacants: applications, counts: count[0]?.total ? count[0] : { total: count[0]?.['COUNT(*)'] || 0 }, stats })
   } catch (err) {
     console.error('[superadmin] Vacancy applications error:', err)
     res.status(500).json({ error: 'Failed to fetch vacancy applications' })
+  }
+})
+
+// Service satisfaction stats proxy for superadmin dashboard
+router.get('/service-satisfaction-stats', authenticateToken, async (req, res) => {
+  if (!isSuperadmin(req, res)) return
+  try {
+    const rows = await pool`
+      SELECT id, created_at, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11
+      FROM service_satisfaction
+      WHERE created_at >= NOW() - INTERVAL 30 DAY
+      ORDER BY created_at DESC`
+
+    const toScore = v => ({ very_high:5, high:4, medium:3, low:2, very_low:1 }[v] ?? null)
+    const keys    = ['q1','q2','q3','q4','q5','q6','q7','q8','q9','q10','q11']
+    const agg     = Object.fromEntries(keys.map(k => [k, { total: 0, count: 0 }]))
+    const daily   = {}
+
+    rows.forEach(row => {
+      const day = (row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at)).slice(0, 10)
+      if (!daily[day]) daily[day] = { total: 0, count: 0 }
+
+      keys.forEach(k => {
+        const s = toScore(row[k])
+        if (s != null) {
+          agg[k].total += s; agg[k].count += 1
+          daily[day].total += s; daily[day].count += 1
+        }
+      })
+    })
+
+    const averages = keys.map((k, i) => ({
+      questionKey: k, questionLabel: `Q${i + 1}`,
+      averageScore: agg[k].count ? Number((agg[k].total / agg[k].count).toFixed(2)) : 0,
+      responses: agg[k].count,
+    }))
+
+    const dailyArr = Object.entries(daily).sort(([a],[b]) => a < b ? -1 : 1).map(([date, v]) => ({
+      date,
+      averageScore: v.count ? Number((v.total / v.count).toFixed(2)) : 0,
+      responses: v.count,
+    }))
+
+    res.set('Cache-Control', 'no-store').json({ totalResponses: rows.length, averages, daily: dailyArr })
+  } catch (err) {
+    console.error('[superadmin] Satisfaction stats error:', err)
+    res.status(500).json({ error: 'Failed to fetch satisfaction stats' })
   }
 })
 

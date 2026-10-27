@@ -8,9 +8,16 @@ function translatePgToMysql(sql) {
   q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"]Dy\. Mon, DD YYYY['"]\s*\)/gi, "DATE_FORMAT($1, '%a. %b, %d %Y')");
   q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"]DY, Mon DD YYYY['"]\s*\)/gi, "DATE_FORMAT($1, '%a, %b %d %Y')");
   q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"]DD\/MM\/YYYY['"]\s*\)/gi, "DATE_FORMAT($1, '%d/%m/%Y')");
+  q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"]DD\s*-\s*MM\s*-\s*YYYY['"]\s*\)/gi, "DATE_FORMAT($1, '%d - %m - %Y')");
   q = q.replace(/TO_CHAR\s*\(\s*([^,]+)\s*,\s*['"][^'"]+['"]\s*\)/gi, "DATE_FORMAT($1, '%Y-%m-%d')");
 
-  // 2. Convert COUNT(*) FILTER (WHERE condition) -> COUNT(CASE WHEN condition THEN 1 END)
+  // 2. Convert PostgreSQL INTERVAL '30 days' / '1 month' -> MySQL INTERVAL 30 DAY / 1 MONTH
+  q = q.replace(/INTERVAL\s+['"](\d+)\s*days?['"]/gi, 'INTERVAL $1 DAY');
+  q = q.replace(/INTERVAL\s+['"](\d+)\s*months?['"]/gi, 'INTERVAL $1 MONTH');
+  q = q.replace(/INTERVAL\s+['"](\d+)\s*years?['"]/gi, 'INTERVAL $1 YEAR');
+  q = q.replace(/INTERVAL\s+['"](\d+)\s*hours?['"]/gi, 'INTERVAL $1 HOUR');
+
+  // 3. Convert COUNT(*) FILTER (WHERE condition) -> COUNT(CASE WHEN condition THEN 1 END)
   const filterRegex = /COUNT\s*\(\s*\*\s*\)\s+FILTER\s*\(\s*WHERE\s+/gi;
   let match;
   let filteredSql = '';
@@ -33,12 +40,12 @@ function translatePgToMysql(sql) {
   filteredSql += q.slice(lastIdx);
   q = filteredSql;
 
-  // 3. Convert type casts ::jsonb, ::json, ::text, etc.
+  // 4. Convert type casts ::jsonb, ::json, ::text, etc.
   q = q.replace(/::jsonb/gi, '');
   q = q.replace(/::json/gi, '');
   q = q.replace(/::text/gi, '');
 
-  // 4. Convert ILIKE -> LIKE
+  // 5. Convert ILIKE -> LIKE
   q = q.replace(/\bILIKE\b/gi, 'LIKE');
 
   return q;
@@ -80,6 +87,14 @@ export function createMysqlPoolAdapter(poolOrConfig) {
           params.push(JSON.stringify(arg.value));
         } else if (arg && typeof arg === 'object' && arg.__isRaw) {
           query += arg.value;
+        } else if (Array.isArray(arg)) {
+          // Serialize plain arrays to JSON strings when binding to MySQL parameters
+          query += '?';
+          params.push(JSON.stringify(arg));
+        } else if (arg !== null && typeof arg === 'object' && !(arg instanceof Date) && !Buffer.isBuffer(arg)) {
+          // Serialize plain objects (e.g. translation bags, metadata) to JSON strings
+          query += '?';
+          params.push(JSON.stringify(arg));
         } else {
           query += '?';
           params.push(arg === undefined ? null : arg);
@@ -101,10 +116,20 @@ export function createMysqlPoolAdapter(poolOrConfig) {
 
     const [result] = await pool.query(cleanQuery, params);
 
-    if (returningCol && result && result.insertId) {
-      const row = { [returningCol]: result.insertId, id: result.insertId, complaint_id: result.insertId, count: result.affectedRows };
+    if (returningCol && result) {
+      const insertId = result.insertId || 0;
+      const row = {
+        [returningCol]: insertId,
+        id: insertId,
+        complaint_id: insertId,
+        events_id: insertId,
+        admin_id: insertId,
+        count: result.affectedRows || 0
+      };
       const arr = [row];
-      arr.count = result.affectedRows;
+      arr.count = result.affectedRows || 0;
+      arr.insertId = insertId;
+      arr.affectedRows = result.affectedRows || 0;
       return arr;
     }
 
@@ -116,10 +141,12 @@ export function createMysqlPoolAdapter(poolOrConfig) {
     const resArr = [];
     resArr.count = result?.affectedRows || 0;
     resArr.insertId = result?.insertId || 0;
+    resArr.affectedRows = result?.affectedRows || 0;
     return resArr;
   };
 
   sql.json = (val) => ({ __isJson: true, value: val });
+  sql.raw = (val) => ({ __isRaw: true, value: val });
   sql.unsafe = async (rawStr, params = []) => {
     const [rows] = await pool.query(translatePgToMysql(rawStr), params);
     return rows;
@@ -128,3 +155,5 @@ export function createMysqlPoolAdapter(poolOrConfig) {
 
   return sql;
 }
+
+export default createMysqlPoolAdapter;

@@ -174,10 +174,10 @@ The system follows a **monolithic three-tier architecture**:
 │   File Handling: Multer v2                               │
 │   OTP: Cloud Email Service Client                             │
 └────────────────────────┬─────────────────────────────────┘
-                         │ TCP (mysql2 / postgres driver)
+                         │ TCP (mysql2 driver / mysqlAdapter)
 ┌────────────────────────▼─────────────────────────────────┐
 │                    DATA TIER                              │
-│   MySQL (Plesk built-in)                                 │
+│   MySQL 8.0 (Plesk Linux built-in)                       │
 │   All application data: users, admins, content, logs     │
 └──────────────────────────────────────────────────────────┘
                          │ HTTPS (OTP Email Service API)
@@ -266,7 +266,11 @@ SPA Fallback            — Serve client/dist/index.html for all non-API paths
 server/
 ├── server.js           — Entry point, middleware and route registration
 ├── con/
-│   └── db.js           — Database connection (postgres driver + in-memory mock)
+│   ├── db/
+│   │   └── index.js        — MySQL pool connection setup
+│   └── con/
+│       ├── db.js           — Database connection wrapper (mysql2 pool with tagged-template adapter)
+│       └── mysqlAdapter.js — PostgreSQL-to-MySQL SQL dialect translator & JSON param serializer
 ├── middleware/
 │   ├── auth.js         — authenticateToken, authenticateUser
 │   ├── cors.js         — CORS configuration
@@ -1145,7 +1149,7 @@ If real-time features are added in future versions, the following would be in sc
 
 ### 10.4 Input Validation
 
-- **SR-013**: All API endpoint input shall be treated as untrusted. Database queries use the `postgres` tagged template literal driver which parameterizes all values, preventing SQL injection.
+- **SR-013**: All API endpoint input shall be treated as untrusted. Database queries execute through the custom tagged-template MySQL adapter using prepared parameterized statements (`?` bindings), which isolates user inputs and prevents SQL injection vulnerabilities.
 - **SR-014**: File uploads are validated by MIME type (images, video, audio, PDF, Word documents only) and limited to 50MB per file.
 - **SR-015**: CV file uploads are restricted to `application/pdf` only at the application layer (in addition to the general multer MIME type filter).
 - **SR-016**: Ethiopian phone number inputs are validated server-side and client-side against the pattern `/^(\+251(9|7)\d{8}|0(9|7)\d{8})$/`.
@@ -1153,16 +1157,23 @@ If real-time features are added in future versions, the following would be in sc
 
 ### 10.5 CORS Policy
 
-- **SR-018**: The CORS policy allows requests only from explicitly whitelisted origins: `localhost` (development), `https://lideta-official.vercel.app`, `https://lidetasubcity.gov.et`, `https://www.lidetasubcity.gov.et`, any `*.run.app` origin, and the `CLIENT_ORIGIN` environment variable.
+- **SR-018**: The CORS policy allows requests only from explicitly whitelisted origins: `localhost` (development), `https://lideta-official.vercel.app`, `https://lidetasubcity.gov.et`, `https://www.lidetasubcity.gov.et`, any `*.run.app` origin, and the `CLIENT_ORIGIN` environment variable. Strict regular expression matching is enforced to prevent subdomain or prefix collision attacks.
 - **SR-019**: `credentials: true` is set in the CORS configuration, allowing cookies and Authorization headers from whitelisted origins.
 - **SR-020**: Requests from non-whitelisted origins are rejected with an HTTP CORS error.
 
 ### 10.6 File Upload Security
 
-- **SR-021**: All uploaded files are stored on the server filesystem at `client/public/uploads/`. This directory is served as a static endpoint (`GET /uploads/*`) and files are publicly accessible by direct URL.
-- **SR-022**: CV files (`/uploads/cvs/*`) are publicly accessible by direct URL. Access should be restricted to authenticated admin users in a future hardening iteration.
-- **SR-023**: Uploaded filenames include a timestamp and random 9-digit suffix to prevent predictable URL enumeration.
-- **SR-024**: No executable file types (`.js`, `.php`, `.sh`, `.exe`) are permitted by the file filter.
+- **SR-021**: All uploaded files are stored on the server filesystem at `client/public/uploads/` (categorized into `photos/`, `videos/`, `audios/`, `cvs/`, and `admin_profiles/`).
+- **SR-022**: Uploaded filenames include a timestamp and random 9-digit suffix to prevent predictable URL enumeration.
+- **SR-023**: No executable file types (`.js`, `.php`, `.sh`, `.exe`, `.jsp`) are permitted by the file filter.
+
+### 10.7 HTTP Security Headers & Probe Protection
+
+- **SR-024**: **Anti-Clickjacking (CWE-1021)**: The server sets `X-Frame-Options: SAMEORIGIN` and CSP `frame-ancestors 'self'` on all responses, blocking unauthorized framing or clickjacking attacks.
+- **SR-025**: **Strict Transport Security (CWE-319)**: The server sets `Strict-Transport-Security: max-age=31536000; includeSubDomains; preload` to mandate secure HTTPS communication.
+- **SR-026**: **MIME-Sniffing Prevention (CWE-79, CWE-116)**: The server sets `X-Content-Type-Options: nosniff` to prevent browser MIME-type confusion attacks.
+- **SR-027**: **Information Disclosure Defense (CWE-200)**: Express `x-powered-by` is disabled, and response header filters strip `Server`, `X-Powered-By`, and Passenger runtime headers.
+- **SR-028**: **Probe & Scanner Defense (CWE-530)**: A dedicated probe-blocker middleware intercepts requests matching sensitive archive (`.tgz`, `.tar`, `.alz`, `.war`, `.zip`), certificate (`.cer`, `.pem`, `.jks`), database dump (`.sql`, `.db`), dotfile (`.env`, `.git`), or executable (`.php`, `.jsp`) patterns. Matching requests terminate with HTTP 404 Not Found and `Cache-Control: no-store` before static file handlers or the SPA fallback can respond.
 
 ### 10.7 Session and Token Security
 
@@ -1352,8 +1363,8 @@ If `DATABASE_URL` is not set in development, the server falls back to an in-memo
 | **Back-End Framework** | Express.js | 5.2.1 |
 | **Runtime** | Node.js | 18+ |
 | **Module System** | ESM (`"type": "module"`) | — |
-| **Database** | MySQL (Plesk built-in) | — |
-| **DB Driver** | `postgres` (tagged template) | 3.4.7 |
+| **Database** | MySQL (Plesk built-in) | 8.0+ |
+| **DB Driver** | `mysql2` (tagged-template pool adapter) | 3.15.3 |
 | **Authentication** | JSON Web Tokens (jsonwebtoken) | 9.0.3 |
 | **Password Hashing** | bcryptjs | 3.0.3 |
 | **File Uploads** | Multer | 2.0.2 |

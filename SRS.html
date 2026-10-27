@@ -784,10 +784,10 @@ a.doc-link {
 │   File Handling: Multer v2                               │
 │   OTP: Cloud Email Service Client                             │
 └────────────────────────┬─────────────────────────────────┘
-                         │ TCP (mysql2 / postgres driver)
+                         │ TCP (mysql2 driver / mysqlAdapter)
 ┌────────────────────────▼─────────────────────────────────┐
 │                    DATA TIER                              │
-│   MySQL (Plesk built-in)                                 │
+│   MySQL 8.0 (Plesk Linux built-in)                       │
 │   All application data: users, admins, content, logs     │
 └──────────────────────────────────────────────────────────┘
                          │ HTTPS (OTP Email Service API)
@@ -861,7 +861,11 @@ SPA Fallback            — Serve client/dist/index.html for all non-API paths
 <p><strong>Server directory structure:</strong> <pre><code class="lang-text">server/
 ├── server.js           — Entry point, middleware and route registration
 ├── con/
-│   └── db.js           — Database connection (postgres driver + in-memory mock)
+│   ├── db/
+│   │   └── index.js        — MySQL pool connection setup
+│   └── con/
+│       ├── db.js           — Database connection wrapper (mysql2 pool with tagged-template adapter)
+│       └── mysqlAdapter.js — PostgreSQL-to-MySQL SQL dialect translator &amp; JSON param serializer
 ├── middleware/
 │   ├── auth.js         — authenticateToken, authenticateUser
 │   ├── cors.js         — CORS configuration
@@ -1775,7 +1779,7 @@ Deletes a news article and its translation. Requires admin JWT.
 <h3>10.4 Input Validation</h3>
 
 <ul>
-  <li><p><strong>SR-013</strong>: All API endpoint input shall be treated as untrusted. Database queries use the <code>postgres</code> tagged template literal driver which parameterizes all values, preventing SQL injection.</p></li>
+  <li><p><strong>SR-013</strong>: All API endpoint input shall be treated as untrusted. Database queries execute through the custom tagged-template MySQL adapter using prepared parameterized statements (<code>?</code> bindings), which isolates user inputs and prevents SQL injection vulnerabilities.</p></li>
   <li><p><strong>SR-014</strong>: File uploads are validated by MIME type (images, video, audio, PDF, Word documents only) and limited to 50MB per file.</p></li>
   <li><p><strong>SR-015</strong>: CV file uploads are restricted to <code>application/pdf</code> only at the application layer (in addition to the general multer MIME type filter).</p></li>
   <li><p><strong>SR-016</strong>: Ethiopian phone number inputs are validated server-side and client-side against the pattern <code>/^(\+251(9|7)\d{8}|0(9|7)\d{8})$/</code>.</p></li>
@@ -1785,7 +1789,7 @@ Deletes a news article and its translation. Requires admin JWT.
 <h3>10.5 CORS Policy</h3>
 
 <ul>
-  <li><p><strong>SR-018</strong>: The CORS policy allows requests only from explicitly whitelisted origins: <code>localhost</code> (development), <code>https://lideta-official.vercel.app</code>, <code>https://lidetasubcity.gov.et</code>, <code>https://www.lidetasubcity.gov.et</code>, any <code>*.run.app</code> origin, and the <code>CLIENT_ORIGIN</code> environment variable.</p></li>
+  <li><p><strong>SR-018</strong>: The CORS policy allows requests only from explicitly whitelisted origins: <code>localhost</code> (development), <code>https://lideta-official.vercel.app</code>, <code>https://lidetasubcity.gov.et</code>, <code>https://www.lidetasubcity.gov.et</code>, any <code>*.run.app</code> origin, and the <code>CLIENT_ORIGIN</code> environment variable. Strict regular expression matching is enforced to prevent subdomain or prefix collision attacks.</p></li>
   <li><p><strong>SR-019</strong>: <code>credentials: true</code> is set in the CORS configuration, allowing cookies and Authorization headers from whitelisted origins.</p></li>
   <li><p><strong>SR-020</strong>: Requests from non-whitelisted origins are rejected with an HTTP CORS error.</p></li>
 </ul>
@@ -1793,10 +1797,19 @@ Deletes a news article and its translation. Requires admin JWT.
 <h3>10.6 File Upload Security</h3>
 
 <ul>
-  <li><p><strong>SR-021</strong>: All uploaded files are stored on the server filesystem at <code>client/public/uploads/</code>. This directory is served as a static endpoint (<code>GET /uploads/*</code>) and files are publicly accessible by direct URL.</p></li>
-  <li><p><strong>SR-022</strong>: CV files (<code>/uploads/cvs/*</code>) are publicly accessible by direct URL. Access should be restricted to authenticated admin users in a future hardening iteration.</p></li>
-  <li><p><strong>SR-023</strong>: Uploaded filenames include a timestamp and random 9-digit suffix to prevent predictable URL enumeration.</p></li>
-  <li><p><strong>SR-024</strong>: No executable file types (<code>.js</code>, <code>.php</code>, <code>.sh</code>, <code>.exe</code>) are permitted by the file filter.</p></li>
+  <li><p><strong>SR-021</strong>: All uploaded files are stored on the server filesystem at <code>client/public/uploads/</code> (categorized into <code>photos/</code>, <code>videos/</code>, <code>audios/</code>, <code>cvs/</code>, and <code>admin_profiles/</code>).</p></li>
+  <li><p><strong>SR-022</strong>: Uploaded filenames include a timestamp and random 9-digit suffix to prevent predictable URL enumeration.</p></li>
+  <li><p><strong>SR-023</strong>: No executable file types (<code>.js</code>, <code>.php</code>, <code>.sh</code>, <code>.exe</code>, <code>.jsp</code>) are permitted by the file filter.</p></li>
+</ul>
+
+<h3>10.7 HTTP Security Headers &amp; Probe Protection</h3>
+
+<ul>
+  <li><p><strong>SR-024</strong>: <strong>Anti-Clickjacking (CWE-1021)</strong>: The server sets <code>X-Frame-Options: SAMEORIGIN</code> and CSP <code>frame-ancestors 'self'</code> on all responses, blocking unauthorized framing or clickjacking attacks.</p></li>
+  <li><p><strong>SR-025</strong>: <strong>Strict Transport Security (CWE-319)</strong>: The server sets <code>Strict-Transport-Security: max-age=31536000; includeSubDomains; preload</code> to mandate secure HTTPS communication.</p></li>
+  <li><p><strong>SR-026</strong>: <strong>MIME-Sniffing Prevention (CWE-79, CWE-116)</strong>: The server sets <code>X-Content-Type-Options: nosniff</code> to prevent browser MIME-type confusion attacks.</p></li>
+  <li><p><strong>SR-027</strong>: <strong>Information Disclosure Defense (CWE-200)</strong>: Express <code>x-powered-by</code> is disabled, and response header filters strip <code>Server</code>, <code>X-Powered-By</code>, and Passenger runtime headers.</p></li>
+  <li><p><strong>SR-028</strong>: <strong>Probe &amp; Scanner Defense (CWE-530)</strong>: A dedicated probe-blocker middleware intercepts requests matching sensitive archive (<code>.tgz</code>, <code>.tar</code>, <code>.alz</code>, <code>.war</code>, <code>.zip</code>), certificate (<code>.cer</code>, <code>.pem</code>, <code>.jks</code>), database dump (<code>.sql</code>, <code>.db</code>), dotfile (<code>.env</code>, <code>.git</code>), or executable (<code>.php</code>, <code>.jsp</code>) patterns. Matching requests terminate with HTTP 404 Not Found and <code>Cache-Control: no-store</code> before static file handlers or the SPA fallback can respond.</p></li>
 </ul>
 
 <h3>10.7 Session and Token Security</h3>
@@ -1989,8 +2002,8 @@ Data Flows of Security Interest:
 <tr><td><strong>Back-End Framework</strong></td><td>Express.js</td><td>5.2.1</td></tr>
 <tr><td><strong>Runtime</strong></td><td>Node.js</td><td>18+</td></tr>
 <tr><td><strong>Module System</strong></td><td>ESM (<code>"type": "module"</code>)</td><td>—</td></tr>
-<tr><td><strong>Database</strong></td><td>MySQL (Plesk built-in)</td><td>—</td></tr>
-<tr><td><strong>DB Driver</strong></td><td><code>postgres</code> (tagged template)</td><td>3.4.7</td></tr>
+<tr><td><strong>Database</strong></td><td>MySQL (Plesk built-in)</td><td>8.0+</td></tr>
+<tr><td><strong>DB Driver</strong></td><td><code>mysql2</code> (tagged-template pool adapter)</td><td>3.15.3</td></tr>
 <tr><td><strong>Authentication</strong></td><td>JSON Web Tokens (jsonwebtoken)</td><td>9.0.3</td></tr>
 <tr><td><strong>Password Hashing</strong></td><td>bcryptjs</td><td>3.0.3</td></tr>
 <tr><td><strong>File Uploads</strong></td><td>Multer</td><td>2.0.2</td></tr>

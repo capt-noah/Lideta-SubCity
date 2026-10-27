@@ -54,16 +54,19 @@ router.patch('/profile', authenticateUser, async (req, res) => {
 
     const newHash = newPassword ? await bcrypt.hash(newPassword, 10) : null
 
-    const result = await pool`
+    await pool`
       UPDATE users SET
         first_name    = COALESCE(${first_name  || null}, first_name),
         last_name     = COALESCE(${last_name   || null}, last_name),
         phone         = COALESCE(${phone       || null}, phone),
         password_hash = COALESCE(${newHash},             password_hash)
-      WHERE id = ${userId}
-      RETURNING id, first_name, last_name, email, phone, created_at`
+      WHERE id = ${userId}`
 
-    res.json(result[0])
+    const updated = await pool`
+      SELECT id, first_name, last_name, email, phone, created_at FROM users WHERE id = ${userId}`
+
+    if (updated.length === 0) return res.status(404).json({ error: 'User not found' })
+    res.json(updated[0])
   } catch (err) {
     console.error('[user] Profile update error:', err)
     res.status(500).json({ error: 'Failed to update profile' })

@@ -100,12 +100,14 @@ router.post('/user/register', async (req, res) => {
       return res.status(400).json({ error: 'An account with this email already exists' })
 
     const password_hash = await bcrypt.hash(password, 10)
-    const result = await pool`
+    await pool`
       INSERT INTO users (first_name, last_name, email, phone, password_hash, email_verified)
-      VALUES (${first_name}, ${last_name}, ${email}, ${phone || null}, ${password_hash}, FALSE)
-      RETURNING id, first_name, last_name, email, phone, email_verified, two_fa_enabled, created_at`
+      VALUES (${first_name}, ${last_name}, ${email}, ${phone || null}, ${password_hash}, FALSE)`
 
-    const user  = result[0]
+    const newUsers = await pool`
+      SELECT id, first_name, last_name, email, phone, email_verified, two_fa_enabled, created_at 
+      FROM users WHERE email = ${email}`
+    const user = newUsers[0]
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d' })
 
     await sendOTPEmail({ to: email, purpose: 'verify_email' })
@@ -124,7 +126,7 @@ router.post('/verify-otp', async (req, res) => {
     if (!email || !otp || !entityType)
       return res.status(400).json({ error: 'Missing fields' })
 
-    const { success, error } = await verifyOTPEmail({ email, token: otp })
+    const { success, error } = await verifyOTPEmail({ email, token: otp, purpose: '2fa_login' })
     if (!success)
       return res.status(401).json({ error: error || 'Invalid or expired code' })
 
@@ -193,7 +195,7 @@ router.post('/verify-email', authenticateUser, async (req, res) => {
     const { otp }  = req.body
     const { email } = req.user
 
-    const { success, error } = await verifyOTPEmail({ email, token: otp })
+    const { success, error } = await verifyOTPEmail({ email, token: otp, purpose: 'verify_email' })
     if (!success)
       return res.status(401).json({ error: error || 'Invalid or expired code' })
 
@@ -215,8 +217,6 @@ router.post('/forgot-password', async (req, res) => {
     const { email, entityType = 'user' } = req.body
     if (!email) return res.status(400).json({ error: 'Email required' })
 
-    const table  = entityType === 'admin' ? 'admins' : 'users'
-    const idCol  = entityType === 'admin' ? 'admin_id' : 'id'
     const exists = entityType === 'admin'
       ? (await pool`SELECT admin_id FROM admins WHERE email = ${email}`).length > 0
       : (await pool`SELECT id FROM users WHERE email = ${email}`).length > 0
@@ -224,7 +224,7 @@ router.post('/forgot-password', async (req, res) => {
     if (exists) {
       if (isRateLimited(`reset:${email}`))
         return res.status(429).json({ error: 'Too many requests. Try again in 10 minutes.' })
-      await sendOTPEmail({ to: email, purpose: 'reset_password' })
+      await sendOTPEmail({ to: email, purpose: 'reset_password', entityType })
     }
 
     res.json({ success: true }) // always 200 — prevents email enumeration
@@ -241,7 +241,7 @@ router.post('/reset-password', async (req, res) => {
     if (!email || !otp || !newPassword)
       return res.status(400).json({ error: 'Missing fields' })
 
-    const { success, error } = await verifyOTPEmail({ email, token: otp })
+    const { success, error } = await verifyOTPEmail({ email, token: otp, purpose: 'reset_password' })
     if (!success)
       return res.status(401).json({ error: error || 'Invalid or expired code' })
 

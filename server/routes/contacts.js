@@ -4,27 +4,25 @@ import { authenticateToken } from '../middleware/auth.js'
 
 const router = Router()
 
-// ── Public: submit contact form ───────────────────────────────────────────────
+// ── Handlers ──────────────────────────────────────────────────────────────────
 
-router.post('/', async (req, res) => {
+const handleContactSubmit = async (req, res) => {
   try {
     const d         = req.body
     const photoData = Array.isArray(d.photos) ? d.photos : (d.photos ? [d.photos] : [])
 
     await pool`
       INSERT INTO contacts (first_name, last_name, email, message, photos)
-      VALUES (${d.first_name}, ${d.last_name}, ${d.email}, ${d.description}, ${JSON.stringify(photoData)}::JSONB)`
+      VALUES (${d.first_name}, ${d.last_name}, ${d.email}, ${d.description || d.message}, ${JSON.stringify(photoData)}::JSONB)`
 
     res.status(201).json({ message: 'Message sent successfully' })
   } catch (err) {
     console.error('[contacts] Submit error:', err)
     res.status(500).json({ error: 'Failed to send message' })
   }
-})
+}
 
-// ── Public: submit satisfaction survey ───────────────────────────────────────
-
-router.post('/satisfaction', async (req, res) => {
+const handleSatisfactionSubmit = async (req, res) => {
   try {
     const d = req.body
     if (!d.gender || !d.age || !d.district || !d.q1)
@@ -51,7 +49,18 @@ router.post('/satisfaction', async (req, res) => {
     console.error('[contacts] Satisfaction error:', err)
     res.status(500).json({ error: 'Failed to submit satisfaction survey' })
   }
+}
+
+// ── Public Routes ─────────────────────────────────────────────────────────────
+
+router.post('/', async (req, res) => {
+  if (req.baseUrl.includes('satisfaction') || (req.body && req.body.gender && req.body.q1)) {
+    return handleSatisfactionSubmit(req, res)
+  }
+  return handleContactSubmit(req, res)
 })
+
+router.post('/satisfaction', handleSatisfactionSubmit)
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
@@ -67,10 +76,11 @@ router.get('/admin', authenticateToken, async (req, res) => {
 
 router.put('/admin/:id/resolve', authenticateToken, async (req, res) => {
   try {
-    const result = await pool`
-      UPDATE contacts SET status = 'resolved' WHERE id = ${req.params.id} RETURNING *`
-    if (result.length === 0) return res.status(404).json({ error: 'Contact not found' })
-    res.json(result[0])
+    const id = req.params.id
+    await pool`UPDATE contacts SET status = 'resolved' WHERE id = ${id}`
+    const rows = await pool`SELECT * FROM contacts WHERE id = ${id}`
+    if (rows.length === 0) return res.status(404).json({ error: 'Contact not found' })
+    res.json(rows[0])
   } catch (err) {
     console.error('[contacts] Resolve error:', err)
     res.status(500).json({ error: 'Failed to resolve contact' })
@@ -79,7 +89,7 @@ router.put('/admin/:id/resolve', authenticateToken, async (req, res) => {
 
 // ── Admin: satisfaction stats ─────────────────────────────────────────────────
 
-router.get('/satisfaction/stats', authenticateToken, async (req, res) => {
+const handleSatisfactionStats = async (req, res) => {
   try {
     const rows = await pool`
       SELECT id, created_at, q1, q2, q3, q4, q5, q6, q7, q8, q9, q10, q11
@@ -122,6 +132,10 @@ router.get('/satisfaction/stats', authenticateToken, async (req, res) => {
     console.error('[contacts] Satisfaction stats error:', err)
     res.status(500).json({ error: 'Failed to fetch satisfaction stats' })
   }
-})
+}
+
+router.get('/satisfaction/stats', authenticateToken, handleSatisfactionStats)
+router.get('/stats', authenticateToken, handleSatisfactionStats)
 
 export default router
+

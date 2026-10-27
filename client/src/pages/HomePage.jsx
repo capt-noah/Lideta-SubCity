@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useLanguage } from "../components/utils/LanguageContext";
 import translatedContents from "../data/translated_contents.json";
+import BASE_URL from "../utils/api";
 
 import CeoImage from "../assets/ceo_final.png";
 import BuildingHeader from "../assets/building_hero.jpg";
@@ -33,7 +34,7 @@ function HomePage() {
   useEffect(() => {
     async function getNews() {
       try {
-        const response = await fetch("/api/news");
+        const response = await fetch(`${BASE_URL}/api/news`);
         if (response.ok) {
           const data = await response.json();
           const formattedNews = data.map((item) => ({

@@ -43,8 +43,8 @@ router.post('/upload-cv', upload.single('cv'), (req, res) => {
   }
 })
 
-// Submit application
-router.post('/applicants', async (req, res) => {
+// Submit application handler
+const handleApplicantSubmit = async (req, res) => {
   try {
     const { vacancy_id, full_name, email, phone, cv_path, user_id } = req.body
 
@@ -60,10 +60,11 @@ router.post('/applicants', async (req, res) => {
       VALUES (${vacancy_id}, ${first_name}, ${last_name}, ${email}, ${phone}, ${user_id || null})
       RETURNING id, vacancy_id, first_name, last_name, email, phone`
 
-    const applicant   = result[0]
-    const applicantId = applicant.id
+    const applicantId = result[0]?.id || result.insertId
+    const applicant   = result[0] || { id: applicantId, vacancy_id, first_name, last_name, email, phone }
+    applicant.id      = applicantId
 
-    if (cv_path) {
+    if (cv_path && applicantId) {
       try {
         const cvsDir      = path.join(uploadBasePath, 'cvs')
         const fileName    = path.basename(cv_path)
@@ -88,6 +89,15 @@ router.post('/applicants', async (req, res) => {
     console.error('[vacancies] Apply error:', err)
     res.status(500).json({ error: 'Failed to submit application' })
   }
+}
+
+router.post('/applicants', handleApplicantSubmit)
+// When mounted at /api/applicants, allow POST / directly:
+router.post('/', (req, res, next) => {
+  if (req.baseUrl === '/api/applicants') {
+    return handleApplicantSubmit(req, res)
+  }
+  next()
 })
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
@@ -151,7 +161,7 @@ router.put('/admin', authenticateToken, async (req, res) => {
     const oldResult = await pool`SELECT * FROM vacancies WHERE id = ${f.id}`
     const old = oldResult[0]
 
-    const result = await pool`
+    await pool`
       UPDATE vacancies
       SET title             = ${f.title},
           short_description = ${f.shortDescription},
@@ -165,10 +175,11 @@ router.put('/admin', authenticateToken, async (req, res) => {
           qualifications    = ${toArr(f.qualifications)},
           start_date        = ${f.startDate},
           end_date          = ${f.endDate}
-      WHERE id = ${f.id}
-      RETURNING *`
+      WHERE id = ${f.id}`
 
-    if (result.count === 0) return res.status(404).json({ error: 'Vacancy not found' })
+    const updatedRows = await pool`SELECT * FROM vacancies WHERE id = ${f.id}`
+    if (updatedRows.length === 0) return res.status(404).json({ error: 'Vacancy not found' })
+    const updated = updatedRows[0]
 
     const fields  = { title:'Title', location:'Location', salary:'Salary', type:'Type', category:'Category' }
     const details = {}
@@ -189,7 +200,7 @@ router.put('/admin', authenticateToken, async (req, res) => {
     }
 
     logActivity(req.admin.admin_id, req.admin.username, 'UPDATED', 'VACANCY', f.title, Object.keys(details).length ? details : null)
-    res.json(result[0])
+    res.json(updated)
   } catch (err) {
     console.error('[vacancies] Update error:', err)
     res.status(500).json({ error: 'Failed to update vacancy' })
@@ -271,7 +282,7 @@ router.put('/applicants/admin/:id', authenticateToken, upload.single('cv'), asyn
     const vid = req.body.vacancy_id && req.body.vacancy_id !== 'null'
       ? (parseInt(req.body.vacancy_id) || null) : null
 
-    const result = await pool`
+    await pool`
       UPDATE applicants
       SET first_name  = ${first_name  || null},
           last_name   = ${last_name   || null},
@@ -280,11 +291,16 @@ router.put('/applicants/admin/:id', authenticateToken, upload.single('cv'), asyn
           status      = ${req.body.status || 'submitted'},
           vacancy_id  = COALESCE(${vid}, vacancy_id),
           cv_path     = COALESCE(${cvPath}, cv_path)
-      WHERE id = ${parseInt(id)}
-      RETURNING *`
+      WHERE id = ${parseInt(id)}`
 
-    if (result.length === 0) return res.status(404).json({ error: 'Applicant not found' })
-    res.json(result[0])
+    const updatedRows = await pool`
+      SELECT a.*, v.title AS vacancy_title
+      FROM applicants a
+      LEFT JOIN vacancies v ON a.vacancy_id = v.id
+      WHERE a.id = ${parseInt(id)}`
+
+    if (updatedRows.length === 0) return res.status(404).json({ error: 'Applicant not found' })
+    res.json(updatedRows[0])
   } catch (err) {
     console.error('[vacancies] Applicant update error:', err)
     res.status(500).json({ error: 'Failed to update applicant' })
